@@ -54,3 +54,14 @@ RenderingEngine/Debug/*.obj
 RenderingEngine/Release/*.obj
 RenderingLibrary/Debug/*.obj
 RenderingLibrary/Release/*.obj
+RenderingExtensions/Debug/*.obj
+RenderingExtensions/Release/*.obj
+*.db
+RenderingEngine.VC.VC.opendb
+*.exe
+Debug/RenderingEngine.ilk
+*.log
+RenderingEngine/Debug/RenderingEngine.pch
+*.suo
+Debug/SampleTest.ilk
+*.pch

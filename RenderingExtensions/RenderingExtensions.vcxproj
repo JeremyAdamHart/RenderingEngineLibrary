@@ -78,10 +78,17 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)RenderingLibrary/headers;$(ProjectDir)headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
     </Link>
+    <Lib>
+      <AdditionalDependencies>RenderingCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)debug;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -106,12 +113,19 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)RenderingLibrary/headers;$(ProjectDir)headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <Lib>
+      <AdditionalDependencies>RenderingCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)debug;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -132,6 +146,37 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\ColorMat.h" />
+    <ClInclude Include="headers\ElementGeometry.h" />
+    <ClInclude Include="headers\Light.h" />
+    <ClInclude Include="headers\MeshInfoLoader.h" />
+    <ClInclude Include="headers\ShadedMat.h" />
+    <ClInclude Include="headers\SimpleGeometry.h" />
+    <ClInclude Include="headers\SimpleShader.h" />
+    <ClInclude Include="headers\SimpleTexManager.h" />
+    <ClInclude Include="headers\simpleTexShader.h" />
+    <ClInclude Include="headers\TextureCreation.h" />
+    <ClInclude Include="headers\TextureMat.h" />
+    <ClInclude Include="headers\TorranceSparrowShader.h" />
+    <ClInclude Include="headers\TrackballCamera.h" />
+    <ClInclude Include="headers\TrackerCamera.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\ColorMat.cpp" />
+    <ClCompile Include="src\ElementGeometry.cpp" />
+    <ClCompile Include="src\MeshInfoLoader.cpp" />
+    <ClCompile Include="src\ShadedMat.cpp" />
+    <ClCompile Include="src\SimpleGeometry.cpp" />
+    <ClCompile Include="src\SimpleShader.cpp" />
+    <ClCompile Include="src\SimpleTexManager.cpp" />
+    <ClCompile Include="src\simpleTexShader.cpp" />
+    <ClCompile Include="src\TextureCreation.cpp" />
+    <ClCompile Include="src\TextureMat.cpp" />
+    <ClCompile Include="src\TorranceSparrowShader.cpp" />
+    <ClCompile Include="src\TrackballCamera.cpp" />
+    <ClCompile Include="src\TrackerCamera.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
