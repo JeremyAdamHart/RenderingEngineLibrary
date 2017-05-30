@@ -56,6 +56,12 @@ RenderingLibrary/Debug/*.obj
 RenderingLibrary/Release/*.obj
 RenderingExtensions/Debug/*.obj
 RenderingExtensions/Release/*.obj
+RenderingEngine/x64/Debug/*.obj
+RenderingEngine/x64/Release/*.obj
+RenderingLibrary/x64/Debug/*.obj
+RenderingLibrary/x64/Release/*.obj
+RenderingExtensions/x64/Debug/*.obj
+RenderingExtensions/x64/Release/*.obj
 *.db
 RenderingEngine.VC.VC.opendb
 *.exe
@@ -65,3 +71,4 @@ RenderingEngine/Debug/RenderingEngine.pch
 *.suo
 Debug/SampleTest.ilk
 *.pch
+*.ipch
