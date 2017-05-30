@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 
 //Namespace for vertex attributes
 struct ATTRIB_LOCATION {
