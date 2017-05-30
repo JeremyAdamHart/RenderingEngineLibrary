@@ -13,6 +13,11 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+RenderingEngine/Debug/*.obj
+RenderingEngine/Release/*.obj
+RenderingLibrary/Debug/*.obj
+RenderingLibrary/Release/*.obj
+
 
 # Windows shortcuts
 *.lnk
@@ -45,3 +50,11 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+*.pdb
+*.pdb
+Debug/RenderingEngine.pdb
+*.lib
+Debug/RenderingEngine.exe
+*.tlog
+*.idb
+*.tlog
