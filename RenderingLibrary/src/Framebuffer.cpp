@@ -20,10 +20,9 @@ bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 	tex[attachment] = newTex;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, id);
-//	glDrawBuffer(GL_NONE);
-//	glReadBuffer(GL_NONE);
-	glFramebufferTexture(GL_FRAMEBUFFER,
+	glFramebufferTexture2D(GL_FRAMEBUFFER,
 		attachment,
+		newTex.getTarget(),
 		newTex.getID(),
 		newTex.getLevel());
 
@@ -100,4 +99,24 @@ void Framebuffer::deleteFramebuffer() {
 
 void Viewport::use() const {
 	glViewport(x, y, width, height);
+}
+
+map<GLenum, Texture>::iterator Framebuffer::textureBegin() {
+	return tex.begin();
+}
+
+map<GLenum, Texture>::iterator Framebuffer::textureEnd() {
+	return tex.end();
+}
+
+void blit(Framebuffer read, Framebuffer write) {
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, read.getID());
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, write.getID());
+
+	glBlitFramebuffer(0, 0, read.vp.width, read.vp.height,
+		0, 0, write.vp.width, write.vp.height,
+		GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);	
 }

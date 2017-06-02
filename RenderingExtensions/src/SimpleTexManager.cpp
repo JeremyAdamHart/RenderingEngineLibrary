@@ -27,16 +27,18 @@ int SimpleTexManager::addTexture(Texture tex) {
 GLenum SimpleTexManager::requestTexUnit(int handle) {
 	//If already bound
 	for (int i = 0; i < texUnits.size(); i++) {
-		if (texUnits[i] == handle)
+		if (texUnits[i] == handle) {
 			return GL_TEXTURE0 + i + 1;
+		}
 	}
 
 	int texUnit = nextUnit;
 	nextUnit = ++nextUnit % texUnits.size();
 	glActiveTexture(GL_TEXTURE0 + texUnit + 1);
-	glBindTexture(GL_TEXTURE_2D, textures[handle].getID());
+	glBindTexture(textures[handle].getTarget(), textures[handle].getID());
 
 	texUnits[texUnit] = handle;
+	glActiveTexture(NO_ACTIVE_TEXTURE);
 	return GL_TEXTURE0 + texUnit + 1;	//Because we're ignoring 0
 }
 

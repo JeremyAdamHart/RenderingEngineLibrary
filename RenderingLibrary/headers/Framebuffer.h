@@ -3,6 +3,7 @@
 #include "glSupport.h"
 #include "Texture.h"
 #include <map>
+#include <iterator>
 
 struct Viewport {
 	int x, y, width, height;
@@ -27,6 +28,11 @@ public:
 	bool addTexture(Texture newTex, GLenum attachment);
 	void use() const;
 
+	map<GLenum, Texture>::iterator textureBegin();
+	map<GLenum, Texture>::iterator textureEnd();
+
 	void deleteTextures();
 	void deleteFramebuffer();
 };
+
+void blit(Framebuffer read, Framebuffer write);

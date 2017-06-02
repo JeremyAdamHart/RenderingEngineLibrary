@@ -20,6 +20,9 @@ public:
 	Material *getMaterial(int type);
 	GLGeometryContainer *getGeometryPtr(){ return geometry; }
 
+	void setPosition(glm::vec3 position);
+	void setOrientation(glm::quat orientation);
+
 	void addMaterial(Material* newMaterial);
 	bool removeMaterial(int type);
 

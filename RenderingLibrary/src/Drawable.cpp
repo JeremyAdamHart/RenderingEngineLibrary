@@ -37,3 +37,7 @@ bool Drawable::loadUniforms(int type, GLint *uniformLocations) const {
 		return false;
 	}
 }
+
+void Drawable::setPosition(glm::vec3 newPosition) { position = newPosition;}
+
+void Drawable::setOrientation(glm::quat newOrientation) { orientation = newOrientation; }

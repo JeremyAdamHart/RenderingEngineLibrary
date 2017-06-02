@@ -33,7 +33,7 @@ Texture createTexture2D(TexInfo info, unsigned char *data) {
 
 Texture createTexture2D(int width, int height, TextureManager *manager) {
 	return createTexture2D(TexInfo(GL_TEXTURE_2D, { width, height }, 0,
-		GL_RGBA, GL_RGBA, GL_FLOAT), manager);
+		GL_RGBA, GL_RGBA8, GL_FLOAT), manager);
 }
 
 Texture createTexture2D(TexInfo info, TextureManager *manager, 
@@ -58,6 +58,10 @@ Texture createDepthTexture(int width, int height, TextureManager *manager) {
 		GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT32F, GL_FLOAT), manager);
 }
 
+Texture createDepthTextureMulti(int width, int height, TextureManager *manager, size_t num_samples) {
+	return createTexture2DMulti(TexInfo(GL_TEXTURE_2D_MULTISAMPLE, { width, height }, 0, GL_NONE, GL_DEPTH_COMPONENT32F, GL_NONE), manager, num_samples);
+}
+
 Framebuffer createNewFramebuffer(int width, int height) {
 	GLuint fbo;
 	glGenFramebuffers(1, &fbo);
@@ -65,3 +69,21 @@ Framebuffer createNewFramebuffer(int width, int height) {
 	return Framebuffer(width, height, fbo);
 }
 
+Texture createTexture2DMulti(int width, int height, TextureManager *manager, size_t num_samples) {
+	return createTexture2DMulti(TexInfo(GL_TEXTURE_2D_MULTISAMPLE, { width, height }, 0, GL_NONE, GL_RGBA8, GL_NONE), manager, num_samples);
+}
+
+Texture createTexture2DMulti(TexInfo info, TextureManager *manager, size_t num_samples) {
+	GLuint texID;
+	glGenTextures(1, &texID);
+	glActiveTexture(NO_ACTIVE_TEXTURE);	//Bind to avoid disturbing active units
+	glBindTexture(info.target, texID);
+	glTexParameteri(info.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(info.target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(info.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(info.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glTexImage2DMultisample(info.target, num_samples, info.internalFormat, info.dimensions[0], info.dimensions[1], GL_FALSE);
+
+	return Texture(texID, info, manager);
+}
