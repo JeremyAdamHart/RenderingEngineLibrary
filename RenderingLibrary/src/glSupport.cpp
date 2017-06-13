@@ -112,7 +112,7 @@ GLuint createShader(const string &source, const string &defines, GLenum shaderTy
 		string errorMessage(logSize, ' ');
 		glGetShaderInfoLog(shader, logSize, NULL, &errorMessage[0]);
 
-		cout << source << endl;
+		cout << newSource << endl;
 		cout << "[Errors detected]" << endl << errorMessage.c_str() << endl;
 
 		glDeleteShader(shader);
