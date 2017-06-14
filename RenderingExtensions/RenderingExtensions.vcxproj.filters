@@ -60,6 +60,12 @@
     <ClInclude Include="headers\TrackerCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="headers\AOShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\PosNormalShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ColorMat.cpp">
@@ -99,6 +105,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\TrackerCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AOShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PosNormalShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

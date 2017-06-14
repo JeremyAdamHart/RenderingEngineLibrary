@@ -16,6 +16,8 @@ struct Viewport {
 
 class Framebuffer {
 	map<GLenum, Texture> tex;
+
+	vector<GLenum> drawBuffers;
 public:
 	GLuint id;
 	Viewport vp;

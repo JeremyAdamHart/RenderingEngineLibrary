@@ -122,9 +122,9 @@ void WindowManager::mainLoop() {
 	const int TEX_HEIGHT = 160;
 	Framebuffer fbTex = createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
 	
-	if (fbTex.addTexture(createTexture2D(TEX_WIDTH, TEX_HEIGHT, &tm),
-		GL_COLOR_ATTACHMENT0) &&
-		fbTex.addTexture(createDepthTexture(TEX_WIDTH, TEX_HEIGHT, &tm),
+	if (!fbTex.addTexture(createTexture2D(TEX_WIDTH, TEX_HEIGHT, &tm),
+		GL_COLOR_ATTACHMENT0) ||
+		!fbTex.addTexture(createDepthTexture(TEX_WIDTH, TEX_HEIGHT, &tm),
 			GL_DEPTH_ATTACHMENT)) {
 		std::cout << "FBO creation failed" << endl;
 	}

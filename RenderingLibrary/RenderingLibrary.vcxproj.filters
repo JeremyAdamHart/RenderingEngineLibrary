@@ -62,9 +62,6 @@
     <ClCompile Include="src\Framebuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\glad.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\glmSupport.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -84,6 +81,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\glad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

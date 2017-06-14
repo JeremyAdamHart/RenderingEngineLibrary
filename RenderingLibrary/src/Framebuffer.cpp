@@ -26,6 +26,8 @@ bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 		newTex.getID(),
 		newTex.getLevel());
 
+	printf("Got here\n");
+
 	bool status = true;
 
 	GLenum FBO_STATUS = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -59,6 +61,11 @@ bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 			break;
 		}
 	}
+	if (status) {
+		drawBuffers.push_back(attachment);
+		glDrawBuffers(drawBuffers.size(), &drawBuffers[0]);
+	}
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	return status;
