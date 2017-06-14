@@ -5,13 +5,13 @@
 using namespace glm;
 
 Drawable::Drawable(Material *material, GLGeometryContainer *geometry,
-	glm::vec3 position, glm::quat &orientation) :
+	glm::vec3 position, glm::quat orientation) :
 	Object(position, orientation), 
 	material({ { material->getType(), material } }),
 	geometry(geometry)
 {}
 
-Drawable::Drawable(vec3 position, quat &orientation) :Object(position, orientation),
+Drawable::Drawable(vec3 position, quat orientation) :Object(position, orientation),
 material({}), geometry(nullptr) {}
 
 Material *Drawable::getMaterial(int type) {

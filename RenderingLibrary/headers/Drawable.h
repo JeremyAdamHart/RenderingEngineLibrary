@@ -13,8 +13,8 @@ protected:
 
 public:
 	Drawable(Material *material, GLGeometryContainer *geometry,
-		glm::vec3 position=glm::vec3(0.f), glm::quat &orientation=glm::quat());
-	Drawable(glm::vec3 position = glm::vec3(0.f), glm::quat &orientation = glm::quat());
+		glm::vec3 position=glm::vec3(0.f), glm::quat orientation=glm::quat());
+	Drawable(glm::vec3 position = glm::vec3(0.f), glm::quat orientation = glm::quat());
 
 	bool loadUniforms(int type, GLint *uniformLocations) const;
 

@@ -7,6 +7,7 @@
 #include "MeshInfoLoader.h"
 #include <fstream>
 #include <algorithm>
+#include <cstring>
 
 #pragma warning(disable:4996)
 

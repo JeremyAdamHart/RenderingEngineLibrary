@@ -7,9 +7,13 @@
 
 using namespace glm;
 
+constexpr int cMax (int a, int b){
+	return (a > b) ? a : b;
+}
+
 enum {
 	VP_MATRIX_LOCATION = ShadedMat::COUNT
-		+ std::max(int(TextureMat::COUNT), int(ColorMat::COUNT)),
+		+ cMax(int(TextureMat::COUNT), int(ColorMat::COUNT)),
 	M_MATRIX_LOCATION,
 	CAMERA_POS_LOCATION,
 	LIGHT_POS_LOCATION,

@@ -62,6 +62,9 @@ RenderingLibrary/x64/Debug/*.obj
 RenderingLibrary/x64/Release/*.obj
 RenderingExtensions/x64/Debug/*.obj
 RenderingExtensions/x64/Release/*.obj
+RenderingExtensions/obj/
+RenderingLibrary/obj/
+RenderingEngine/obj/
 *.db
 RenderingEngine.VC.VC.opendb
 *.exe
@@ -72,3 +75,5 @@ RenderingEngine/Debug/RenderingEngine.pch
 Debug/SampleTest.ilk
 *.pch
 *.ipch
+*.a
+*.out
