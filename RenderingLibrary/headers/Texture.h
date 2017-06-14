@@ -36,7 +36,7 @@ public:
 	void newTexture(GLuint texID, TexInfo info);
 	void deleteTexture();
 	void newTexManager(TextureManager *newManager);
-	GLenum getTexUnit() const;
+	int getTexUnit() const;
 
 	//Access info 
 	int getID() const;
@@ -62,5 +62,5 @@ public:
 
 	//Gets texture unit handle is bound to, binding it if necessary
 	//Returns NO_ACTIVE_TEXTURE if failed
-	virtual GLenum requestTexUnit(int handle);
+	virtual int requestTexUnit(int handle);
 };

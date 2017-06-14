@@ -15,7 +15,7 @@ public:
 
 	virtual void removeTexture(int handle);
 	virtual int addTexture(Texture tex);
-	virtual GLenum requestTexUnit(int handle);
+	virtual int requestTexUnit(int handle);
 };
 
 int sizeOfTexture(const Texture &tex);

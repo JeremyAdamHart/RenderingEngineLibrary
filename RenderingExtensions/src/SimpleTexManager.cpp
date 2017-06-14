@@ -24,7 +24,7 @@ int SimpleTexManager::addTexture(Texture tex) {
 }
 
 //Change -> Use a most recent method
-GLenum SimpleTexManager::requestTexUnit(int handle) {
+int SimpleTexManager::requestTexUnit(int handle) {
 	//If already bound
 	for (int i = 0; i < texUnits.size(); i++) {
 		if (texUnits[i] == handle) {
@@ -39,7 +39,7 @@ GLenum SimpleTexManager::requestTexUnit(int handle) {
 
 	texUnits[texUnit] = handle;
 	glActiveTexture(NO_ACTIVE_TEXTURE);
-	return GL_TEXTURE0 + texUnit + 1;	//Because we're ignoring 0
+	return texUnit + 1;	//Because we're ignoring 0
 }
 
 int sizeOfTexture(const Texture &tex) {

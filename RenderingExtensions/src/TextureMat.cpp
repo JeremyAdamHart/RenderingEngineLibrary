@@ -2,12 +2,10 @@
 
 const int TextureMat::id = Material::getNextID();
 
-TextureMat::TextureMat(Texture tex) :tex(tex) {}
+TextureMat::TextureMat(Texture tex, int subtype) :tex(tex), subtype(subtype) {}
 
-int TextureMat::getType() const {return id;}
+int TextureMat::getType() const {return id | subtype;}
 
 void TextureMat::loadUniforms(GLint *locations) const {
-//	GLenum unit = tex.getTexUnit();
-//	int unitNum = unit - GL_TEXTURE0;
-	glUniform1i(locations[TEXTURE_LOCATION], tex.getTexUnit()-GL_TEXTURE0);
+	glUniform1i(locations[TEXTURE_LOCATION], tex.getTexUnit());
 }

@@ -18,6 +18,9 @@ using namespace std;
 #include "ShadedMat.h"
 #include "TorranceSparrowShader.h"
 #include "Framebuffer.h"
+//Ambient occlusion
+#include "AOShader.h"
+#include "PosNormalShader.h"
 
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -103,9 +106,20 @@ void WindowManager::mainLoop() {
 	};
 	SimpleTexManager tm;
 
+	//AO framebuffer
+	Framebuffer pnFbo = createNewFramebuffer(window_width, window_height);
+	pnFbo.addTexture(createTexture2D(
+		TexInfo(GL_TEXTURE_2D, {window_width, window_height}, 0, GL_RGB, GL_RGB32F, GL_FLOAT), &tm), 
+		GL_COLOR_ATTACHMENT0);
+
+	pnFbo.addTexture(createTexture2D(
+		TexInfo(GL_TEXTURE_2D, {window_width, window_height}, 0, GL_RGB, GL_RGB32F, GL_FLOAT), &tm), 
+		GL_COLOR_ATTACHMENT1);
+	pnFbo.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT);
+
 	Framebuffer fbWindow (window_width, window_height);
-	const int TEX_WIDTH = 800;
-	const int TEX_HEIGHT = 800;
+	const int TEX_WIDTH = 160;
+	const int TEX_HEIGHT = 160;
 	Framebuffer fbTex = createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
 	
 	if (fbTex.addTexture(createTexture2D(TEX_WIDTH, TEX_HEIGHT, &tm),
@@ -122,7 +136,6 @@ void WindowManager::mainLoop() {
 		&dragonGeom);
 	dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
 
-	Texture dogTexture = createTexture2D("textures/dog.png", &tm);
 	Texture cobbleTexture = createTexture2D("textures/cobble.jpg", &tm);
 
 	Drawable square(
@@ -131,8 +144,10 @@ void WindowManager::mainLoop() {
 
 	Drawable texSquare(
 		new TextureMat(fbTex.getTexture(GL_COLOR_ATTACHMENT0)),
-//		new TextureMat(dogTexture),
 		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
+
+	texSquare.addMaterial(new TextureMat(pnFbo.getTexture(GL_COLOR_ATTACHMENT0), TextureMat::POSITION));
+	texSquare.addMaterial(new TextureMat(pnFbo.getTexture(GL_COLOR_ATTACHMENT1), TextureMat::NORMAL));
 
 	SimpleTexShader texShader;
 	SimpleShader shader;
@@ -144,27 +159,29 @@ void WindowManager::mainLoop() {
 
 	fbWindow.use();
 
+	PosNormalShader pnShader;
+	AOShader aoShader;
+
+	Camera simpleCam;
+
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-//		shader.draw(cam, square);
-		texShader.draw(cam, texSquare);
-//		tsShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
+		//texShader.draw(cam, texSquare);
 
-/*		fbTex.use();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		tsShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
-
+		//Render dragon with Ambient Occlusion
+		pnFbo.use();
+		pnShader.draw(cam, vec3(0, 0, 0), dragon);
 		fbWindow.use();
-*/
+		aoShader.draw(simpleCam, vec3(0), texSquare);
+
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
 	}
 
 	delete square.getMaterial(ColorMat::id);
 	delete square.getGeometryPtr();
-//	dogTexture.deleteTexture();
 
 	delete texSquare.getMaterial(TextureMat::id);
 	delete texSquare.getGeometryPtr();

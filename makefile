@@ -1,7 +1,7 @@
 CC=g++
 
 
-CFLAGS=-c -std=c++11 -O3 -Wall
+CFLAGS=-c -std=c++11 -O3 -Wall -g
 LINKFLAGS=-O3
 
 #debug = true
