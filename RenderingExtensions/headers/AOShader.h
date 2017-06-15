@@ -14,7 +14,8 @@ protected:
 	vector<int> uniformLocations;
 
 	void calculateUniformLocations();
-	void loadUniforms(glm::vec3 camera_pos, glm::vec3 light_pos);
+	void loadUniforms(glm::vec3 camera_pos, glm::vec3 cam_right, 
+		glm::vec3 cam_up, glm::vec3 light_pos);
 public:
 	AOShader(map<GLenum, string> defines = {});
 

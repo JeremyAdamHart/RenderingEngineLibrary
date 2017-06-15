@@ -171,13 +171,13 @@ void WindowManager::mainLoop() {
 
 		//Render dragon with Ambient Occlusion
 		pnFbo.use();
-		glClearColor(0.f, 0.f, 1000000.f, 1.f);
+		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		pnShader.draw(cam, vec3(0, 0, 0), dragon);
 		fbWindow.use();
 		glClearColor(1.f, 1.f, 1.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		aoShader.draw(simpleCam, vec3(0), texSquare);
+		aoShader.draw(cam, vec3(10.f, 10.f, 10.f), texSquare);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
