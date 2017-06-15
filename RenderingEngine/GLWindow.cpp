@@ -85,13 +85,13 @@ void WindowManager::mainLoop() {
 
 	vec3 points [6] = {
 		//First triangle
-		vec3(-0.5f, 0.5f, 0.f),
-		vec3(0.5f, 0.5f, 0.f),
-		vec3(0.5f, -0.5f, 0.f),
+		vec3(-0.5f, 0.5f, 0.f)*2.f,
+		vec3(0.5f, 0.5f, 0.f)*2.f,
+		vec3(0.5f, -0.5f, 0.f)*2.f,
 		//Second triangle
-		vec3(0.5f, -0.5f, 0.f),
-		vec3(-0.5f, -0.5f, 0.f),
-		vec3(-0.5f, 0.5f, 0.f)
+		vec3(0.5f, -0.5f, 0.f)*2.f,
+		vec3(-0.5f, -0.5f, 0.f)*2.f,
+		vec3(-0.5f, 0.5f, 0.f)*2.f
 	};
 
 	vec2 coords[6] = {
@@ -166,14 +166,17 @@ void WindowManager::mainLoop() {
 
 
 	while (!glfwWindowShouldClose(window)) {
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//texShader.draw(cam, texSquare);
 
 		//Render dragon with Ambient Occlusion
 		pnFbo.use();
+		glClearColor(0.f, 0.f, 1000000.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		pnShader.draw(cam, vec3(0, 0, 0), dragon);
 		fbWindow.use();
+		glClearColor(1.f, 1.f, 1.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		aoShader.draw(simpleCam, vec3(0), texSquare);
 
 		glfwSwapBuffers(window);

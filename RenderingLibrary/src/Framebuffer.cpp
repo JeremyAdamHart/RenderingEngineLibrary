@@ -26,8 +26,6 @@ bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 		newTex.getID(),
 		newTex.getLevel());
 
-	printf("Got here\n");
-
 	bool status = true;
 
 	GLenum FBO_STATUS = glCheckFramebufferStatus(GL_FRAMEBUFFER);

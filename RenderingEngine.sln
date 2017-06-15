@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RenderingEngine", "RenderingEngine\RenderingEngine.vcxproj", "{6BD6244C-0029-47EB-BC11-206AD99C195D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SampleTest", "RenderingEngine\RenderingEngine.vcxproj", "{6BD6244C-0029-47EB-BC11-206AD99C195D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D8A87B4E-295A-40B5-947F-C2DBF66AA3B5} = {D8A87B4E-295A-40B5-947F-C2DBF66AA3B5}
+		{3BA32DD1-C276-4EAC-A668-B04B443321B6} = {3BA32DD1-C276-4EAC-A668-B04B443321B6}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RenderingCore", "RenderingLibrary\RenderingLibrary.vcxproj", "{3BA32DD1-C276-4EAC-A668-B04B443321B6}"
 EndProject

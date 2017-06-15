@@ -77,3 +77,5 @@ Debug/SampleTest.ilk
 *.ipch
 *.a
 *.out
+*.opensdf
+RenderingEngine.sdf
