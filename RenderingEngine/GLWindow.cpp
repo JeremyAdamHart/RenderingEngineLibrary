@@ -136,12 +136,6 @@ void WindowManager::mainLoop() {
 		&dragonGeom);
 	dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
 
-	Texture cobbleTexture = createTexture2D("textures/cobble.jpg", &tm);
-
-	Drawable square(
-		new ColorMat(vec3(0.f, 0.f, 1.f)),
-		new SimpleGeometry(points, 6, GL_TRIANGLES));
-
 	Drawable texSquare(
 		new TextureMat(fbTex.getTexture(GL_COLOR_ATTACHMENT0)),
 		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
@@ -162,9 +156,6 @@ void WindowManager::mainLoop() {
 	PosNormalShader pnShader;
 	AOShader aoShader;
 
-	Camera simpleCam;
-
-
 	while (!glfwWindowShouldClose(window)) {
 
 		//texShader.draw(cam, texSquare);
@@ -179,12 +170,12 @@ void WindowManager::mainLoop() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		aoShader.draw(cam, vec3(10.f, 10.f, 10.f), texSquare);
 
+//		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//		tsShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
+
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
 	}
-
-	delete square.getMaterial(ColorMat::id);
-	delete square.getGeometryPtr();
 
 	delete texSquare.getMaterial(TextureMat::id);
 	delete texSquare.getGeometryPtr();

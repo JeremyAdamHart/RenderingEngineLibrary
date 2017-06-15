@@ -15,16 +15,17 @@ uniform sampler2D normalTex;
 
 uniform vec3 lightPos;
 
-const float MAX_DIST = 0.05;
-const int NUM_SAMPLES = 5;
+const float MAX_DIST = 0.2;
+const int NUM_SAMPLES = 10;
 const float SAMPLE_STEP = MAX_DIST/float(NUM_SAMPLES-1);
 const int NUM_DIRECTIONS = 16;
 const float ROT_ANGLE = (2.0*M_PI)/float(NUM_DIRECTIONS);
+const float THRESHOLD = 0.1;
 
-const float ks = 0.4;
-const float kd = 0.2;
-const float ka = 0.4;
-const float alpha = 50.0;
+const float ks = 0.0;
+const float kd = 0.0;
+const float ka = 0.9;
+const float alpha = 10.0;
 
 vec3 getTangentOfNormal(vec3 normal, vec3 direction){
 	vec3 n_proj_d = dot(normal, direction)/dot(direction, direction)*direction;
@@ -42,7 +43,7 @@ float rand(vec2 co){
 
 float calculateAmbientOcclusion(vec3 position, vec3 normal, vec2 texDir){
 	vec3 direction = normalize(cam_right*texDir.x + cam_up*texDir.y);
-	vec3 tangent = getTangentOfNormal(normal, direction);
+//	vec3 tangent = getTangentOfNormal(normal, direction);
 
 	vec2 texPos = FragmentTexCoord;
 	float maxOcclusion = 0.0;
@@ -55,9 +56,9 @@ float calculateAmbientOcclusion(vec3 position, vec3 normal, vec2 texDir){
 		if(length(samplePos - vec3(0, 0, 0)) > 0.00001){
 			vec3 sampleDir = normalize(samplePos - position);
 			if(dot(sampleDir, normal) > 0.0){
-				float cos_theta = dot(sampleDir, tangent);
+//				float cos_theta = dot(sampleDir, tangent);
 				float r = length(samplePos - position)/MAX_DIST;
-				float occlusion = dot(sampleDir, normal)*(1.0-r*r);	//*1.0/length(samplePos - position); 	//1.0 - cos_theta*cos_theta;
+				float occlusion = max(dot(sampleDir, normal)-THRESHOLD, 0.0)*(1.0-r*r);	//*1.0/length(samplePos - position); 	//1.0 - cos_theta*cos_theta;
 				if(occlusion > maxOcclusion)
 					maxOcclusion = occlusion;
 			}
@@ -88,9 +89,10 @@ float torranceSparrowLighting(vec3 normal, vec3 position, vec3 viewPosition)
 {
 	vec3 viewer = normalize(viewPosition - position);
 	vec3 light = normalize(lightPos - position);
+
 	vec3 h = normalize(viewer + light);
 
-	return ks*(alpha+2.0)*(0.5/M_PI) * clamp(pow(dot(normal, h), alpha), 0.0, 1.0)
+	return ks*(alpha+2.0)*(0.5/M_PI) * pow(clamp(dot(normal, h), 0.0, 1.0), alpha)
 			+ kd*clamp(dot(normal, light), 0.0, 1.0);
 }
 
