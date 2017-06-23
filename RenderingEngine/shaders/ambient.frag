@@ -16,15 +16,15 @@ uniform sampler2D normalTex;
 uniform vec3 lightPos;
 
 const float MAX_DIST = 0.2;
-const int NUM_SAMPLES = 10;
+const int NUM_SAMPLES = 20;
 const float SAMPLE_STEP = MAX_DIST/float(NUM_SAMPLES-1);
-const int NUM_DIRECTIONS = 16;
+const int NUM_DIRECTIONS = 32;
 const float ROT_ANGLE = (2.0*M_PI)/float(NUM_DIRECTIONS);
 const float THRESHOLD = 0.1;
 
-const float ks = 0.0;
-const float kd = 0.0;
-const float ka = 0.9;
+const float ks = 0.2;
+const float kd = 0.2;
+const float ka = 0.6;
 const float alpha = 10.0;
 
 vec3 getTangentOfNormal(vec3 normal, vec3 direction){
@@ -96,6 +96,17 @@ float torranceSparrowLighting(vec3 normal, vec3 position, vec3 viewPosition)
 			+ kd*clamp(dot(normal, light), 0.0, 1.0);
 }
 
+float phongLighting(vec3 normal, vec3 position, vec3 viewPosition)
+{
+	vec3 viewer = normalize(viewPosition - position);
+	vec3 light = normalize(lightPos - position);
+
+	vec3 r = normalize(2.0*dot(light, normal)*normal - light);
+
+	return ks*pow(clamp(dot(normal, r), 0.0, 1.0), alpha)
+			+ kd*clamp(dot(normal, light), 0.0, 1.0);
+}
+
 void main(void)
 {
 	//PixelColour = vec4(normalize(texture(normalTex, FragmentTexCoord).rgb), 1);
@@ -106,7 +117,7 @@ void main(void)
 		PixelColour = vec4(0, 0, 0, 1);
 	else{
 		vec3 normal = normalize(texture(normalTex, FragmentTexCoord).rgb);
-		float lighting = torranceSparrowLighting(normal, position, camera_position);
+		float lighting = phongLighting(normal, position, camera_position);
 		PixelColour = vec4(vec3(1, 1, 1)*((1-ambientOcclusion)*ka + lighting), 1);
 	}
 

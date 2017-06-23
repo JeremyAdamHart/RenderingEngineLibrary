@@ -178,8 +178,12 @@
     <ClInclude Include="headers\TorranceSparrowShader.h" />
     <ClInclude Include="headers\TrackballCamera.h" />
     <ClInclude Include="headers\TrackerCamera.h" />
+    <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="ProcessingShader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="ProcessingShader.cpp" />
     <ClCompile Include="src\AOShader.cpp" />
     <ClCompile Include="src\ColorMat.cpp" />
     <ClCompile Include="src\ElementGeometry.cpp" />
