@@ -146,6 +146,14 @@ struct MatInfo {
 	MatInfo() :ka(), kd(), ks(), ns(), texture() {}
 };
 
+struct Vertex {
+	vec3 position;
+	vec3 normal;
+	vec2 texcoord;
+	Vertex(vec3 position, vec3 normal, vec2 texcoord) :
+		position(position), normal(normal), texcoord(texcoord) {}
+};
+
 //Assumes triangulated mesh
 bool loadWavefront(std::string directory, std::string filename, std::vector<Drawable> *drawables, TextureManager *manager) {
 	FILE *f = fopen((directory+filename+".obj").c_str(), "r");
@@ -176,6 +184,9 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 
 	char text[256];
 	int fIndex = 0;
+
+	//Debugging
+	vector<Vertex> originalVertices;
 
 	while(success && fscanf(f, "%s", text) != EOF){
 		//Vertex positions
@@ -241,6 +252,13 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 				rawNFaces[fIndex].push_back(n2 - 1);
 				rawNFaces[fIndex].push_back(n3 - 1);
 			}
+
+			originalVertices.push_back(
+				Vertex(rawVertices[v1-1], rawNormals[n1-1], rawTexCoords[u1-1]));
+			originalVertices.push_back(
+				Vertex(rawVertices[v2-1], rawNormals[n2-1], rawTexCoords[u2-1]));
+			originalVertices.push_back(
+				Vertex(rawVertices[v3-1], rawNormals[n3-1], rawTexCoords[u3-1]));
 		}
 		//Use material - @TODO Modify to split up objects made of same material?
 		else if (strcmp(text, "usemtl") == 0) {
@@ -326,6 +344,9 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 
 	map<string, Texture> textures;
 
+	//Debugging
+	vector<Vertex> newVertices;
+
 	//Split into drawables
 	for (auto it = materialMap.begin(); it != materialMap.end(); it++) {
 		int mat = it->second;
@@ -380,12 +401,19 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 				object.vertices, object.normals, object.texCoords, object.faces);
 		}
 		//Add other cases
+
+		float ka = length(materials[mat].ka);
+		float kd = length(materials[mat].kd);
+		float ks = length(materials[mat].ks);
+		float sum = max(ka + kd + ks, 1.f);
+		ka /= sum;
+		kd /= sum;
+		ks /= sum;
+
 		drawables->push_back(Drawable(
 			new ShadedMat(
-				length(materials[mat].ka),
-				length(materials[mat].kd),
-				length(materials[mat].kd),
-				materials[mat].ns),
+				ka, kd, ks,
+				max(materials[mat].ns*50.f, 1.f)),
 			new ElementGeometry(
 				&object.vertices[0],
 				&object.normals[0],
@@ -410,7 +438,31 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 		else {
 			drawables->back().addMaterial(new ColorMat(normalize(materials[mat].kd)));
 		}
+
+		//Debugging
+		for (int i = 0; i < object.faces.size(); i++) {
+			newVertices.push_back(Vertex(
+				object.vertices[object.faces[i]],
+				object.normals[object.faces[i]],
+				object.texCoords[object.faces[i]]));
+		}
 	}
+
+	/*for (int i = 0; i < newVertices.size(); i++) {
+		if (newVertices[i].position != originalVertices[i].position)
+			printf("Position error (%f %f %f) -> (%f %f %f)\n",
+				originalVertices[i].position.x, originalVertices[i].position.y, originalVertices[i].position.z,
+				newVertices[i].position.x, newVertices[i].position.y, newVertices[i].position.z);
+		if(newVertices[i].normal != newVertices[i].normal)
+			printf("Normal error (%f %f %f) -> (%f %f %f)\n",
+				originalVertices[i].normal.x, originalVertices[i].normal.y, originalVertices[i].normal.z,
+				newVertices[i].normal.x, newVertices[i].normal.y, newVertices[i].normal.z);
+
+		if (newVertices[i].texcoord != newVertices[i].texcoord)
+			printf("texcoord error (%f %f) -> (%f %f)\n",
+				originalVertices[i].texcoord.x, originalVertices[i].texcoord.y,
+				newVertices[i].texcoord.x, newVertices[i].texcoord.y);
+	}*/
 
 	return true;
 }

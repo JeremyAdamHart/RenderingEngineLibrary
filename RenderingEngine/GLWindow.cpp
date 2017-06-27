@@ -161,10 +161,18 @@ void WindowManager::mainLoop() {
 	AOShader aoShader;
 
 	vector<Drawable> drawables;
-//	loadWavefront("models/SciFiCenter/CenterCity/", "Center_City_Sci-Fi", &drawables, &tm);
-	loadWavefront("models/OrganodronCity2/", "OrganodronCity", &drawables, &tm);
+//	loadWavefront("untrackedmodels/SciFiCenter/CenterCity/", "Center_City_Sci-Fi", &drawables, &tm);
+	loadWavefront("untrackedmodels/OrganodronCity2/", "OrganodronCity", &drawables, &tm);
+
+	Drawable debugSquare(
+		new TextureMat(dynamic_cast<TextureMat*>(drawables[2].getMaterial(TextureMat::id))->tex),
+		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
 
 	vec3 lightPos(10.f, 10.f, 10.f);
+
+	for (int i = 0; i < drawables.size(); i++) {
+		drawables[i].setScale(vec3(0.5f));
+	}
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -188,6 +196,9 @@ void WindowManager::mainLoop() {
 			else
 				tsShader.draw(cam, lightPos, drawables[i]);
 		}
+		//texShader.draw(cam, debugSquare);
+
+		
 
 //		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //		tsShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);

@@ -10,9 +10,13 @@ Texture createTexture2D(string filename, TextureManager *manager) {
 	int width, height, comp;
 	unsigned char *image = stbi_load(filename.c_str(), 
 		&width, &height, &comp, 0);
+
+	//Calculate alignment
+	int alignment = 4 - (width * comp) % 4;
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	
 	if ((image == nullptr) || (comp > 4)) {
-		cout << "Texture invalid" << endl;
+		cout << "Texture invalid - " << filename.c_str() << endl;
 		return Texture();
 	}
 
@@ -24,6 +28,8 @@ Texture createTexture2D(string filename, TextureManager *manager) {
 	Texture tex = createTexture2D(info, manager, image);
 	stbi_image_free(image);
 	
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);		//Return to default
+
 	return tex;
 }
 
@@ -42,6 +48,7 @@ Texture createTexture2D(TexInfo info, TextureManager *manager,
 	glGenTextures(1, &texID);
 	glActiveTexture(NO_ACTIVE_TEXTURE);	//Bind to avoid disturbing active units
 	glBindTexture(GL_TEXTURE_2D, texID);
+//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

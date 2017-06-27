@@ -28,13 +28,13 @@ int SimpleTexManager::requestTexUnit(int handle) {
 	//If already bound
 	for (int i = 0; i < texUnits.size(); i++) {
 		if (texUnits[i] == handle) {
-			return GL_TEXTURE0 + i + 1;
+			return i + 1;
 		}
 	}
 
 	int texUnit = nextUnit;
 	nextUnit = ++nextUnit % texUnits.size();
-	glActiveTexture(GL_TEXTURE0 + texUnit + 1);
+	glActiveTexture(GL_TEXTURE1 + texUnit);
 	glBindTexture(textures[handle].getTarget(), textures[handle].getID());
 
 	texUnits[texUnit] = handle;

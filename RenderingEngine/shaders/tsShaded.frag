@@ -36,13 +36,15 @@ float torranceSparrowLighting(vec3 normal, vec3 position, vec3 viewPosition)
 void main(void)
 {
 	#ifdef USING_TEXTURE
-		vec3 baseColor = texture(colorTexture, FragmentTexCoord).rgb;
+		vec3 baseColor = texture(colorTexture, vec2(FragmentTexCoord.x, FragmentTexCoord.y)).rgb;
+	//	baseColor = vec3(0.0, 1-FragmentTexCoord.y, 0.0);
 	#else
 		vec3 baseColor = color;
 	#endif
 
  	vec3 color = torranceSparrowLighting(normalize(FragmentNormal), ModelPosition, camera_position)
  	*baseColor;
+ 	color = FragmentNormal;
 
  	PixelColour = vec4(color, 1);
 }
