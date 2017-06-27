@@ -65,6 +65,7 @@ RenderingExtensions/x64/Release/*.obj
 RenderingExtensions/obj/
 RenderingLibrary/obj/
 RenderingEngine/obj/
+RenderingEngine/untrackedmodels/
 *.db
 RenderingEngine.VC.VC.opendb
 *.exe

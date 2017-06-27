@@ -66,10 +66,10 @@
     <ClInclude Include="headers\PosNormalShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ProcessingShader.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="headers\ModelLoader.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ModelLoader.h">
+    <ClInclude Include="headers\ProcessingShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -119,10 +119,10 @@
     <ClCompile Include="src\PosNormalShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ProcessingShader.cpp">
+    <ClCompile Include="src\ModelLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ModelLoader.cpp">
+    <ClCompile Include="src\ProcessingShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

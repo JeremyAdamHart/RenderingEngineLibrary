@@ -4,14 +4,16 @@
 
 #include "ElementGeometry.h"
 #include "TextureMat.h"
+#include "ColorMat.h"
 #include "ShadedMat.h"
+#include "TextureCreation.h"
 
 #include <fstream>
 #include <map>
 #include <iterator>
 
 //Last three arguments are return values
-void sharedIndices(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, vector<vec3> &_normals,
+void sharedIndices2(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, vector<vec3> &_normals,
 	vector<vec3> &vertices, vector<vec3> &normals, vector<unsigned int> &faces)
 {
 
@@ -41,7 +43,7 @@ void sharedIndices(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, 
 }
 
 //Vertices not modified
-void sharedIndices(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, vector<unsigned int>& _tFaces, vector<vec3>& _normals, vector<vec2>& _uvs,
+void sharedIndices2(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, vector<unsigned int>& _tFaces, vector<vec3>& _normals, vector<vec2>& _uvs,
 	//Returned values
 	vector<vec3> &vertices, vector<vec3> &normals, vector<vec2>& uvs, vector<unsigned int> &faces)
 {
@@ -145,13 +147,15 @@ struct MatInfo {
 };
 
 //Assumes triangulated mesh
-bool loadWavefront(std::string filename, std::vector<Drawable> *drawables) {
-	FILE *f = fopen(filename.c_str(), "r");
+bool loadWavefront(std::string directory, std::string filename, std::vector<Drawable> *drawables, TextureManager *manager) {
+	FILE *f = fopen((directory+filename+".obj").c_str(), "r");
 	if (!f)
 	{
-		printf("%s does not exist\n", (filename+".obj").c_str());
+		printf("%s does not exist\n", (directory + filename + ".obj").c_str());
 		return false;
 	}
+	else
+		printf("Loading %s\n", (directory + filename + ".obj").c_str());
 
 	//String is material name, int is index
 	map<string, int> materialMap;	
@@ -239,12 +243,17 @@ bool loadWavefront(std::string filename, std::vector<Drawable> *drawables) {
 			}
 		}
 		//Use material - @TODO Modify to split up objects made of same material?
-		else if (strcmp(text, "usemtl")) {
+		else if (strcmp(text, "usemtl") == 0) {
 			char temp[250];
 			fscanf(f, "%s", temp);
 			if (materialMap.find(string(temp)) == materialMap.end()) {
 				materialMap[string(temp)] = materialMap.size();
 				fIndex = materialMap.size() - 1;
+				if(materialMap.size() > rawVFaces.size()){
+					rawVFaces.push_back({});
+					rawNFaces.push_back({});
+					rawTFaces.push_back({});
+				}
 			}
 			else 
 				fIndex = materialMap[string(temp)];
@@ -254,11 +263,13 @@ bool loadWavefront(std::string filename, std::vector<Drawable> *drawables) {
 	fclose(f);
 
 	//Read material file
-	f = fopen((filename + ".mtl").c_str(), "r");
+	f = fopen((directory+filename + ".mtl").c_str(), "r");
 
 	if (f == nullptr) {
 		printf("No Material file found\n");
 	}
+	else
+		printf("Loading %s\n", (directory + filename + ".mtl").c_str());
 
 	vector<MatInfo> materials(rawVFaces.size());
 
@@ -285,7 +296,7 @@ bool loadWavefront(std::string filename, std::vector<Drawable> *drawables) {
 				}
 			}
 			if (strcmp(text, "Kd") == 0 && currentMtl >= 0) {
-				vec3 &kd = materials[currentMtl].ka;
+				vec3 &kd = materials[currentMtl].kd;
 				if (fscanf(f, "%f %f %f", &kd.x, &kd.y, &kd.z) != 3) {
 					printf("Error reading Kd\n");
 				}
@@ -303,7 +314,7 @@ bool loadWavefront(std::string filename, std::vector<Drawable> *drawables) {
 			}
 			if (strcmp(text, "map_Kd") == 0 && currentMtl >= 0) {
 				char temp[256];
-				if (fscanf(f, "%s", temp) == 0)
+				if (fscanf(f, "%s", temp) == 1)
 					materials[currentMtl].texture = temp;
 				else
 					printf("Error reading map_Kd\n");
@@ -311,6 +322,9 @@ bool loadWavefront(std::string filename, std::vector<Drawable> *drawables) {
 		}
 	}
 
+	fclose(f);
+
+	map<string, Texture> textures;
 
 	//Split into drawables
 	for (auto it = materialMap.begin(); it != materialMap.end(); it++) {
@@ -362,15 +376,40 @@ bool loadWavefront(std::string filename, std::vector<Drawable> *drawables) {
 		object.vertices = verts;
 		
 		if (vFaces.size() != 0 && tFaces.size() != 0) {
-			sharedIndices(vFaces, nFaces, tFaces, normals, texCoords,
+			sharedIndices2(vFaces, nFaces, tFaces, normals, texCoords,
 				object.vertices, object.normals, object.texCoords, object.faces);
 		}
 		//Add other cases
+		drawables->push_back(Drawable(
+			new ShadedMat(
+				length(materials[mat].ka),
+				length(materials[mat].kd),
+				length(materials[mat].kd),
+				materials[mat].ns),
+			new ElementGeometry(
+				&object.vertices[0],
+				&object.normals[0],
+				&object.texCoords[0],
+				&object.faces[0],
+				object.vertices.size(),
+				object.faces.size())
+		));
 
+		if (materials[mat].texture.length() > 0) {
+			auto texIt = textures.find(materials[mat].texture);
+			Texture tex;
+			if (texIt == textures.end()) {
+				tex = createTexture2D((directory + materials[mat].texture).c_str(), manager);
+				textures[materials[mat].texture] = tex;
+			}
+			else
+				tex = texIt->second;
 
-
-
-
+			drawables->back().addMaterial(new TextureMat(tex));
+		}
+		else {
+			drawables->back().addMaterial(new ColorMat(normalize(materials[mat].kd)));
+		}
 	}
 
 	return true;

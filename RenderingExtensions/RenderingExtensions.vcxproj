@@ -79,6 +79,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)RenderingLibrary/headers;$(ProjectDir)headers;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -87,7 +88,7 @@
       <AdditionalDependencies>RenderingCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)Debug;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -99,6 +100,7 @@
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)RenderingLibrary/headers;$(ProjectDir)headers;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,7 +109,7 @@
       <AdditionalDependencies>RenderingCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)Debug;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -131,7 +133,7 @@
       <AdditionalDependencies>RenderingCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)Debug;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -155,7 +157,7 @@
       <AdditionalDependencies>RenderingCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)Debug;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -167,7 +169,9 @@
     <ClInclude Include="headers\ElementGeometry.h" />
     <ClInclude Include="headers\Light.h" />
     <ClInclude Include="headers\MeshInfoLoader.h" />
+    <ClInclude Include="headers\ModelLoader.h" />
     <ClInclude Include="headers\PosNormalShader.h" />
+    <ClInclude Include="headers\ProcessingShader.h" />
     <ClInclude Include="headers\ShadedMat.h" />
     <ClInclude Include="headers\SimpleGeometry.h" />
     <ClInclude Include="headers\SimpleShader.h" />
@@ -178,17 +182,15 @@
     <ClInclude Include="headers\TorranceSparrowShader.h" />
     <ClInclude Include="headers\TrackballCamera.h" />
     <ClInclude Include="headers\TrackerCamera.h" />
-    <ClInclude Include="ModelLoader.h" />
-    <ClInclude Include="ProcessingShader.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ModelLoader.cpp" />
-    <ClCompile Include="ProcessingShader.cpp" />
     <ClCompile Include="src\AOShader.cpp" />
     <ClCompile Include="src\ColorMat.cpp" />
     <ClCompile Include="src\ElementGeometry.cpp" />
     <ClCompile Include="src\MeshInfoLoader.cpp" />
+    <ClCompile Include="src\ModelLoader.cpp" />
     <ClCompile Include="src\PosNormalShader.cpp" />
+    <ClCompile Include="src\ProcessingShader.cpp" />
     <ClCompile Include="src\ShadedMat.cpp" />
     <ClCompile Include="src\SimpleGeometry.cpp" />
     <ClCompile Include="src\SimpleShader.cpp" />

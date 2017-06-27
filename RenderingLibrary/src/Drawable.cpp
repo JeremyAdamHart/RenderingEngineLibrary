@@ -8,15 +8,16 @@ Drawable::Drawable(Material *material, GLGeometryContainer *geometry,
 	glm::vec3 position, glm::quat orientation) :
 	Object(position, orientation), 
 	material({ { material->getType(), material } }),
-	geometry(geometry)
+	geometry(geometry),
+	scale(1.f)
 {}
 
 Drawable::Drawable(GLGeometryContainer *geometry, glm::vec3 position, glm::quat orientation) :
-	Object(position, orientation), material({}), geometry(geometry)
+	Object(position, orientation), material({}), geometry(geometry), scale(1.f)
 {}
 
 Drawable::Drawable(vec3 position, quat orientation) :Object(position, orientation),
-material({}), geometry(nullptr) {}
+material({}), geometry(nullptr), scale(1.f) {}
 
 Material *Drawable::getMaterial(int type) {
 	try {
@@ -57,6 +58,15 @@ void Drawable::deleteMaterialsAndGeometry() {
 	delete geometry;
 }
 
+mat4 Drawable::getTransform() const {
+	return Object::getTransform()*
+		mat4({ scale.x, 0, 0, 0,
+				0, scale.y, 0, 0,
+				0, 0, scale.z, 0,
+				0, 0, 0, 1 });
+}
+
 void Drawable::setPosition(glm::vec3 newPosition) { position = newPosition;}
 
 void Drawable::setOrientation(glm::quat newOrientation) { orientation = newOrientation; }
+void Drawable::setScale(glm::vec3 newScale) { scale = newScale; }

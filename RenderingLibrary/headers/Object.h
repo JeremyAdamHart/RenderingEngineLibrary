@@ -13,6 +13,6 @@ protected:
 public:
 	glm::quat getOrientationQuat() const;
 	glm::mat4 getOrientationMat4() const;
-	glm::mat4 getTransform() const;
+	virtual glm::mat4 getTransform() const;
 	glm::vec3 getPos() const;
 };
