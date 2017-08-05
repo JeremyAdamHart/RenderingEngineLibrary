@@ -47,13 +47,13 @@ ENGINE_OBJS=$(addprefix $(ENGINE_DIR)/obj/,$(notdir $(ENGINE_SOURCES:.cpp=.o)))
 
 all: librenderingcore.a librenderingextensions.a $(ENGINE_DIR)/renderingengine.out 
 
-$(CORE_DIR)/obj/%.o: $(CORE_DIR)/src/%.cpp
+$(CORE_DIR)/obj/%.o: $(CORE_DIR)/src/%.cpp $(CORE_DIR)/obj 
 	$(CC) -c $(CFLAGS) $(CORE_HEADERS) $(INCDIR) $< -o $@
 
-$(EXTENSION_DIR)/obj/%.o: $(EXTENSION_DIR)/src/%.cpp 
+$(EXTENSION_DIR)/obj/%.o: $(EXTENSION_DIR)/src/%.cpp $(EXTENSION_DIR)/obj
 	$(CC) -c $(CFLAGS) $(EXTENSION_HEADERS) $(INCDIR) $< -o $@
 
-$(ENGINE_DIR)/obj/%.o: $(ENGINE_DIR)/%.cpp
+$(ENGINE_DIR)/obj/%.o: $(ENGINE_DIR)/%.cpp $(ENGINE_DIR)/obj
 	$(CC) -c $(CFLAGS) $(ENGINE_HEADERS) $(INCDIR) $< -o $@
 
 librenderingcore.a: $(CORE_OBJS)
@@ -64,6 +64,13 @@ librenderingextensions.a: $(EXTENSION_OBJS)
 
 $(ENGINE_DIR)/renderingengine.out: librenderingextensions.a $(ENGINE_OBJS)
 	$(CC) $(LINK_FLAGS) $(ENGINE_OBJS) -o $@ -L. -lrenderingextensions -lrenderingcore $(LIBS)
+
+$(CORE_DIR)/obj:
+	mkdir $(CORE_DIR)/obj
+$(EXTENSION_DIR)/obj:
+	mkdir $(EXTENSION_DIR)/obj
+$(ENGINE_DIR)/obj:
+	mkdir $(ENGINE_DIR)/obj
 
 clean:
 	rm *.a $(ENGINE_DIR)/*.out $(CORE_DIR)/obj/*.o $(EXTENSION_DIR)/obj/*.o $(ENGINE_DIR)/obj/*.o

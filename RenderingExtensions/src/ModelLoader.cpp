@@ -11,6 +11,7 @@
 #include <fstream>
 #include <map>
 #include <iterator>
+#include <cstring>
 
 //Last three arguments are return values
 void sharedIndices2(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, vector<vec3> &_normals,
@@ -405,7 +406,7 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 		float ka = length(materials[mat].ka);
 		float kd = length(materials[mat].kd);
 		float ks = length(materials[mat].ks);
-		float sum = max(ka + kd + ks, 1.f);
+		float sum = std::max(ka + kd + ks, 1.f);
 		ka /= sum;
 		kd /= sum;
 		ks /= sum;
@@ -413,7 +414,7 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 		drawables->push_back(Drawable(
 			new ShadedMat(
 				ka, kd, ks,
-				max(materials[mat].ns*50.f, 1.f)),
+				std::max(materials[mat].ns*50.f, 1.f)),
 			new ElementGeometry(
 				&object.vertices[0],
 				&object.normals[0],

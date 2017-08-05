@@ -162,12 +162,12 @@ void WindowManager::mainLoop() {
 
 	vector<Drawable> drawables;
 //	loadWavefront("untrackedmodels/SciFiCenter/CenterCity/", "Center_City_Sci-Fi", &drawables, &tm);
-	loadWavefront("untrackedmodels/OrganodronCity2/", "OrganodronCity", &drawables, &tm);
+//	loadWavefront("untrackedmodels/OrganodronCity2/", "OrganodronCity", &drawables, &tm);
 
-	Drawable debugSquare(
+/*	Drawable debugSquare(
 		new TextureMat(dynamic_cast<TextureMat*>(drawables[2].getMaterial(TextureMat::id))->tex),
 		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
-
+*/
 	vec3 lightPos(10.f, 10.f, 10.f);
 
 	for (int i = 0; i < drawables.size(); i++) {
@@ -179,16 +179,16 @@ void WindowManager::mainLoop() {
 		//texShader.draw(cam, texSquare);
 
 		//Render dragon with Ambient Occlusion
-		/*pnFbo.use();
+		pnFbo.use();
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		pnShader.draw(cam, vec3(0, 0, 0), dragon);
 		fbWindow.use();
 		glClearColor(1.f, 1.f, 1.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		aoShader.draw(cam, vec3(10.f, 10.f, 10.f), texSquare);*/
+		aoShader.draw(cam, vec3(10.f, 10.f, 10.f), texSquare);
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+/*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		for (int i = 0; i < drawables.size(); i++) {
 			if (drawables[i].getMaterial(TextureMat::id) != nullptr) {
 				tsTexShader.draw(cam, lightPos, drawables[i]);
@@ -197,7 +197,7 @@ void WindowManager::mainLoop() {
 				tsShader.draw(cam, lightPos, drawables[i]);
 		}
 		//texShader.draw(cam, debugSquare);
-
+*/
 		
 
 //		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
