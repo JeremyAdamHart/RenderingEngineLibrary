@@ -5,7 +5,12 @@
 #endif
 
 // GLAD
+#ifndef USING_GLEW
 #include <glad/glad.h>
+#else
+#define GLEW_STATIC
+#include <GL/glew.h>
+#endif
 
 // confirm that GLAD didn't include windows.h
 #ifdef _WINDOWS_
@@ -33,5 +38,5 @@ public:
 	void mainLoop();
 };
 
-void initGlad();
+void initGLExtensions();
 GLFWwindow *createWindow(int width, int height, std::string name);

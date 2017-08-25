@@ -22,6 +22,7 @@ using namespace std;
 //Ambient occlusion
 #include "AOShader.h"
 #include "PosNormalShader.h"
+#include <sstream>
 
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -54,7 +55,7 @@ window_width(800), window_height(800)
 	glfwInit();
 	window = createWindow(window_width, window_height, 
 		"You really should rename this");
-	initGlad();
+	initGLExtensions();
 
 	glfwSwapInterval(1);
 
@@ -70,7 +71,7 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 {
 	glfwInit();
 	window = createWindow(window_width, window_height, name);
-	initGlad();
+	initGLExtensions();
 
 	glClearColor(color.r, color.g, color.b, color.a);
 	glEnable(GL_DEPTH_TEST);
@@ -81,6 +82,15 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 
 //Temporary testing
 void WindowManager::mainLoop() {
+
+	//Test
+	std::stringstream ss;
+	ss.str("Sample characters\nWith spaces\n");
+	string arg;
+	while (ss.good()) {
+		ss >> arg;
+		cout << arg << endl;
+	}
 
 	glfwSetCursorPosCallback(window, cursorPositionCallback);
 
@@ -219,10 +229,18 @@ void WindowManager::mainLoop() {
 	glfwTerminate();
 }
 
-void initGlad() {
+void initGLExtensions() {
+#ifndef USING_GLEW
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "GLAD initialization failed" << std::endl;
 	}
+#else
+	glewExperimental = true;
+	GLenum err = glewInit();
+	if (GLEW_OK != err) {
+		std::cout << "GLEW initialization failed" << std::endl;
+	}
+#endif
 }
 
 GLFWwindow *createWindow(int width, int height, std::string name)

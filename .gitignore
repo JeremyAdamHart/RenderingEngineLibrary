@@ -50,12 +50,22 @@ Temporary Items
 *.lib
 *.idb
 *.tlog
+Debug/
+DebugGLEW/
+Release/
+ReleaseGLEW/
 RenderingEngine/Debug/*.obj
+RenderingEngine/DebugGLEW/
 RenderingEngine/Release/*.obj
+RenderingEngine/ReleaseGLEW/
 RenderingLibrary/Debug/*.obj
 RenderingLibrary/Release/*.obj
+RenderingLibrary/DebugGLEW/
+RenderingLibrary/ReleaseGLEW/
 RenderingExtensions/Debug/*.obj
+RenderingExtensions/DebugGLEW/
 RenderingExtensions/Release/*.obj
+RenderingExtensions/ReleaseGLEW/
 RenderingEngine/x64/Debug/*.obj
 RenderingEngine/x64/Release/*.obj
 RenderingLibrary/x64/Debug/*.obj
@@ -80,3 +90,4 @@ Debug/SampleTest.ilk
 *.out
 *.opensdf
 RenderingEngine.sdf
+GLFW/obj

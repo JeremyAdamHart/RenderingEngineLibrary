@@ -1,6 +1,11 @@
 #pragma once
 
+#ifndef USING_GLEW
 #include <glad/glad.h>
+#else
+#define GLEW_STATIC
+#include <GL/glew.h>
+#endif
 
 //Namespace for vertex attributes
 struct ATTRIB_LOCATION {

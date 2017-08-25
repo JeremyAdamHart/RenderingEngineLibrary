@@ -44,7 +44,6 @@ void main(void)
 
  	vec3 color = torranceSparrowLighting(normalize(FragmentNormal), ModelPosition, camera_position)
  	*baseColor;
- 	color = FragmentNormal;
 
  	PixelColour = vec4(color, 1);
 }

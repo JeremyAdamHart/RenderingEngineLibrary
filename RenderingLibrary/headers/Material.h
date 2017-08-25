@@ -1,6 +1,11 @@
 #pragma once
 #include <iostream>
+#ifndef USING_GLEW
 #include <glad/glad.h>
+#else
+#define GLEW_STATIC
+#include <GL/glew.h>
+#endif
 
 //All derived subclasses are singletons
 class Material{

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GLGeometry.h"
-#include <glad/glad.h>
 #include <glm/glm.hpp>
 
 using namespace glm;

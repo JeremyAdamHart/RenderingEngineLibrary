@@ -131,6 +131,10 @@ void sharedIndices2(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces,
 		printf("Mesh continuity violated\n");
 }
 
+void convertQuadsToTriangles(vector<unsigned int> *indices) {
+
+}
+
 struct MeshInfo {
 	vector<vec3> vertices;
 	vector<vec3> normals;
@@ -157,7 +161,9 @@ struct Vertex {
 
 //Assumes triangulated mesh
 bool loadWavefront(std::string directory, std::string filename, std::vector<Drawable> *drawables, TextureManager *manager) {
-	FILE *f = fopen((directory+filename+".obj").c_str(), "r");
+//	FILE *f = fopen((directory + filename + ".obj").c_str(), "r");
+	ifstream f;
+	f.open((directory + filename + ".obj").c_str());
 	if (!f)
 	{
 		printf("%s does not exist\n", (directory + filename + ".obj").c_str());
@@ -171,6 +177,8 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 
 	vector<MeshInfo> objects;
 
+//	string contents{ istreambuf_iterator<char>(f), istreambuf_iterator<char>() };
+
 	vector<vec3> rawVertices;
 	vector<vec3> rawNormals;
 	vector<vec2> rawTexCoords;
@@ -183,17 +191,22 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 	bool noTexCoords = false;
 	bool noNormals = false;
 
-	char text[256];
+	const int BUFF_SIZE = 256;
+//	char text[BUFF_SIZE];
+	string text;
+	text.reserve(BUFF_SIZE);
+//	string text;
 	int fIndex = 0;
 
-	//Debugging
-	vector<Vertex> originalVertices;
-
-	while(success && fscanf(f, "%s", text) != EOF){
+//	f.getline(text, BUFF_SIZE);
+	f >> text;
+	while(success && f.good())
+	{
 		//Vertex positions
-		if (strcmp(text, "v") == 0) {
+		if (strcmp(text.c_str(), "v") == 0) {
 			vec3 vert;
-			if (fscanf(f, "%f %f %f\n", &vert.x, &vert.y, &vert.z) == 3)
+			f.getline(&text[0], BUFF_SIZE);
+			if (sscanf(text.c_str(), "%f %f %f\n", &vert.x, &vert.y, &vert.z) == 3)
 				rawVertices.push_back(vert);
 			else {
 				printf("Error reading vertex\n");
@@ -202,9 +215,10 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 
 		}
 		//Vertex normals
-		else if (strcmp(text, "vn") == 0) {
+		else if (strcmp(text.c_str(), "vn") == 0) {
 			vec3 normal;
-			if (fscanf(f, "%f %f %f\n", &normal.x, &normal.y, &normal.z) == 3)
+			f.getline(&text[0], BUFF_SIZE);
+			if (sscanf(text.c_str(), "%f %f %f\n", &normal.x, &normal.y, &normal.z) == 3)
 				rawNormals.push_back(normal);
 			else {
 				printf("Error reading normal\n");
@@ -212,9 +226,10 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 			}
 		}
 		//Vertex texture coordinates
-		else if (strcmp(text, "vt") == 0){
+		else if (strcmp(text.c_str(), "vt") == 0){
 			vec2 tex;
-			if (fscanf(f, "%f %f\n", &tex.x, &tex.y) == 2)
+			f.getline(&text[0], BUFF_SIZE);
+			if (sscanf(text.c_str(), "%f %f\n", &tex.x, &tex.y) == 2)
 				rawTexCoords.push_back(tex);
 			else {
 				printf("Error reading texture coordinate\n");
@@ -222,49 +237,63 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 			}
 		}
 		//Faces
-		else if (strcmp(text, "f") == 0) {
-			unsigned int v1, v2, v3, u1, u2, u3, n1, n2, n3;
-			if (rawTexCoords.size() != 0 && rawNormals.size() != 0) {
-				if (fscanf(f, "%d/%d/%d %d/%d/%d %d/%d/%d\n",
-					&v1, &u1, &n1, &v2, &u2, &n2, &v3, &u3, &n3) != 9) {
+		else if (strcmp(text.c_str(), "f") == 0) {
+			
+			f.getline(&text[0], BUFF_SIZE);
+
+			int v=-1, n=-1, t=-1;
+			char *token = strtok(&text[0], " ");
+
+			int faceCount = 0;
+
+			while (token) {
+				faceCount++;
+
+				if (sscanf(token, "%d/%d/%d", &v, &t, &n) != 3 &&
+					sscanf(token, "%d//%d", &v, &n) != 2 &&
+					sscanf(token, "%d/%d", &v, &t) != 2 &&
+					sscanf(token, "%d", &v) != 1)
+				{
 					printf("Error reading face\n");
 					success = false;
 				}
-			}
-			else if (rawTexCoords.size() != 0) {
-				if (fscanf(f, "%d//%d %d//%d %d//%d",
-					&v1, &n1, &v2, &n2, &v3, &n3) != 9) {
-					printf("Error reading face\n");
-					success = false;
+				else {
+					if (v >= 0) {
+						rawVFaces[fIndex].push_back(v-1);
+						if (faceCount > 3) {
+							int v2 = rawVFaces[fIndex][rawVFaces[fIndex].size() - 2];
+							int v3 = rawVFaces[fIndex][rawVFaces[fIndex].size() - 4];
+							rawVFaces[fIndex].push_back(v2);
+							rawVFaces[fIndex].push_back(v3);
+						}
+					}
+					if (t >= 0) {
+						rawTFaces[fIndex].push_back(t-1);
+						if (faceCount > 3) {
+							int t2 = rawTFaces[fIndex][rawTFaces[fIndex].size() - 2];
+							int t3 = rawTFaces[fIndex][rawTFaces[fIndex].size() - 4];
+							rawTFaces[fIndex].push_back(t2);
+							rawTFaces[fIndex].push_back(t3);
+						}
+					}
+					if (n >= 0) {
+						rawNFaces[fIndex].push_back(n-1);
+						
+						if (faceCount > 3) {
+							int n2 = rawNFaces[fIndex][rawNFaces[fIndex].size() - 2];
+							int n3 = rawNFaces[fIndex][rawNFaces[fIndex].size() - 4];
+							rawNFaces[fIndex].push_back(n2);
+							rawNFaces[fIndex].push_back(n3);
+						}
+					}
 				}
+				token = strtok(nullptr, " ");
 			}
-
-			rawVFaces[fIndex].push_back(v1 - 1);
-			rawVFaces[fIndex].push_back(v2 - 1);
-			rawVFaces[fIndex].push_back(v3 - 1);
-
-			if (rawTexCoords.size() != 0) {
-				rawTFaces[fIndex].push_back(u1 - 1);
-				rawTFaces[fIndex].push_back(u2 - 1);
-				rawTFaces[fIndex].push_back(u3 - 1);
-			}
-			if (rawNormals.size() != 0) {
-				rawNFaces[fIndex].push_back(n1 - 1);
-				rawNFaces[fIndex].push_back(n2 - 1);
-				rawNFaces[fIndex].push_back(n3 - 1);
-			}
-
-			originalVertices.push_back(
-				Vertex(rawVertices[v1-1], rawNormals[n1-1], rawTexCoords[u1-1]));
-			originalVertices.push_back(
-				Vertex(rawVertices[v2-1], rawNormals[n2-1], rawTexCoords[u2-1]));
-			originalVertices.push_back(
-				Vertex(rawVertices[v3-1], rawNormals[n3-1], rawTexCoords[u3-1]));
 		}
 		//Use material - @TODO Modify to split up objects made of same material?
-		else if (strcmp(text, "usemtl") == 0) {
-			char temp[250];
-			fscanf(f, "%s", temp);
+		else if (strcmp(text.c_str(), "usemtl") == 0) {
+			f.getline(&text[0], BUFF_SIZE);
+			char *temp = strtok(&text[0], " ");
 			if (materialMap.find(string(temp)) == materialMap.end()) {
 				materialMap[string(temp)] = materialMap.size();
 				fIndex = materialMap.size() - 1;
@@ -277,14 +306,15 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 			else 
 				fIndex = materialMap[string(temp)];
 		}
-	}
 
-	fclose(f);
+		f >> text;
+	}
+	f.close();
+
 
 	//Read material file
-	f = fopen((directory+filename + ".mtl").c_str(), "r");
-
-	if (f == nullptr) {
+	f.open((directory+filename + ".mtl").c_str());
+	if (!f) {
 		printf("No Material file found\n");
 	}
 	else
@@ -293,14 +323,18 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 	vector<MatInfo> materials(rawVFaces.size());
 
 	if(f) {
-		char temp[256];
+		char temp[BUFF_SIZE];
 		int currentMtl = 0;
+//		f.getline(text, BUFF_SIZE);
+		f >> text;
 
 		//Parse material file
-		while (fscanf(f, "%s", text) != EOF) {
-			if (strcmp(text, "newmtl") == 0) {
-				char mtlName[256];
-				fscanf(f, "%s", mtlName);
+		while (f.good()) {
+			if (strcmp(text.c_str(), "newmtl") == 0) {
+				char mtlName[BUFF_SIZE];
+				//fscanf(f, "%s", mtlName);
+				f.getline(temp, BUFF_SIZE);
+				sscanf(temp, "%s", mtlName);
 				try {
 					currentMtl = materialMap.at(mtlName);
 				} catch (out_of_range) {
@@ -308,45 +342,46 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 					printf("Material not found - %s\n", mtlName);
 				}
 			}
-			if (strcmp(text, "Ka") == 0 && currentMtl >= 0){
+			if (strcmp(text.c_str(), "Ka") == 0 && currentMtl >= 0){
 				vec3 &ka = materials[currentMtl].ka;
-				if (fscanf(f, "%f %f %f\n", &ka.x, &ka.y, &ka.z) != 3) {
+				f.getline(temp, BUFF_SIZE);
+				if (sscanf(temp, "%f %f %f\n", &ka.x, &ka.y, &ka.z) != 3) {
 					printf("Error reading Ka\n");
 				}
 			}
-			if (strcmp(text, "Kd") == 0 && currentMtl >= 0) {
+			if (strcmp(text.c_str(), "Kd") == 0 && currentMtl >= 0) {
 				vec3 &kd = materials[currentMtl].kd;
-				if (fscanf(f, "%f %f %f", &kd.x, &kd.y, &kd.z) != 3) {
+				f.getline(temp, BUFF_SIZE);
+				if (sscanf(temp, "%f %f %f", &kd.x, &kd.y, &kd.z) != 3) {
 					printf("Error reading Kd\n");
 				}
 			}
-			if (strcmp(text, "Ks") == 0 && currentMtl >= 0) {
+			if (strcmp(text.c_str(), "Ks") == 0 && currentMtl >= 0) {
 				vec3 &ks = materials[currentMtl].ks;
-				if (fscanf(f, "%f %f %f", &ks.x, &ks.y, &ks.z) != 3) {
+				f.getline(temp, BUFF_SIZE);
+				if (sscanf(temp, "%f %f %f", &ks.x, &ks.y, &ks.z) != 3) {
 					printf("Error reading Ks\n");
 				}
 			}
-			if (strcmp(text, "Ns") == 0 && currentMtl >= 0) {
-				if (fscanf(f, "%f", &materials[currentMtl].ns) != 1) {
+			if (strcmp(text.c_str(), "Ns") == 0 && currentMtl >= 0) {
+				f.getline(temp, BUFF_SIZE);
+				if (sscanf(temp, "%f", &materials[currentMtl].ns) != 1) {
 					printf("Error reading Ns\n");
 				}
 			}
-			if (strcmp(text, "map_Kd") == 0 && currentMtl >= 0) {
-				char temp[256];
-				if (fscanf(f, "%s", temp) == 1)
+			if (strcmp(text.c_str(), "map_Kd") == 0 && currentMtl >= 0) {
+
+				f.getline(temp, BUFF_SIZE);
+				if (sscanf(temp, "%s", temp) == 1)
 					materials[currentMtl].texture = temp;
 				else
 					printf("Error reading map_Kd\n");
 			}
+			f >> text;
 		}
 	}
 
-	fclose(f);
-
 	map<string, Texture> textures;
-
-	//Debugging
-	vector<Vertex> newVertices;
 
 	//Split into drawables
 	for (auto it = materialMap.begin(); it != materialMap.end(); it++) {
@@ -439,31 +474,8 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 		else {
 			drawables->back().addMaterial(new ColorMat(normalize(materials[mat].kd)));
 		}
-
-		//Debugging
-		for (int i = 0; i < object.faces.size(); i++) {
-			newVertices.push_back(Vertex(
-				object.vertices[object.faces[i]],
-				object.normals[object.faces[i]],
-				object.texCoords[object.faces[i]]));
-		}
 	}
 
-	/*for (int i = 0; i < newVertices.size(); i++) {
-		if (newVertices[i].position != originalVertices[i].position)
-			printf("Position error (%f %f %f) -> (%f %f %f)\n",
-				originalVertices[i].position.x, originalVertices[i].position.y, originalVertices[i].position.z,
-				newVertices[i].position.x, newVertices[i].position.y, newVertices[i].position.z);
-		if(newVertices[i].normal != newVertices[i].normal)
-			printf("Normal error (%f %f %f) -> (%f %f %f)\n",
-				originalVertices[i].normal.x, originalVertices[i].normal.y, originalVertices[i].normal.z,
-				newVertices[i].normal.x, newVertices[i].normal.y, newVertices[i].normal.z);
-
-		if (newVertices[i].texcoord != newVertices[i].texcoord)
-			printf("texcoord error (%f %f) -> (%f %f)\n",
-				originalVertices[i].texcoord.x, originalVertices[i].texcoord.y,
-				newVertices[i].texcoord.x, newVertices[i].texcoord.y);
-	}*/
-
+	printf("Successfully loaded %s\n", filename.c_str());
 	return true;
 }
