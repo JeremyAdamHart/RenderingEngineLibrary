@@ -12,6 +12,7 @@
 #include <map>
 #include <iterator>
 #include <cstring>
+#include <algorithm>
 
 //Last three arguments are return values
 void sharedIndices2(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, vector<vec3> &_normals,
