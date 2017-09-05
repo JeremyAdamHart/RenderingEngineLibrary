@@ -21,12 +21,18 @@
     <ClInclude Include="GLWindow.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="HeatParticleSystem.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GLWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeatParticleSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
