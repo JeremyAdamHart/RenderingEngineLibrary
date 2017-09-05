@@ -72,10 +72,13 @@ void HeatParticleSystem::addParticleFromDisk(Disk disk, float velocity, float he
 
 void HeatParticleSystem::runSimulation(float timeStep) {
 	for (int i = 0; i < particles.size(); i++) {
-		if (lifespans[i] > 0.f) {
+		if (lifespans[i] >= 0.f) {
 			lifespans[i] -= timeStep;
-			if (lifespans[i] < 0.f)
+			if (lifespans[i] < 0.f) {
+				particles[i].heat = 0.f;
 				emptySpots.push(i);		//Queue for replacement
+			}
+
 			particles[i].velocity -= particles[i].velocity*DAMPING*timeStep;
 			particles[i].position += particles[i].velocity*timeStep;
 			particles[i].heat *= 1- HEAT_DECAY*timeStep;

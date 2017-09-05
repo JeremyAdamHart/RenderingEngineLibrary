@@ -112,9 +112,9 @@ void WindowManager::mainLoop() {
 	
 	float initialVelocity = 5.0f;
 	float lifespan = 0.2f;
-	float heat = 0.075f;
-	float divergenceAngle = PI/32.f;
-	const int particlesPerStep = 500;
+	float heat = 0.1f;
+	float divergenceAngle = PI/8.f;
+	const int particlesPerStep = 250;
 	
 	Disk particleSpawner(0.05f, vec3(0.f, -1.f, 0.f), vec3(0, 1.f, 0));
 
@@ -125,7 +125,9 @@ void WindowManager::mainLoop() {
 
 	float timeElapsed = 0.f;
 
-	glClearColor(0.f, 0.f, 0.f, 0.f);
+	float thrust = 0.f;
+
+	glClearColor(0.f, 0.f, 0.0f, 0.f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
@@ -134,11 +136,17 @@ void WindowManager::mainLoop() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glDepthMask(GL_FALSE);
 
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+			thrust = std::min(thrust + 0.02f, 1.f);
+		else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+			thrust = std::max(thrust - 0.02f, 0.f);
+
 		float currentTime = glfwGetTime();
 		float timeOffset = 0.f;
-		for(int i=0; i<particlesPerStep/2; i++){
-			pSystem.addParticleFromDisk(particleSpawner, initialVelocity,
-				heat, lifespan, divergenceAngle, timeOffset);
+		for(int i=0; i<int((1.f+thrust)*float(particlesPerStep)/2.f); i++){
+			float newHeat = heat*(float(rand()) / float(RAND_MAX))*(0.75f + thrust/4.f);
+			pSystem.addParticleFromDisk(particleSpawner, initialVelocity*(0.5f+thrust/2.f),
+				newHeat, lifespan, divergenceAngle*(1.f - thrust)*2.f, timeOffset);
 			timeOffset += (currentTime - timeElapsed) / float(particlesPerStep);
 		}
 
