@@ -51,8 +51,8 @@ void HeatParticleSystem::addParticleFromDisk(Disk disk, float velocity, float he
 		float cos_phi = std::cosf(maxDivergenceAngle);
 		float z = cos_phi + (1 - cos_phi)*rand01();
 		theta = rand01()*2.f*PI;
-		vec3 pVelocity = sqrt(1 - z*z)*disk.radius*cosf(theta)*disk.v1+
-			sqrt(1 - z*z)*disk.radius*sinf(theta)*disk.v2+
+		vec3 pVelocity = sqrt(1 - z*z)*cosf(theta)*disk.v1+
+			sqrt(1 - z*z)*sinf(theta)*disk.v2+
 			z*disk.normal;
 		newParticle = HeatParticle(position, velocity*pVelocity, heat);
 	}
