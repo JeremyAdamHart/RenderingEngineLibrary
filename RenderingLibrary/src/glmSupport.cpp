@@ -2,6 +2,8 @@
 
 using namespace glm;
 
+namespace renderlib {
+
 mat4 scaleMatrix(float scale){
 	mat4 matrix (scale);
 	matrix[3][3] = 1.f;
@@ -37,4 +39,6 @@ glm::mat3 toMat3(mat4 m){
 		toVec3(m[1]),
 		toVec3(m[2])
 		);
+}
+
 }

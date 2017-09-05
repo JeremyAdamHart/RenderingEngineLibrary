@@ -2,6 +2,8 @@
 
 #include "glSupport.h"
 
+namespace renderlib {
+
 class Shader {
 protected:
 	GLuint programID;
@@ -13,3 +15,5 @@ public:
 	void deleteProgram();
 	virtual bool createProgram(map<GLenum, string> defines = {});
 };
+
+}

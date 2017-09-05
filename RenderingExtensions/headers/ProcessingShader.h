@@ -6,6 +6,8 @@
 #include <vector>
 #include <glm/glm.hpp>
 
+namespace renderlib {
+
 class ProcessingShader : public Shader {
 	vector<pair<GLenum, string>> shaders;
 public:
@@ -16,3 +18,5 @@ public:
 	void draw(const Drawable &obj);		//Change to use pointer to drawable?
 	void draw(Scene &scene);
 };
+
+}

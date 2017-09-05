@@ -13,6 +13,8 @@ https://gist.github.com/dgiagio/b0187dac64b60e6ff626
 created by Diego Giagio
 */
 
+namespace renderlib {
+
 std::string str(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
@@ -243,4 +245,6 @@ bool checkGLErrors(string location){
 		error = true;
 	}
 	return error;
+}
+
 }

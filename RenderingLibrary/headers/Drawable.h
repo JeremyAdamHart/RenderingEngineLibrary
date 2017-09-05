@@ -6,6 +6,8 @@
 #include "Object.h"
 #include <map>
 
+namespace renderlib {
+
 class Drawable : public virtual Object{
 protected:
 	std::map<int, Material*> material;
@@ -37,3 +39,5 @@ public:
 
 	void deleteMaterialsAndGeometry();
 };
+
+}

@@ -7,6 +7,8 @@
 
 using namespace glm;
 
+namespace renderlib {
+
 constexpr int cMax (int a, int b){
 	return (a > b) ? a : b;
 }
@@ -98,4 +100,6 @@ void TorranceSparrowShader::draw(const Camera &cam, vec3 lightPos,
 
 	obj.getGeometry().drawGeometry();
 	glUseProgram(0);
+}
+
 }

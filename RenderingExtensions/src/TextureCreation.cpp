@@ -6,6 +6,8 @@
 
 using namespace std;
 
+namespace renderlib {
+
 Texture createTexture2D(string filename, TextureManager *manager) {
 	int width, height, comp;
 	unsigned char *image = stbi_load(filename.c_str(), 
@@ -93,4 +95,6 @@ Texture createTexture2DMulti(TexInfo info, TextureManager *manager, size_t num_s
 	glTexImage2DMultisample(info.target, num_samples, info.internalFormat, info.dimensions[0], info.dimensions[1], GL_FALSE);
 
 	return Texture(texID, info, manager);
+}
+
 }

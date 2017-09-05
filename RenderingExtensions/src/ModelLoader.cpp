@@ -14,6 +14,8 @@
 #include <cstring>
 #include <algorithm>
 
+namespace renderlib {
+
 //Last three arguments are return values
 void sharedIndices2(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, vector<vec3> &_normals,
 	vector<vec3> &vertices, vector<vec3> &normals, vector<unsigned int> &faces)
@@ -479,4 +481,6 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 
 	printf("Successfully loaded %s\n", filename.c_str());
 	return true;
+}
+
 }

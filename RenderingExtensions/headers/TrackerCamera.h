@@ -3,6 +3,8 @@
 #include "glm/glm.hpp"
 #include "Camera.h"
 
+namespace renderlib {
+
 class TrackerCamera : public Camera{
 public:
 	glm::vec3 dir;
@@ -23,3 +25,5 @@ public:
 
 	void trackGeometryXZ(glm::vec3 *vertices, size_t numVertices, const glm::mat4 &model_matrix);
 };
+
+}

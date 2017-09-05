@@ -11,6 +11,8 @@
 
 #pragma warning(disable:4996)
 
+namespace renderlib {
+
 using namespace std;
 using namespace glm;
 
@@ -291,4 +293,6 @@ ElementGeometry objToElementGeometry(char *filename) {
 	return ElementGeometry(minfo.vertices.data(), minfo.normals.data(),
 		minfo.uvs.data(), minfo.indices.data(), minfo.vertices.size(),
 		minfo.indices.size(), GL_TRIANGLES);
+}
+
 }

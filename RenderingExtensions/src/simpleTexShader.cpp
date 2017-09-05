@@ -3,6 +3,8 @@
 
 using namespace glm;
 
+namespace renderlib {
+
 enum {
 	VP_MATRIX_LOCATION = TextureMat::COUNT,
 	M_MATRIX_LOCATION,
@@ -52,4 +54,6 @@ void SimpleTexShader::draw(const Camera &cam, const Drawable &obj) {
 
 	obj.getGeometry().drawGeometry();
 	glUseProgram(0);
+}
+
 }

@@ -4,6 +4,8 @@
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 
+namespace renderlib {
+
 using namespace glm;
 
 class SimpleGeometry : public GLGeometryContainer {
@@ -98,3 +100,4 @@ public:
 	virtual bool usingDrawElements() { return false; }
 };
 
+}

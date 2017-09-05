@@ -7,6 +7,8 @@
 #include <GL/glew.h>
 #endif
 
+namespace renderlib{
+
 //All derived subclasses are singletons
 class Material{
 protected:
@@ -17,3 +19,5 @@ public:
 	virtual int getType() const;
 	virtual void loadUniforms(GLint *locations) const;
 };
+
+}

@@ -4,7 +4,13 @@
 #include <iterator>
 #include <iostream>
 
+namespace renderlib {
+
 const Texture NO_TEXTURE;
+
+Framebuffer::Framebuffer() :id(0), vp(0, 0, 0, 0){
+
+}
 
 Framebuffer::Framebuffer(GLuint id, Texture tex, GLenum attachment) :
 id(id), vp(std::max(tex.getWidth(), 0), std::max(tex.getHeight(), 0))
@@ -124,4 +130,6 @@ void blit(Framebuffer read, Framebuffer write) {
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);	
+}
+
 }

@@ -5,6 +5,8 @@
 
 #include <algorithm>
 
+namespace renderlib {
+
 using namespace glm;
 
 enum {
@@ -78,4 +80,6 @@ void AOShader::draw(const Camera &cam, vec3 lightPos, const Drawable &obj) {
 
 	obj.getGeometry().drawGeometry();
 	glUseProgram(0);
+}
+
 }

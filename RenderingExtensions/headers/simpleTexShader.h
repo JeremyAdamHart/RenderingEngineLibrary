@@ -6,6 +6,8 @@
 #include "Scene.h"
 #include <vector>
 
+namespace renderlib {
+
 class SimpleTexShader : public Shader {
 protected:
 	vector<int> uniformLocations;
@@ -20,3 +22,5 @@ public:
 	void draw(const Camera &cam, const Drawable &obj);
 	void draw(const Camera &cam, const Scene &scene);
 };
+
+}

@@ -3,6 +3,8 @@
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 
+namespace renderlib{
+
 class Object {
 protected:
 	Object();
@@ -16,3 +18,5 @@ public:
 	virtual glm::mat4 getTransform() const;
 	glm::vec3 getPos() const;
 };
+
+}

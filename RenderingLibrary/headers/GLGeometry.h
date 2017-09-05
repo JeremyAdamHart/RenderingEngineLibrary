@@ -7,6 +7,8 @@
 #include <GL/glew.h>
 #endif
 
+namespace renderlib {
+
 //Namespace for vertex attributes
 struct ATTRIB_LOCATION {
 	enum{
@@ -32,3 +34,5 @@ public:
 
 	virtual bool usingDrawElements() const { return false; }
 };
+
+}

@@ -4,6 +4,8 @@
 #include <iterator>
 #include "Drawable.h"
 
+namespace renderlib {
+
 typedef std::vector<Drawable*>::iterator DrawableIterator;
 
 const int SCENE_ALL = 1;
@@ -26,3 +28,5 @@ public:
 	DrawableIterator objectBegin();
 	DrawableIterator objectEnd();
 };
+
+}

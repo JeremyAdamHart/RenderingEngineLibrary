@@ -3,6 +3,8 @@
 #include "Texture.h"
 #include <map>
 
+namespace renderlib {
+
 class SimpleTexManager : public TextureManager{
 	map<int, Texture> textures;
 	vector<int> texUnits;
@@ -19,3 +21,5 @@ public:
 };
 
 int sizeOfTexture(const Texture &tex);
+
+}

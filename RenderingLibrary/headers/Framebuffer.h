@@ -5,6 +5,8 @@
 #include <map>
 #include <iterator>
 
+namespace renderlib {
+
 struct Viewport {
 	int x, y, width, height;
 
@@ -22,6 +24,7 @@ public:
 	GLuint id;
 	Viewport vp;
 
+	Framebuffer();
 	Framebuffer(unsigned int width, unsigned int height, GLuint id=0);
 	Framebuffer(GLuint id, Texture tex, GLenum attachment);
 
@@ -38,3 +41,5 @@ public:
 };
 
 void blit(Framebuffer read, Framebuffer write);
+
+}

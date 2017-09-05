@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+namespace renderlib {
+
 class Camera{
 protected:
 	glm::mat4 projection;
@@ -13,3 +15,5 @@ public:
 	virtual void setProjectionMatrix(const glm::mat4 &projMatrix);
 	virtual glm::vec3 getPosition() const;
 };
+
+}

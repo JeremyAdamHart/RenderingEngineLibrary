@@ -5,6 +5,8 @@
 
 using namespace glm;
 
+namespace renderlib {
+
 TrackerCamera::TrackerCamera() : dir(vec3(0, 0, -1)), right(vec3(1, 0, 0)), up(vec3(0, 1, 0)),
 pos(vec3(0, 0, 1.f)){}
 
@@ -75,4 +77,6 @@ void TrackerCamera::trackGeometryXZ(glm::vec3 *vertices, size_t numVertices, con
 	projection = glm::ortho(left_geometry - pos.x, right_geometry - pos.x, 
 		bottom_geometry - pos.z, top_geometry - pos.z, 
 		0.5f, pos.y - bottom_geometry+1.f);
+}
+
 }

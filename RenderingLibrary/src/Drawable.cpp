@@ -2,6 +2,8 @@
 #include "glSupport.h"
 #include <iterator>
 
+namespace renderlib {
+
 using namespace glm;
 
 Drawable::Drawable(Material *material, GLGeometryContainer *geometry,
@@ -70,3 +72,4 @@ void Drawable::setPosition(glm::vec3 newPosition) { position = newPosition;}
 
 void Drawable::setOrientation(glm::quat newOrientation) { orientation = newOrientation; }
 void Drawable::setScale(glm::vec3 newScale) { scale = newScale; }
+}

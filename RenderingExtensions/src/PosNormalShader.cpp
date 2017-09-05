@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+namespace renderlib {
+
 using namespace glm;
 
 enum {
@@ -53,4 +55,6 @@ void PosNormalShader::draw(const Camera &cam, vec3 lightPos,
 	
 	obj.getGeometry().drawGeometry();
 	glUseProgram(0);
+}
+
 }

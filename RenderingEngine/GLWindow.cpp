@@ -27,6 +27,8 @@ using namespace std;
 
 #include <glm/gtc/matrix_transform.hpp>
 
+using namespace renderlib;
+
 TrackballCamera cam(
 	vec3(0, 0, -1), vec3(0, 0, 1),
 	glm::perspective(90.f*3.14159f/180.f, 1.f, 0.1f, 3.f));

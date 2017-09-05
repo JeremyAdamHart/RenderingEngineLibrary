@@ -3,6 +3,8 @@
 #include "Material.h"
 #include <glm/glm.hpp>
 
+namespace renderlib {
+
 class ColorMat : public Material {
 public:
 	enum {
@@ -19,3 +21,5 @@ public:
 	virtual int getType() const;
 	virtual void loadUniforms(GLint *locations) const;	//Must have already called useProgram
 };
+
+}

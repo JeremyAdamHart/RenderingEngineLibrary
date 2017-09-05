@@ -10,6 +10,8 @@
 #include <vector>
 #include <map>
 
+namespace renderlib {
+
 using namespace std;
 
 std::string str(const char *fmt, ...);
@@ -27,5 +29,4 @@ bool checkGLErrors(string location);
 GLuint createGLProgram(vector<pair<GLenum, string>> shaders,
 	map<GLenum, string> defines = {});
 
-
-
+}

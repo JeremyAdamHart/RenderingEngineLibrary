@@ -5,6 +5,8 @@
 // Simple geometry
 ///////////////////
 
+namespace renderlib {
+
 SimpleGeometry::SimpleGeometry(GLenum mode) :bufferSize(0), mode(mode)
 {
 	initializeVAO();
@@ -227,4 +229,6 @@ void SimpleTexGeometryI::bindGeometry() const
 void SimpleTexGeometryI::drawGeometry() const {
 	bindGeometry();
 	glDrawArrays(mode, 0, bufferSize);
+}
+
 }

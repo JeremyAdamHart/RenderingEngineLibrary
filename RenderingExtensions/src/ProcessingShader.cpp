@@ -1,5 +1,7 @@
 #include "ProcessingShader.h"
 
+namespace renderlib {
+
 ProcessingShader::ProcessingShader(string fragmentShader, string defines):
 	shaders({{GL_VERTEX_SHADER, "processing.vert"}, {GL_FRAGMENT_SHADER, fragmentShader}})
 {
@@ -17,4 +19,6 @@ void ProcessingShader::draw(const Drawable &obj) {
 	glUseProgram(programID);
 	obj.getGeometry().drawGeometry();
 	glUseProgram(0);
+}
+
 }

@@ -1,5 +1,7 @@
 #include "Texture.h"
 
+namespace renderlib {
+
 using namespace std;
 
 TexInfo::TexInfo() : dimensions(), target(0), level(-1), 
@@ -77,3 +79,5 @@ TextureManager::TextureManager() {}
 void TextureManager::removeTexture(int handle){}
 int TextureManager::addTexture(Texture tex) { return -1; }
 int TextureManager::requestTexUnit(int handle) { return 0; }
+
+}

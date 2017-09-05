@@ -1,6 +1,8 @@
+
 #include "ElementGeometry.h"
 #include "glSupport.h"
 
+namespace renderlib {
 
 ElementGeometry::ElementGeometry(GLenum mode) :bufferSize(0), elementNum(0), mode(mode)
 {
@@ -8,7 +10,7 @@ ElementGeometry::ElementGeometry(GLenum mode) :bufferSize(0), elementNum(0), mod
 }
 
 ElementGeometry::ElementGeometry(vec3 *positions, vec3 *normals, vec2 *texCoords, unsigned int *elements,
-	size_t bufferSize, size_t elementNum, GLenum mode):
+	size_t bufferSize, size_t elementNum, GLenum mode) :
 	mode(mode), bufferSize(bufferSize), elementNum(elementNum)
 {
 	initializeVAO();
@@ -20,22 +22,22 @@ void ElementGeometry::loadGeometry(vec3 *positions, vec3 *normals, vec2 *texCoor
 	size_t _bufferSize, size_t _elementNum, GLenum usage)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[POSITION]);
-	glBufferData(GL_ARRAY_BUFFER, _bufferSize * sizeof(vec3), 
+	glBufferData(GL_ARRAY_BUFFER, _bufferSize * sizeof(vec3),
 		positions, usage);
 
 	if (normals) {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[NORMAL]);
-		glBufferData(GL_ARRAY_BUFFER, _bufferSize * sizeof(vec3), 
+		glBufferData(GL_ARRAY_BUFFER, _bufferSize * sizeof(vec3),
 			normals, usage);
 	}
 	if (texCoords) {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[TEXCOORD]);
-		glBufferData(GL_ARRAY_BUFFER, _bufferSize * sizeof(vec2), 
+		glBufferData(GL_ARRAY_BUFFER, _bufferSize * sizeof(vec2),
 			texCoords, usage);
 	}
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[ELEMENTS]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementNum*sizeof(unsigned int), 
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementNum * sizeof(unsigned int),
 		elements, usage);
 
 	bufferSize = _bufferSize;
@@ -87,7 +89,7 @@ bool ElementGeometry::initializeVAO() {
 		GL_FALSE,			//Normalized?
 		sizeof(vec2),		//Stride
 		(void*)0			//Offset
-		);
+	);
 
 	glBindVertexArray(0);
 
@@ -113,3 +115,5 @@ GLenum ElementGeometry::getMode() const { return mode; }
 GLint ElementGeometry::getVaoID() const { return vao; }
 
 bool ElementGeometry::usingDrawElements() const { return true; }
+
+}

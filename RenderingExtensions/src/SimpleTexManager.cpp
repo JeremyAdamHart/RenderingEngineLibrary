@@ -2,6 +2,8 @@
 #include <iostream>
 #include <limits>
 
+namespace renderlib {
+
 SimpleTexManager::SimpleTexManager():counter(0), nextUnit(0) {
 	int maxTexUnits = 0;
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTexUnits);
@@ -49,4 +51,6 @@ int sizeOfTexture(const Texture &tex) {
 	if (tex.getDepth() > 0) size *= tex.getDepth();
 
 	return size;
+}
+
 }

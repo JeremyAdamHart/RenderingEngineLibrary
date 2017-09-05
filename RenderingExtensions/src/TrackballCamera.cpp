@@ -1,5 +1,7 @@
 #include "TrackballCamera.h"
 
+namespace renderlib {
+
 mat4 rotateAbout(vec3 axis, float radians)
 {
 	mat4 matrix;
@@ -85,4 +87,6 @@ mat4 TrackballCamera::getProjectionMatrix() const
 vec3 TrackballCamera::getPosition() const
 {
 	return pos+center;
+}
+
 }

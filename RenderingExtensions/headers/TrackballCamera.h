@@ -5,6 +5,8 @@
 
 using namespace glm;
 
+namespace renderlib{
+
 class TrackballCamera : public Camera{
 public:
 	vec3 dir;
@@ -30,3 +32,5 @@ public:
 	mat4 getProjectionMatrix() const;
 	vec3 getPosition() const;
 };
+
+}

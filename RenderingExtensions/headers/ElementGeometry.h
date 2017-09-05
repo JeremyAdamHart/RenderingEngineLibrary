@@ -3,6 +3,8 @@
 #include "GLGeometry.h"
 #include <glm/glm.hpp>
 
+namespace renderlib {
+
 using namespace glm;
 
 class ElementGeometry : public GLGeometryContainer {
@@ -20,19 +22,21 @@ public:
 
 	ElementGeometry(GLenum mode = GL_TRIANGLES);
 	ElementGeometry(vec3 *positions, vec3 *normals, vec2 *texCoords, unsigned int *elements,
-					size_t bufferSize, size_t elementNum, GLenum mode = GL_TRIANGLES);
+		size_t bufferSize, size_t elementNum, GLenum mode = GL_TRIANGLES);
 
 	void loadGeometry(vec3 *positions, vec3 *normals, vec2 *texCoords, unsigned int *elements,
-					size_t _bufferSize, size_t _elementNum, GLenum usage=GL_STATIC_DRAW);
+		size_t _bufferSize, size_t _elementNum, GLenum usage = GL_STATIC_DRAW);
 
 	virtual void drawGeometry() const;
 
 	//Deprecated?
 	virtual void bindGeometry() const;
-	virtual int startIndex() const ;
-	virtual int numElements() const ;
+	virtual int startIndex() const;
+	virtual int numElements() const;
 	virtual GLenum getMode() const;
 	virtual GLint getVaoID() const;
 
 	virtual bool usingDrawElements() const;
 };
+
+}

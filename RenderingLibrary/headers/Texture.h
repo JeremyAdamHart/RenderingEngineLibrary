@@ -3,6 +3,8 @@
 #include "glSupport.h"
 #include <vector>
 
+namespace renderlib {
+
 //Never bind a texture to this to draw, only/always use during texture creation
 //	Avoids invalidating textures currently bound to a unit
 const GLenum NO_ACTIVE_TEXTURE = GL_TEXTURE0;
@@ -64,3 +66,5 @@ public:
 	//Returns NO_ACTIVE_TEXTURE if failed
 	virtual int requestTexUnit(int handle);
 };
+
+}

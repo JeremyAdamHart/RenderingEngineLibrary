@@ -6,6 +6,8 @@
 #include <GL/glew.h>
 #endif
 
+namespace renderlib {
+
 int Material::getNextID() {
 	static int id = 0;
 	return ++id;
@@ -13,3 +15,5 @@ int Material::getNextID() {
 
 int Material::getType() const { return 0; }
 void Material::loadUniforms(GLint *locations) const { }
+
+}

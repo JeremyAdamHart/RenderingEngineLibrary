@@ -3,6 +3,8 @@
 
 using namespace glm;
 
+namespace renderlib {
+
 enum {
 	VP_MATRIX_LOCATION=ColorMat::COUNT,
 	M_MATRIX_LOCATION,
@@ -53,3 +55,4 @@ void SimpleShader::draw(const Camera &cam, const Drawable &obj) {
 	glUseProgram(0);
 }
 
+}

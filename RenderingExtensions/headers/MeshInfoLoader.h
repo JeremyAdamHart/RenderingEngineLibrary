@@ -6,6 +6,8 @@
 #include <vector>
 #include "ElementGeometry.h"
 
+namespace renderlib {
+
 using namespace std;
 using namespace glm;
 
@@ -33,3 +35,5 @@ private:
 };
 
 ElementGeometry objToElementGeometry(char *filename);
+
+}

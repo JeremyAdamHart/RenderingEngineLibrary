@@ -3,6 +3,8 @@
 #include "Material.h"
 #include "Texture.h"
 
+namespace renderlib {
+
 class ShadedMat : public Material {
 public:
 	enum {
@@ -25,3 +27,5 @@ public:
 	virtual int getType() const;
 	virtual void loadUniforms(GLint *locations) const;	//Must have already called useProgram
 };
+
+}

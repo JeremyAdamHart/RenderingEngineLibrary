@@ -1,5 +1,7 @@
 #include "ShadedMat.h"
 
+namespace renderlib {
+
 const int ShadedMat::id = Material::getNextID();
 
 ShadedMat::ShadedMat(float ka, float kd, float ks, float alpha) :
@@ -14,4 +16,6 @@ void ShadedMat::loadUniforms(GLint *locations) const {
 	glUniform1f(locations[KD_LOCATION], kd);
 	glUniform1f(locations[KS_LOCATION], ks);
 	glUniform1f(locations[ALPHA_LOCATION], alpha);
+}
+
 }

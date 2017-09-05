@@ -7,6 +7,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
+namespace renderlib {
 
 class PosNormalShader : public Shader {
 protected:
@@ -22,3 +23,5 @@ public:
 	void draw(const Camera &cam, glm::vec3 lightPos, const Drawable &obj);		//Change to use pointer to drawable?
 	void draw(const Camera &cam, glm::vec3 lightPos, Scene &scene);
 };
+
+}

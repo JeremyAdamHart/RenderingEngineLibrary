@@ -9,6 +9,8 @@
 
 //Defines accepted: USING_TEXTURE
 
+namespace renderlib {
+
 class TorranceSparrowShader : public Shader {
 protected:
 	vector<int> uniformLocations;
@@ -26,3 +28,5 @@ public:
 	void draw(const Camera &cam, glm::vec3 lightPos, const Drawable &obj);		//Change to use pointer to drawable?
 	void draw(const Camera &cam, glm::vec3 lightPos, Scene &scene);
 };
+
+}
