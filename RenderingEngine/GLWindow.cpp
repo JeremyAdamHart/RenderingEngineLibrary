@@ -143,7 +143,7 @@ void WindowManager::mainLoop() {
 
 		float currentTime = glfwGetTime();
 		float timeOffset = 0.f;
-		for(int i=0; i<int((1.f+thrust)*float(particlesPerStep)/2.f); i++){
+		for(int i=0; i<int((0.f+2.f*thrust)*float(particlesPerStep)/2.f); i++){
 			float newHeat = heat*(float(rand()) / float(RAND_MAX))*(0.75f + thrust/4.f);
 			pSystem.addParticleFromDisk(particleSpawner, initialVelocity*(0.5f+thrust/2.f),
 				newHeat, lifespan, divergenceAngle*(1.f - thrust)*2.f, timeOffset);

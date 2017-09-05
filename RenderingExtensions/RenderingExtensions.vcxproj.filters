@@ -72,13 +72,7 @@
     <ClInclude Include="headers\ProcessingShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\HeatParticleGeometry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\HeatParticleShader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\HeatParticleMat.h">
+    <ClInclude Include="headers\BlendShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -134,13 +128,7 @@
     <ClCompile Include="src\ProcessingShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\HeatParticleGeometry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\HeatParticleShader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\HeatParticleMat.cpp">
+    <ClCompile Include="src\BlendShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

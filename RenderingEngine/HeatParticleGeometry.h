@@ -3,8 +3,6 @@
 #include <GLGeometry.h>
 #include <glm/glm.hpp>
 
-namespace renderlib {
-
 struct HeatParticle{
 	HeatParticle(glm::vec3 position, glm::vec3 velocity, float heat);
 	HeatParticle();
@@ -14,7 +12,7 @@ struct HeatParticle{
 };
 
 //Stores heat, velocity, radius and position
-class HeatParticleGeometry : public GLGeometryContainer {
+class HeatParticleGeometry : public renderlib::GLGeometryContainer {
 	GLuint vao;
 	size_t particleNum;
 	
@@ -33,5 +31,3 @@ public:
 
 	virtual void drawGeometry() const;
 };
-
-}

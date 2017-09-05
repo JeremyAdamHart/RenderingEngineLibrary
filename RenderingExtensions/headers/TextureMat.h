@@ -16,7 +16,8 @@ public:
 		COLOR=0,
 		SHADOW=1 << 16,
 		POSITION=2 << 16,
-		NORMAL=3 << 16
+		NORMAL=3 << 16,
+		TRANSLUCENT=4 << 16
 	};
 
 	static const int id;

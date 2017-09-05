@@ -3,7 +3,9 @@
 
 using namespace glm;
 
-namespace renderlib {
+using namespace renderlib;
+
+using namespace std;
 
 enum {
 	VP_MATRIX_LOCATION=HeatParticleMat::COUNT,
@@ -59,7 +61,4 @@ void HeatParticleShader::draw(const Camera &cam, const Drawable &obj) {
 	glUseProgram(0);
 
 	checkGLErrors("HeatParticleShader::draw");
-}
-
-
 }

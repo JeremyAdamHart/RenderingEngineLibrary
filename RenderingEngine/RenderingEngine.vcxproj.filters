@@ -24,6 +24,15 @@
     <ClInclude Include="HeatParticleSystem.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="HeatParticleGeometry.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeatParticleMat.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HeatParticleShader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">
@@ -33,6 +42,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HeatParticleSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeatParticleGeometry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeatParticleMat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HeatParticleShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

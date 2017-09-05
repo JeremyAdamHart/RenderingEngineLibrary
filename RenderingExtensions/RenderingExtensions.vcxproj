@@ -310,14 +310,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\AOShader.h" />
+    <ClInclude Include="headers\BlendShader.h" />
     <ClInclude Include="headers\ColorMat.h" />
     <ClInclude Include="headers\ElementGeometry.h" />
-    <ClInclude Include="headers\HeatParticleMat.h" />
-    <ClInclude Include="headers\HeatParticleShader.h" />
     <ClInclude Include="headers\Light.h" />
     <ClInclude Include="headers\MeshInfoLoader.h" />
     <ClInclude Include="headers\ModelLoader.h" />
-    <ClInclude Include="headers\HeatParticleGeometry.h" />
     <ClInclude Include="headers\PosNormalShader.h" />
     <ClInclude Include="headers\ProcessingShader.h" />
     <ClInclude Include="headers\ShadedMat.h" />
@@ -333,11 +331,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AOShader.cpp" />
+    <ClCompile Include="src\BlendShader.cpp" />
     <ClCompile Include="src\ColorMat.cpp" />
     <ClCompile Include="src\ElementGeometry.cpp" />
-    <ClCompile Include="src\HeatParticleGeometry.cpp" />
-    <ClCompile Include="src\HeatParticleMat.cpp" />
-    <ClCompile Include="src\HeatParticleShader.cpp" />
     <ClCompile Include="src\MeshInfoLoader.cpp" />
     <ClCompile Include="src\ModelLoader.cpp" />
     <ClCompile Include="src\PosNormalShader.cpp" />

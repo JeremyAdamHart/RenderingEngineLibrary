@@ -1,7 +1,7 @@
-#include <HeatParticleGeometry.h>
+#include "HeatParticleGeometry.h"
 #include <glSupport.h>
 
-namespace renderlib {
+using namespace renderlib;
 
 using namespace glm;
 
@@ -117,19 +117,4 @@ void HeatParticleGeometry::drawGeometry() const {
 
 
 	glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, particleNum);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

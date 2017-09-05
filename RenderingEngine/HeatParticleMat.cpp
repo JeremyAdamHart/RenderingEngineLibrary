@@ -1,7 +1,7 @@
 #include "HeatParticleMat.h"
 #include "glSupport.h"
 
-namespace renderlib {
+using namespace renderlib;
 
 const int HeatParticleMat::id = Material::getNextID();
 
@@ -14,6 +14,4 @@ void HeatParticleMat::loadUniforms(GLint *locations) const {
 	glUniform1f(locations[RADIUS_LOCATION], radius);
 
 	checkGLErrors("HeatParticleMat::loadUniforms");
-}
-
 }

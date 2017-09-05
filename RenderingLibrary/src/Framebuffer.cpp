@@ -65,7 +65,7 @@ bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 			break;
 		}
 	}
-	if (status) {
+	if (status && attachment != GL_DEPTH_ATTACHMENT) {
 		drawBuffers.push_back(attachment);
 		glDrawBuffers(drawBuffers.size(), &drawBuffers[0]);
 	}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <HeatParticleGeometry.h>
+#include "HeatParticleGeometry.h""
 #include <vector>
 #include <queue>
 
@@ -22,7 +22,7 @@ struct Disk {
 
 class HeatParticleSystem {
 public:
-	std::vector<renderlib::HeatParticle> particles;
+	std::vector<HeatParticle> particles;
 	std::vector<float> lifespans;
 	std::queue<int> emptySpots;
 
