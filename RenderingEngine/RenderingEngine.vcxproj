@@ -303,9 +303,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLWindow.h" />
+    <ClInclude Include="HeatParticleSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLWindow.cpp" />
+    <ClCompile Include="HeatParticleSystem.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

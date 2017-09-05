@@ -30,6 +30,7 @@ public:
 	void zoom(float factor);
 	mat4 getCameraMatrix() const;
 	mat4 getProjectionMatrix() const;
+	mat4 getRotationMatrix() const;
 	vec3 getPosition() const;
 };
 

@@ -79,6 +79,15 @@ mat4 TrackballCamera::getCameraMatrix() const
 	return transpose(cameraRotation)*translation;
 }
 
+mat4 TrackballCamera::getRotationMatrix() const
+{
+	return mat4(
+		vec4(right, 0),
+		vec4(up, 0),
+		vec4(-dir, 0),
+		vec4(0, 0, 0, 1));
+}
+
 mat4 TrackballCamera::getProjectionMatrix() const
 {
 	return projection;

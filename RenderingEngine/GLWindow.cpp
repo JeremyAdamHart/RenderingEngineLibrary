@@ -24,6 +24,12 @@ using namespace std;
 #include "PosNormalShader.h"
 #include <sstream>
 
+//Particle system
+#include "HeatParticleGeometry.h"
+#include "HeatParticleMat.h"
+#include "HeatParticleShader.h"
+#include "HeatParticleSystem.h"
+
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -60,6 +66,7 @@ window_width(800), window_height(800)
 	initGLExtensions();
 
 	glfwSwapInterval(1);
+	glfwSetCursorPosCallback(window, cursorPositionCallback);
 
 	glClearColor(1.f, 1.f, 1.f, 1.f);
 	glEnable(GL_DEPTH_TEST);
@@ -72,6 +79,7 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 	window_width(width), window_height(height) 
 {
 	glfwInit();
+	glfwSetCursorPosCallback(window, cursorPositionCallback);
 	window = createWindow(window_width, window_height, name);
 	initGLExtensions();
 
@@ -85,6 +93,79 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 //Temporary testing
 void WindowManager::mainLoop() {
 
+	HeatParticleShader pShader;
+	
+	HeatParticleSystem pSystem;
+	HeatParticleGeometry pGeometry;
+	HeatParticleMat pMat(0.07f);
+
+	Drawable pDrawable(&pMat, &pGeometry);
+
+#define PI 3.14159265359f
+/*
+	float initialVelocity = 3.0f;
+	float lifespan = 5.0f;
+	float heat = 0.5f;
+	float divergenceAngle = PI/2.f;
+	const int particlesPerStep = 20;
+	*/
+	
+	float initialVelocity = 5.0f;
+	float lifespan = 0.2f;
+	float heat = 0.1f;
+	float divergenceAngle = PI/8.f;
+	const int particlesPerStep = 250;
+	
+	Disk particleSpawner(0.05f, vec3(0.f, -1.f, 0.f), vec3(0, 1.f, 0));
+
+	for (int i = 0; i < 500; i++) {
+		pSystem.addParticleFromDisk(particleSpawner, initialVelocity, 
+			heat, lifespan, divergenceAngle);
+	}
+
+	float timeElapsed = 0.f;
+
+	float thrust = 0.f;
+
+	glClearColor(0.f, 0.f, 0.0f, 0.f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+	while (!glfwWindowShouldClose(window)) {
+		glDepthMask(GL_TRUE);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDepthMask(GL_FALSE);
+
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+			thrust = std::min(thrust + 0.02f, 1.f);
+		else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+			thrust = std::max(thrust - 0.02f, 0.f);
+
+		float currentTime = glfwGetTime();
+		float timeOffset = 0.f;
+		for(int i=0; i<int((1.f+thrust)*float(particlesPerStep)/2.f); i++){
+			float newHeat = heat*(float(rand()) / float(RAND_MAX))*(0.75f + thrust/4.f);
+			pSystem.addParticleFromDisk(particleSpawner, initialVelocity*(0.5f+thrust/2.f),
+				newHeat, lifespan, divergenceAngle*(1.f - thrust)*2.f, timeOffset);
+			timeOffset += (currentTime - timeElapsed) / float(particlesPerStep);
+		}
+
+		pSystem.runSimulation((currentTime - timeElapsed)*0.5f);
+
+		pGeometry.loadParticles(pSystem.particles.data(), pSystem.particles.size());
+
+		pShader.draw(cam, pDrawable);
+
+		timeElapsed = currentTime;
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	return;
+
+	//Original main loop
+
 	//Test
 	std::stringstream ss;
 	ss.str("Sample characters\nWith spaces\n");
@@ -94,7 +175,7 @@ void WindowManager::mainLoop() {
 		cout << arg << endl;
 	}
 
-	glfwSetCursorPosCallback(window, cursorPositionCallback);
+	//glfwSetCursorPosCallback(window, cursorPositionCallback);
 
 	vec3 points [6] = {
 		//First triangle
