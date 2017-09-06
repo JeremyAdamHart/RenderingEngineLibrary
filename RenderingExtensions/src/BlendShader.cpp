@@ -34,7 +34,7 @@ void BlendShader::calculateUniformLocations() {
 	uniformLocations[TextureMat::TEXTURE_LOCATION] = 
 		glGetUniformLocation(programID, "opaqueTexture");
 	uniformLocations[TextureMat::TEXTURE_LOCATION + TextureMat::COUNT] = 
-		glGetUniformLocation(programID, "transluscentTexture");
+		glGetUniformLocation(programID, "translucentTexture");
 }
 
 void BlendShader::draw(const Drawable &obj) {
