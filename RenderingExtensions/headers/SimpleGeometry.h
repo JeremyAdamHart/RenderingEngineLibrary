@@ -42,6 +42,8 @@ class SimpleTexGeometry : public GLGeometryContainer {
 	GLuint vao;
 	size_t bufferSize;
 	GLenum mode;
+
+	GLenum texCoordType;
 	
 	enum{POSITION=0, TEXCOORD, COUNT};
 	GLuint vbo[COUNT];
@@ -49,13 +51,16 @@ class SimpleTexGeometry : public GLGeometryContainer {
 	bool initializeVAO();
 
 public:
-	SimpleTexGeometry(GLenum mode=GL_TRIANGLES);
+	SimpleTexGeometry(GLenum mode=GL_TRIANGLES, GLenum type=GL_FLOAT);
 	SimpleTexGeometry(vec3 *positions, vec2 *texCoords, size_t elementNum, GLenum mode=GL_TRIANGLES);
+	SimpleTexGeometry(vec3 *positions, ivec2 *texCoords, size_t elementNum, GLenum mode = GL_TRIANGLES);
 
 	void loadGeometry(vec3 *positions, vec2 *texCoords, size_t elementNum);
+	void loadGeometry(vec3 *positions, ivec2 *texCoords, size_t elementNum);
 
 	void loadPositions(vec3 *positions, size_t numPositions, GLenum usage=GL_STATIC_DRAW);
 	void loadTexCoords(vec2 *texCoords, size_t numTexCoords, GLenum usage=GL_STATIC_DRAW);
+	void loadTexCoords(ivec2 *texCoords, size_t numTexCoords, GLenum usage = GL_STATIC_DRAW);
 
 	virtual void drawGeometry() const;
 

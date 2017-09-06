@@ -42,7 +42,8 @@ void HeatParticleSystem::addParticleFromDisk(Disk disk, float velocity, float he
 
 	float r = rand01()*disk.radius;
 	float theta = rand01()*2.f*PI;
-	vec3 position = disk.v1*sqrt(r)*cos(theta) + disk.v2*sqrt(r)*sin(theta);
+	vec3 position = disk.v1*sqrt(r)*cos(theta) + disk.v2*sqrt(r)*sin(theta)
+		+disk.origin;
 	HeatParticle newParticle;
 	if (maxDivergenceAngle < 0.0001f) {
 		newParticle = HeatParticle(position, velocity*disk.normal, heat);

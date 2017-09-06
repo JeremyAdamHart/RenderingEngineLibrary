@@ -85,6 +85,8 @@ const Texture &Framebuffer::getTexture(GLenum attachment) const {
 
 void Framebuffer::use() const {
 	glBindFramebuffer(GL_FRAMEBUFFER, id);
+	if(drawBuffers.size() != 0)
+		glDrawBuffers(drawBuffers.size(), &drawBuffers[0]);
 	vp.use();
 }
 

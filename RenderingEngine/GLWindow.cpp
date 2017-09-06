@@ -93,7 +93,7 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 //Temporary testing
 void WindowManager::mainLoop() {
 
-	HeatParticleShader pShader;
+	/*HeatParticleShader pShader;
 	
 	HeatParticleSystem pSystem;
 	HeatParticleGeometry pGeometry;
@@ -102,21 +102,14 @@ void WindowManager::mainLoop() {
 	Drawable pDrawable(&pMat, &pGeometry);
 
 #define PI 3.14159265359f
-/*
-	float initialVelocity = 3.0f;
-	float lifespan = 5.0f;
-	float heat = 0.5f;
-	float divergenceAngle = PI/2.f;
-	const int particlesPerStep = 20;
-	*/
 	
-	float initialVelocity = 5.0f;
+	float initialVelocity = 7.0f;
 	float lifespan = 0.2f;
-	float heat = 0.1f;
+	float heat = 0.2f;
 	float divergenceAngle = PI/8.f;
 	const int particlesPerStep = 250;
 	
-	Disk particleSpawner(0.05f, vec3(0.f, -1.f, 0.f), vec3(0, 1.f, 0));
+	Disk particleSpawner(0.05f, vec3(0.f, 0.f, 0.f), vec3(0, 1.f, 0));
 
 	for (int i = 0; i < 500; i++) {
 		pSystem.addParticleFromDisk(particleSpawner, initialVelocity, 
@@ -162,7 +155,7 @@ void WindowManager::mainLoop() {
 		glfwPollEvents();
 	}
 
-	return;
+	return;*/
 
 	//Original main loop
 
