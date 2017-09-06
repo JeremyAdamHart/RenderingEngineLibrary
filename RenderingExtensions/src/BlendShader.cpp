@@ -19,7 +19,7 @@ BlendShader::BlendShader(int numSamples) {
 bool BlendShader::createProgram(int numSamples) {
 	if (numSamples)
 		programID = createGLProgram(shaders,
-		{ {GL_FRAGMENT_SHADER, str("#define NUM_SAMPLES= %d\n", numSamples)} });
+		{ {GL_FRAGMENT_SHADER, str("#define NUM_SAMPLES %d\n", numSamples)} });
 	else
 		programID = createGLProgram(shaders);
 

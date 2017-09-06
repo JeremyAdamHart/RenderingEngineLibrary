@@ -19,7 +19,7 @@ SimpleGeometry::SimpleGeometry(vec3 *positions, size_t elementNum, GLenum mode) 
 	loadGeometry(positions, elementNum);
 }
 
-bool SimpleGeometry::initializeVAO(){
+bool SimpleGeometry::initializeVAO() {
 	checkGLErrors("EnterVAO");
 
 	glGenVertexArrays(1, &vao);
@@ -36,7 +36,7 @@ bool SimpleGeometry::initializeVAO(){
 		GL_FALSE,			//Normalized?
 		sizeof(vec3),		//Stride
 		(void*)0			//Offset
-		);
+	);
 
 	glBindVertexArray(0);
 
@@ -53,7 +53,7 @@ void SimpleGeometry::loadGeometry(vec3 *positions, size_t elementNum)
 void SimpleGeometry::loadPositions(vec3 *positions, size_t numPositions, GLenum usage)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[POSITION]);
-	glBufferData(GL_ARRAY_BUFFER, numPositions*sizeof(vec3), positions, usage);
+	glBufferData(GL_ARRAY_BUFFER, numPositions * sizeof(vec3), positions, usage);
 
 	checkGLErrors("SimpleGeometry::loadPositions");
 }
@@ -74,18 +74,12 @@ void SimpleGeometry::bindGeometry() const
 
 SimpleTexGeometry::SimpleTexGeometry(GLenum mode, GLenum type) :bufferSize(0), mode(mode), texCoordType(type)
 {
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(COUNT, vbo);
-
 	initializeVAO();
 }
 
 SimpleTexGeometry::SimpleTexGeometry(vec3 *positions, vec2 *texCoords, size_t elementNum, GLenum mode)
 	: mode(mode), texCoordType(GL_FLOAT)
 {
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(COUNT, vbo);
-
 	initializeVAO();
 
 	loadGeometry(positions, texCoords, elementNum);
@@ -102,7 +96,10 @@ SimpleTexGeometry::SimpleTexGeometry(vec3 *positions, ivec2 *texCoords, size_t e
 	loadGeometry(positions, texCoords, elementNum);
 }
 
-bool SimpleTexGeometry::initializeVAO(){
+bool SimpleTexGeometry::initializeVAO() {
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(COUNT, vbo);
+
 	glBindVertexArray(vao);
 
 	glEnableVertexAttribArray(ATTRIB_LOCATION::POSITION);
@@ -114,7 +111,7 @@ bool SimpleTexGeometry::initializeVAO(){
 		GL_FALSE,			//Normalized?
 		sizeof(vec3),		//Stride
 		(void*)0			//Offset
-		);
+	);
 
 	size_t componentSize = (texCoordType == GL_FLOAT) ? sizeof(vec2) : sizeof(ivec2);
 	glEnableVertexAttribArray(ATTRIB_LOCATION::TEX_COORD);
@@ -126,7 +123,7 @@ bool SimpleTexGeometry::initializeVAO(){
 		GL_FALSE,			//Normalized?
 		componentSize,		//Stride
 		(void*)0			//Offset
-		);
+	);
 
 	glBindVertexArray(0);
 
@@ -137,6 +134,8 @@ void SimpleTexGeometry::loadGeometry(vec3 *positions, vec2 *texCoords, size_t el
 {
 	if (texCoordType != GL_FLOAT) {
 		texCoordType = GL_FLOAT;
+		glDeleteVertexArrays(1, &vao);
+		glDeleteBuffers(COUNT, vbo);
 		initializeVAO();
 	}
 	bindGeometry();
@@ -144,11 +143,14 @@ void SimpleTexGeometry::loadGeometry(vec3 *positions, vec2 *texCoords, size_t el
 	loadTexCoords(texCoords, elementNum);
 
 	bufferSize = elementNum;
+	checkGLErrors("SimpleTexGeometry::loadGeometry");
 }
 
 void SimpleTexGeometry::loadGeometry(vec3 *positions, ivec2 *texCoords, size_t elementNum)
 {
 	if (texCoordType != GL_INT) {
+		glDeleteVertexArrays(1, &vao);
+		glDeleteBuffers(COUNT, vbo);
 		texCoordType = GL_INT;
 		initializeVAO();
 	}
@@ -157,29 +159,34 @@ void SimpleTexGeometry::loadGeometry(vec3 *positions, ivec2 *texCoords, size_t e
 	loadTexCoords(texCoords, elementNum);
 
 	bufferSize = elementNum;
+	checkGLErrors("SimpleTexGeometry::loadGeometry");
 }
 
 void SimpleTexGeometry::loadPositions(vec3 *positions, size_t numPositions, GLenum usage)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[POSITION]);
-	glBufferData(GL_ARRAY_BUFFER, numPositions*sizeof(vec3), positions, usage);
+	glBufferData(GL_ARRAY_BUFFER, numPositions * sizeof(vec3), positions, usage);
 }
 
 void SimpleTexGeometry::loadTexCoords(vec2 *texCoords, size_t numTexCoords, GLenum usage)
 {
 	if (texCoordType != GL_FLOAT) {
 		texCoordType = GL_FLOAT;
+		glDeleteVertexArrays(1, &vao);
+		glDeleteBuffers(COUNT, vbo);
 		initializeVAO();
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[TEXCOORD]);
-	glBufferData(GL_ARRAY_BUFFER, numTexCoords*sizeof(vec2), texCoords, usage);
+	glBufferData(GL_ARRAY_BUFFER, numTexCoords * sizeof(vec2), texCoords, usage);
 }
 
 void SimpleTexGeometry::loadTexCoords(ivec2 *texCoords, size_t numTexCoords, GLenum usage)
 {
 	if (texCoordType != GL_INT) {
 		texCoordType = GL_INT;
+		glDeleteVertexArrays(1, &vao);
+		glDeleteBuffers(COUNT, vbo);
 		initializeVAO();
 	}
 
@@ -239,7 +246,7 @@ bool SimpleTexGeometryI::initializeVAO() {
 		2,					//# of components
 		GL_INT,			//Type
 		GL_FALSE,			//Normalized?
-		sizeof(ivec2),		//Stride
+		sizeof(GLint) * 2,		//Stride
 		(void*)0			//Offset
 	);
 
@@ -278,5 +285,4 @@ void SimpleTexGeometryI::drawGeometry() const {
 	bindGeometry();
 	glDrawArrays(mode, 0, bufferSize);
 }
-
 }
