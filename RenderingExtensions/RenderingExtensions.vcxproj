@@ -316,6 +316,7 @@
     <ClInclude Include="headers\Light.h" />
     <ClInclude Include="headers\MeshInfoLoader.h" />
     <ClInclude Include="headers\ModelLoader.h" />
+    <ClInclude Include="headers\PerlinNoise.h" />
     <ClInclude Include="headers\PosNormalShader.h" />
     <ClInclude Include="headers\ProcessingShader.h" />
     <ClInclude Include="headers\ShadedMat.h" />
@@ -336,6 +337,7 @@
     <ClCompile Include="src\ElementGeometry.cpp" />
     <ClCompile Include="src\MeshInfoLoader.cpp" />
     <ClCompile Include="src\ModelLoader.cpp" />
+    <ClCompile Include="src\PerlinNoise.cpp" />
     <ClCompile Include="src\PosNormalShader.cpp" />
     <ClCompile Include="src\ProcessingShader.cpp" />
     <ClCompile Include="src\ShadedMat.cpp" />

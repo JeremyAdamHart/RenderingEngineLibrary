@@ -22,6 +22,7 @@ using namespace std;
 //Ambient occlusion
 #include "AOShader.h"
 #include "PosNormalShader.h"
+#include "PerlinNoise.h"
 #include <sstream>
 
 //Particle system
@@ -90,8 +91,79 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 	glViewport(0, 0, window_width, window_height);
 }
 
+#define M_PI 3.1415926535897932384626433832795
+#define MOD_MAX 8388608
+
+uint lcg(uint seed) {
+	int value = (65793 * seed + 4282663) % MOD_MAX;
+	return value;
+}
+
+vec2 gradient(uint i, uint j, uint seed) {
+	uint rand = lcg(lcg(seed + i) + j);
+	float theta = float(rand) / float(MOD_MAX);
+	return vec2(sin(theta), cos(theta));
+}
+
+void WindowManager::noiseLoop() {
+	vec3 points[6] = {
+		//First triangle
+		vec3(-0.5f, 0.5f, 0.f)*2.f,
+		vec3(0.5f, 0.5f, 0.f)*2.f,
+		vec3(0.5f, -0.5f, 0.f)*2.f,
+		//Second triangle
+		vec3(0.5f, -0.5f, 0.f)*2.f,
+		vec3(-0.5f, -0.5f, 0.f)*2.f,
+		vec3(-0.5f, 0.5f, 0.f)*2.f
+	};
+
+	vec2 coords[6] = {
+		//First triangle
+		vec2(0, 1.f),
+		vec2(1.f, 1.f),
+		vec2(1.f, 0.f),
+		//Second triangle
+		vec2(1.f, 0.f),
+		vec2(0.f, 0.f),
+		vec2(0.f, 1.f)
+	};
+
+	gradient(0, 0, 1);
+	gradient(0, 1, 1);
+	gradient(1, 0, 1);
+	gradient(1, 1, 1);
+
+	int value = 1;
+	for (int i = 0; i < 10; i++) {
+		value = lcg(value);
+		printf("Value = %d\n", value);
+	}
+
+	SimpleTexManager tm;
+	PerlinNoiseShader2D perlinShader;
+	Drawable texSquare(
+		new TextureMat(createTexture2D(1, 1, &tm)),
+		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		perlinShader.draw(cam, texSquare);
+
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
 //Temporary testing
 void WindowManager::mainLoop() {
+
+	noiseLoop();
+
+	return;
 
 	/*HeatParticleShader pShader;
 	
@@ -246,6 +318,7 @@ void WindowManager::mainLoop() {
 	PosNormalShader pnShader;
 	AOShader aoShader;
 
+
 	vector<Drawable> drawables;
 //	loadWavefront("untrackedmodels/SciFiCenter/CenterCity/", "Center_City_Sci-Fi", &drawables, &tm);
 //	loadWavefront("untrackedmodels/OrganodronCity2/", "OrganodronCity", &drawables, &tm);
@@ -273,6 +346,8 @@ void WindowManager::mainLoop() {
 		glClearColor(1.f, 1.f, 1.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		aoShader.draw(cam, vec3(10.f, 10.f, 10.f), texSquare);
+
+		texShader.draw(cam, texSquare);
 
 /*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		for (int i = 0; i < drawables.size(); i++) {
