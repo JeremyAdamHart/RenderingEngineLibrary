@@ -19,11 +19,7 @@ LIBS=
 OS_NAME:=$(shell uname -s)
 
 ifeq ($(OS_NAME),Darwin)
-	LIBS += \
-		-framework Cocoa \
-		-framework OpenGL \
-		-framework IOKit \
-		-framework CoreVideo
+	LIBS += `pkg-config --static --libs glfw3 gl`
 endif
 ifeq ($(OS_NAME),Linux)
 	LIBS += `pkg-config --static --libs glfw3 gl`
