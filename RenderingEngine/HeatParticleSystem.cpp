@@ -1,6 +1,7 @@
 #include "HeatParticleSystem.h"
 #include <random>
 #include <ctime>
+#include <cmath>
 
 #define PI 3.14159265359f
 
@@ -49,7 +50,7 @@ void HeatParticleSystem::addParticleFromDisk(Disk disk, float velocity, float he
 		newParticle = HeatParticle(position, velocity*disk.normal, heat);
 	}
 	else {
-		float cos_phi = std::cosf(maxDivergenceAngle);
+		float cos_phi = cosf(maxDivergenceAngle);
 		float z = cos_phi + (1 - cos_phi)*rand01();
 		theta = rand01()*2.f*PI;
 		vec3 pVelocity = sqrt(1 - z*z)*cosf(theta)*disk.v1+
