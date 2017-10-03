@@ -63,8 +63,8 @@ float generateNoise(float x, float y, float width, int seed){
 }
 
 float sun(vec2 coord, float noise){
-	vec2 input = vec2(coord.x, coord.y);
-	return 1.0 - 2.0*(length(input - vec2(0.5, 0.5))+noise);
+	vec2 point = vec2(coord.x, coord.y);
+	return 1.0 - 2.0*(length(point - vec2(0.5, 0.5))+noise);
 }
 
 float spots(vec2 coord, float noise, float period){

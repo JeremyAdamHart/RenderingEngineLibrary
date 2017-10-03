@@ -40,6 +40,8 @@ public:
 	void newTexManager(TextureManager *newManager);
 	int getTexUnit() const;
 
+	TexInfo& getInfoRef();
+
 	//Access info 
 	int getID() const;
 	size_t numDimensions() const;

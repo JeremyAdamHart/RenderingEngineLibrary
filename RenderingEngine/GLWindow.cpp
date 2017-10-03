@@ -361,7 +361,10 @@ void WindowManager::mainLoop() {
 			reloadShaders = false;
 		}
 		if (windowResized) {
-
+			window_width = windowWidth;
+			window_height = windowHeight;
+			pnFbo.resize(window_width, window_height);
+			fbWindow.resize(window_width, window_height);
 		}
 
 		//texShader.draw(cam, texSquare);

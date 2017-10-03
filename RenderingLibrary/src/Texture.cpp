@@ -73,6 +73,7 @@ GLint Texture::getLevel() const { return info.level; }
 GLenum Texture::getFormat() const { return info.format; }
 GLenum Texture::getType() const { return info.type; }
 GLint Texture::getInternalFormat() const { return info.internalFormat; }
+TexInfo& Texture::getInfoRef() {return info;}
 
 TextureManager::TextureManager() {}
 

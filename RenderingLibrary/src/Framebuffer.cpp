@@ -93,7 +93,33 @@ void Framebuffer::use() const {
 GLuint Framebuffer::getID() const { return id; }
 
 void Framebuffer::resize(int width, int height) {
-	//TODO
+	for(auto it=tex.begin(); it != tex.end(); it++){
+		GLenum attachment = it->first;
+		Texture tex = it->second;
+		TexInfo info = it->second.getInfoRef();
+
+		if(info.target == GL_TEXTURE_2D){
+			info.dimensions[0] = width;
+			info.dimensions[1] = height;
+			glActiveTexture(NO_ACTIVE_TEXTURE);
+			glBindTexture(info.target, tex.getID());
+			glTexImage2D(info.target, info.level, info.internalFormat, info.dimensions[0], info.dimensions[1], 
+						0, info.format, GL_FLOAT, nullptr);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, id);
+			glFramebufferTexture2D(GL_FRAMEBUFFER,
+				attachment,
+				tex.getTarget(),
+				tex.getID(),
+				tex.getLevel());
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}	
+
+	}
+
+	vp.width = width;
+	vp.height = height;
 }
 
 Viewport::Viewport(unsigned int width, unsigned int height, 
