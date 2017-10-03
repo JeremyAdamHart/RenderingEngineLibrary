@@ -12,9 +12,9 @@ protected:
 	void calculateUniformLocations();
 	void loadUniforms(const glm::mat4& vp_matrix, const glm::mat4& inv_rot_matrix);
 public:
-	HeatParticleShader(std::map<GLenum, std::string> defines = std::map<GLenum, std::string> defines{});
+	HeatParticleShader(std::map<GLenum, std::string> defines = std::map<GLenum, std::string>{});
 
-	virtual bool createProgram(std::map<GLenum, std::string> defines = std::map<GLenum, std::string> defines{});
+	virtual bool createProgram(std::map<GLenum, std::string> defines = std::map<GLenum, std::string>{});
 
 	void draw(const renderlib::Camera &cam, const renderlib::Drawable &obj);
 };
