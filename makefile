@@ -51,9 +51,14 @@ ENGINE_OBJS=$(addprefix $(ENGINE_DIR)/obj/,$(notdir $(ENGINE_SOURCES:.cpp=.o)))
 .PHONY: default
 default:  buildDirectories $(ENGINE_DIR)/renderingengine.out
 	echo "Build completed"
-
+ifeq ($(OS_NAME),Darwin)
+$(ENGINE_DIR)/renderingengine.out: $(CORE_OBJS) $(EXTENSION_OBJS) $(ENGINE_OBJS)
+	$(CC) $(LINK_FLAGS) $(ENGINE_OBJS) $(CORE_OBJS) $(EXTENSION_OBJS) -o $@ -L. $(LIBS)
+endif
+ifeq ($(OS_NAME),Linux)
 $(ENGINE_DIR)/renderingengine.out: librenderingcore.a librenderingextensions.a $(ENGINE_OBJS)
 	$(CC) $(LINK_FLAGS) $(ENGINE_OBJS) -o $@ -L. -lrenderingextensions -lrenderingcore $(LIBS)
+endif
 
 all: librenderingcore.a librenderingextensions.a $(ENGINE_DIR)/renderingengine.out 
 
