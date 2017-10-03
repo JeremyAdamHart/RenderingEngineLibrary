@@ -13,7 +13,7 @@ protected:
 public:
 	GLuint getID();
 	void deleteProgram();
-	virtual bool createProgram(map<GLenum, string> defines = {});
+	virtual bool createProgram(map<GLenum, string> defines = map<GLenum, string>{});
 };
 
 }

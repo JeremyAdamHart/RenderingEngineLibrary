@@ -42,10 +42,10 @@ EXTENSION_OBJS=$(addprefix $(EXTENSION_DIR)/obj/,$(notdir $(EXTENSION_SOURCES:.c
 ENGINE_OBJS=$(addprefix $(ENGINE_DIR)/obj/,$(notdir $(ENGINE_SOURCES:.cpp=.o)))
 
 .PHONY: default
-default: $(ENGINE_DIR)/renderingengine.out
-	mkdir -p $(CORE_DIR)/obj $(EXTENSION_DIR)/obj $(ENGINE_DIR)/obj
+default:  buildDirectories $(ENGINE_DIR)/renderingengine.out
+	echo "Starting build"
 
-$(ENGINE_DIR)/renderingengine.out: librenderingextensions.a librenderingcore.a $(ENGINE_OBJS)
+$(ENGINE_DIR)/renderingengine.out: librenderingcore.a librenderingextensions.a $(ENGINE_OBJS)
 	$(CC) $(LINK_FLAGS) $(ENGINE_OBJS) -o $@ -L. -lrenderingextensions -lrenderingcore $(LIBS)
 
 all: librenderingcore.a librenderingextensions.a $(ENGINE_DIR)/renderingengine.out 
@@ -64,6 +64,10 @@ librenderingcore.a: $(CORE_OBJS)
 
 librenderingextensions.a: $(EXTENSION_OBJS)
 	ar rvs $@ $(EXTENSION_OBJS)
+
+.PHONY: buildDirectories
+buildDirectories:
+	mkdir -p $(CORE_DIR)/obj $(EXTENSION_DIR)/obj $(ENGINE_DIR)/obj
 
 .PHONY: clean
 clean:
