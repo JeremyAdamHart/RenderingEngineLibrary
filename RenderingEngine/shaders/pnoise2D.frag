@@ -1,4 +1,4 @@
-#version 410
+#version 330
 #define M_PI 3.1415926535897932384626433832795
 #define MOD_MAX 8388608
 
@@ -13,22 +13,22 @@ uniform float baseWidth = 0.1;
 uniform float persistance = 0.5;
 uniform int seedValue = 71;
 
-uint hash( uint x ) {
-    x += ( x << 10u );
-    x ^= ( x >>  6u );
-    x += ( x <<  3u );
-    x ^= ( x >> 11u );
-    x += ( x << 15u );
+int hash( int x ) {
+    x += ( x << 10 );
+    x ^= ( x >>  6 );
+    x += ( x <<  3 );
+    x ^= ( x >> 11 );
+    x += ( x << 15 );
     return x;
 }
 
 //Linear congruential generator - Doesn't work well for this
-uint lcg(uint seed){
+int lcg(int seed){
 	return (65793*seed+4282663)%MOD_MAX;
 }
 
-vec2 gradient(uint i, uint j, uint seed){
-	uint rand = hash(hash(seed+i)+j)%MOD_MAX;
+vec2 gradient(int i, int j, int seed){
+	int rand = hash(hash(seed+i)+j)%MOD_MAX;
 	float theta = 2.0*M_PI*float(rand)/float(MOD_MAX);
 	return vec2(sin(theta), cos(theta));
 }
@@ -37,9 +37,9 @@ float fade(float t){
 	return t*t*t*(t*(t*6 - 15) + 10);
 }
 
-float generateNoise(float x, float y, float width, uint seed){
-	uint i = uint(x/width);
-	uint j = uint (y/width);
+float generateNoise(float x, float y, float width, int seed){
+	int i = int(x/width);
+	int j = int (y/width);
 	float x_r = mod(x, width)/width;
 	float y_r = mod(y, width)/width;
 

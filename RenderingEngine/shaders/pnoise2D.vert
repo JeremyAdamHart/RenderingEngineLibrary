@@ -1,4 +1,4 @@
-#version 410
+#version 330
 
 // location indices for these attributes correspond to those specified in the
 // InitializeGeometry() function of the main program
