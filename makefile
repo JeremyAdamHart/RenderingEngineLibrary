@@ -20,6 +20,13 @@ OS_NAME:=$(shell uname -s)
 
 ifeq ($(OS_NAME),Darwin)
 	LIBS += `pkg-config --static --libs glfw3 gl`
+	LIBS += \
+	 -lglfw3 \
+	 -lGLEW \
+	 -framework Cocoa \
+	 -framework OpenGL \
+	 -framework IOKit \
+	-framework CoreVideo
 endif
 ifeq ($(OS_NAME),Linux)
 	LIBS += `pkg-config --static --libs glfw3 gl`
@@ -43,7 +50,7 @@ ENGINE_OBJS=$(addprefix $(ENGINE_DIR)/obj/,$(notdir $(ENGINE_SOURCES:.cpp=.o)))
 
 .PHONY: default
 default:  buildDirectories $(ENGINE_DIR)/renderingengine.out
-	echo "Starting build"
+	echo "Build completed"
 
 $(ENGINE_DIR)/renderingengine.out: librenderingcore.a librenderingextensions.a $(ENGINE_OBJS)
 	$(CC) $(LINK_FLAGS) $(ENGINE_OBJS) -o $@ -L. -lrenderingextensions -lrenderingcore $(LIBS)

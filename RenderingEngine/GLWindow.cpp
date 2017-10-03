@@ -61,7 +61,7 @@ void cursorPositionCallback(GLFWwindow *window, double xpos, double ypos) {
 WindowManager::WindowManager() :
 window_width(800), window_height(800)
 {
-
+	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -69,6 +69,8 @@ window_width(800), window_height(800)
 	glfwInit();
 	window = createWindow(window_width, window_height, 
 		"You really should rename this");
+
+	glfwMakeContextCurrent(window);
 	initGLExtensions();
 
 	glfwSwapInterval(1);
@@ -91,6 +93,7 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 	glfwInit();
 	glfwSetCursorPosCallback(window, cursorPositionCallback);
 	window = createWindow(window_width, window_height, name);
+	glfwMakeContextCurrent(window);
 	initGLExtensions();
 
 	glClearColor(color.r, color.g, color.b, color.a);
