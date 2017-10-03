@@ -27,6 +27,6 @@ GLuint createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessCo
 bool checkGLErrors(string location);
 
 GLuint createGLProgram(vector<pair<GLenum, string>> shaders,
-	map<GLenum, string> defines = {});
+	map<GLenum, string> defines = map<GLenum, string>{});
 
 }
