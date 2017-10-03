@@ -9,8 +9,9 @@ in vec2 FragmentTexCoord;
 
 //Perlin noise values
 uniform int octaveNum = 1;
-uniform float baseWidth = 0.1;
+uniform float baseWidth = 0.5;
 uniform float persistance = 0.5;
+uniform int seedValue = 71;
 
 uint hash( uint x ) {
     x += ( x << 10u );
@@ -61,17 +62,41 @@ float generateNoise(float x, float y, float width, uint seed){
 	return (1-t)*v0 + t*v1;
 }
 
+float sun(vec2 coord, float noise){
+	vec2 input = vec2(coord.x, coord.y);
+	return 1.0 - 2.0*(length(input - vec2(0.5, 0.5))+noise);
+}
+
+float spots(vec2 coord, float noise, float period){
+	return (sin((noise+coord.x)*2.0*M_PI/period)+1.0)*0.5 * 
+			(sin((noise+coord.y)*2.0*M_PI/period)+1.0)*0.5;
+}
+
+float rings(vec2 coord, float noise, float period){
+	float x = length(coord - vec2(0.5, 0.5));
+	return cos((noise + x)*2.0*M_PI/period);
+}
+
+float lightning(vec2 coord, float noise, float width){
+	float x = max(1.0 - abs(coord.x+noise - 0.5)/width, 0.0);
+	return x*x*x*x;
+}
+
 void main(void)
 {
 	float noise = 0.0;
-	for(int i=0; i<5; i++){
+	for(int i=0; i<3; i++){
 		float weight = pow(persistance, i+1);
 		float width = baseWidth*pow(0.5, i);
-		noise += (generateNoise(FragmentTexCoord.x, FragmentTexCoord.y, width, 19831)+0.5)*weight;
+		noise += (generateNoise(FragmentTexCoord.x, FragmentTexCoord.y, width, seedValue)+0.5)*weight;
 	}
 
-	float turbulence = 0.5;
-	float intensity = sin((FragmentTexCoord.x + FragmentTexCoord.y+noise*turbulence)*20.0)*0.5 + 0.5;
-
+	float turbulence = 0.1;
+	float intensity = noise;
+//	float intensity = sin((FragmentTexCoord.x + FragmentTexCoord.y+noise*turbulence)*10.0)*0.5 + 0.5;
+//	float intensity = sun(FragmentTexCoord, noise*turbulence);
+//	float intensity = spots(FragmentTexCoord, noise*turbulence, 0.25);
+//	float intensity = rings(FragmentTexCoord, noise*turbulence, 0.1);
+//	float intensity = lightning(FragmentTexCoord, (2.0*noise - 1.0)*turbulence, 0.125);
 	PixelColour = vec4(intensity*vec3(1, 1, 1), 1);
 }
