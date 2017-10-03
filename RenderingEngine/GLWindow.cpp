@@ -110,16 +110,6 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 #define M_PI 3.1415926535897932384626433832795
 #define MOD_MAX 8388608
 
-uint lcg(uint seed) {
-	int value = (65793 * seed + 4282663) % MOD_MAX;
-	return value;
-}
-
-vec2 gradient(uint i, uint j, uint seed) {
-	uint rand = lcg(lcg(seed + i) + j);
-	float theta = float(rand) / float(MOD_MAX);
-	return vec2(sin(theta), cos(theta));
-}
 
 void WindowManager::noiseLoop() {
 	vec3 points[6] = {
@@ -144,17 +134,6 @@ void WindowManager::noiseLoop() {
 		vec2(0.f, 1.f)
 	};
 
-	gradient(0, 0, 1);
-	gradient(0, 1, 1);
-	gradient(1, 0, 1);
-	gradient(1, 1, 1);
-
-	int value = 1;
-	for (int i = 0; i < 10; i++) {
-		value = lcg(value);
-		printf("Value = %d\n", value);
-	}
-
 	SimpleTexManager tm;
 	PerlinNoiseShader2D perlinShader;
 	Drawable texSquare(
@@ -176,10 +155,6 @@ void WindowManager::noiseLoop() {
 
 //Temporary testing
 void WindowManager::mainLoop() {
-
-	noiseLoop();
-
-	return;
 
 	/*HeatParticleShader pShader;
 	

@@ -8,8 +8,8 @@ out vec4 PixelColour;
 in vec2 FragmentTexCoord;
 
 //Perlin noise values
-uniform int octaveNum = 1;
-uniform float baseWidth = 0.5;
+uniform int octaveNum = 5;
+uniform float baseWidth = 0.1;
 uniform float persistance = 0.5;
 uniform int seedValue = 71;
 
@@ -85,15 +85,15 @@ float lightning(vec2 coord, float noise, float width){
 void main(void)
 {
 	float noise = 0.0;
-	for(int i=0; i<3; i++){
+	for(int i=0; i<octaveNum; i++){
 		float weight = pow(persistance, i+1);
 		float width = baseWidth*pow(0.5, i);
 		noise += (generateNoise(FragmentTexCoord.x, FragmentTexCoord.y, width, seedValue)+0.5)*weight;
 	}
 
-	float turbulence = 0.1;
-	float intensity = noise;
-//	float intensity = sin((FragmentTexCoord.x + FragmentTexCoord.y+noise*turbulence)*10.0)*0.5 + 0.5;
+	float turbulence = 0.5;
+//	float intensity = noise;
+	float intensity = sin((FragmentTexCoord.x + FragmentTexCoord.y+noise*turbulence)*10.0)*0.5 + 0.5;
 //	float intensity = sun(FragmentTexCoord, noise*turbulence);
 //	float intensity = spots(FragmentTexCoord, noise*turbulence, 0.25);
 //	float intensity = rings(FragmentTexCoord, noise*turbulence, 0.1);
