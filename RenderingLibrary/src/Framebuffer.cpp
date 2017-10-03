@@ -92,6 +92,10 @@ void Framebuffer::use() const {
 
 GLuint Framebuffer::getID() const { return id; }
 
+void Framebuffer::resize(int width, int height) {
+	//TODO
+}
+
 Viewport::Viewport(unsigned int width, unsigned int height, 
 	unsigned int x, unsigned int y) 
 	:width(width), height(height), x(x), y(y) 

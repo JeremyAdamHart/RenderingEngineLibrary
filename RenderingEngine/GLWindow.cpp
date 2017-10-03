@@ -40,6 +40,10 @@ TrackballCamera cam(
 	vec3(0, 0, -1), vec3(0, 0, 1),
 	glm::perspective(90.f*3.14159f/180.f, 1.f, 0.1f, 3.f));
 
+bool reloadShaders = false;
+bool windowResized = false;
+int windowWidth, windowHeight;
+
 void cursorPositionCallback(GLFWwindow *window, double xpos, double ypos) {
 	static vec2 lastPos = vec2(0.f, 0.f);
 	
@@ -56,6 +60,17 @@ void cursorPositionCallback(GLFWwindow *window, double xpos, double ypos) {
 	}
 
 	lastPos = mousePos;
+}
+
+void windowResizeCallback(GLFWwindow* window, int width, int height) {
+	windowResized = true;
+	windowWidth = width;
+	windowHeight = height;
+}
+
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
+		reloadShaders = true;
 }
 
 WindowManager::WindowManager() :
@@ -134,6 +149,9 @@ void WindowManager::noiseLoop() {
 		vec2(0.f, 1.f)
 	};
 
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
 	SimpleTexManager tm;
 	PerlinNoiseShader2D perlinShader;
 	Drawable texSquare(
@@ -142,6 +160,16 @@ void WindowManager::noiseLoop() {
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (reloadShaders) {
+			perlinShader.createProgram();
+			reloadShaders = false;
+		}
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
 
 		perlinShader.draw(cam, texSquare);
 
@@ -231,6 +259,8 @@ void WindowManager::mainLoop() {
 		cout << arg << endl;
 	}
 
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
 	//glfwSetCursorPosCallback(window, cursorPositionCallback);
 
 	vec3 points [6] = {
@@ -326,6 +356,14 @@ void WindowManager::mainLoop() {
 
 	while (!glfwWindowShouldClose(window)) {
 
+		if (reloadShaders) {
+			aoShader.createProgram();
+			reloadShaders = false;
+		}
+		if (windowResized) {
+
+		}
+
 		//texShader.draw(cam, texSquare);
 
 		//Render dragon with Ambient Occlusion
@@ -384,6 +422,7 @@ void initGLExtensions() {
 	}
 #endif
 }
+
 
 GLFWwindow *createWindow(int width, int height, std::string name)
 {

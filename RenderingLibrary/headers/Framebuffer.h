@@ -36,6 +36,8 @@ public:
 	map<GLenum, Texture>::iterator textureBegin();
 	map<GLenum, Texture>::iterator textureEnd();
 
+	void resize(int width, int height);
+
 	void deleteTextures();
 	void deleteFramebuffer();
 };

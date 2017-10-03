@@ -26,7 +26,7 @@ const float THRESHOLD = 0.1;
 const float ks = 0.2;
 const float kd = 0.2;
 const float ka = 0.6;
-const float alpha = 20.0;
+const float alpha = 5.0;
 
 vec3 getTangentOfNormal(vec3 normal, vec3 direction){
 	vec3 n_proj_d = dot(normal, direction)/dot(direction, direction)*direction;
@@ -209,7 +209,7 @@ float sinLines(vec3 coord, float noise, float noiseB){
 }
 
 float radialSin(vec3 coord, float noise){
-	float period = 0.25;
+	float period = 0.2;
 	return sin((length(coord) + noise)*2.0*M_PI/period)*0.5 + 0.5;
 }
 
@@ -234,7 +234,7 @@ void main(void)
 
 //	float intensity = sinLines(coord, noise*turbulence, noiseB*turbulence);
 	float intensity = radialSin(coord, noise*turbulence);
-	vec3 color = (1.0 - intensity*intensity)*vec3(1, 1, 1) + vec3(0.1, 0.07, 0.1);
+	vec3 color = (1.0 - intensity*intensity*intensity*intensity*intensity)*vec3(1, 1, 1) + vec3(0.1, 0.07, 0.1);
 
 	if(length(position - vec3(0, 0, 0)) < 0.00001)
 		PixelColour = vec4(0, 0, 0, 1);

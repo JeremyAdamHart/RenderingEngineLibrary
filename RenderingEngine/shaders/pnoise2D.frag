@@ -93,7 +93,7 @@ void main(void)
 
 	float turbulence = 0.5;
 //	float intensity = noise;
-	float intensity = sin((FragmentTexCoord.x + FragmentTexCoord.y+noise*turbulence)*10.0)*0.5 + 0.5;
+	float intensity = sin((FragmentTexCoord.x + FragmentTexCoord.y+noise*turbulence)*20.0)*0.5 + 0.5;
 //	float intensity = sun(FragmentTexCoord, noise*turbulence);
 //	float intensity = spots(FragmentTexCoord, noise*turbulence, 0.25);
 //	float intensity = rings(FragmentTexCoord, noise*turbulence, 0.1);
