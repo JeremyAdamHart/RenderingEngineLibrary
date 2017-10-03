@@ -21,9 +21,9 @@ protected:
 	void loadUniforms(const glm::mat4& vp_matrix, 
 		const glm::mat4& m_matrix, glm::vec3 camera_pos, glm::vec3 light_pos);
 public:
-	TorranceSparrowShader(map<GLenum, string> defines = {});
+	TorranceSparrowShader(map<GLenum, string> defines = map<GLenum, string>{});
 
-	virtual bool createProgram(map<GLenum, string> defines = {});
+	virtual bool createProgram(map<GLenum, string> defines = map<GLenum, string>{});
 
 	void draw(const Camera &cam, glm::vec3 lightPos, const Drawable &obj);		//Change to use pointer to drawable?
 	void draw(const Camera &cam, glm::vec3 lightPos, Scene &scene);
