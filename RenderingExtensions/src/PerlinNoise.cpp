@@ -12,8 +12,8 @@ enum {
 };
 
 static vector<pair<GLenum, string>> shaders{
-	{ GL_VERTEX_SHADER, "shaders/pnoise2D.vert" },
-	{ GL_FRAGMENT_SHADER, "shaders/pnoise2D.frag" }
+	{ GL_VERTEX_SHADER, "shaders/implicitLines.vert" },
+	{ GL_FRAGMENT_SHADER, "shaders/implicitLines.frag" }
 };
 
 PerlinNoiseShader2D::PerlinNoiseShader2D(map<GLenum, string> defines) {
