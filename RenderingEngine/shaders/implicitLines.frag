@@ -5,23 +5,16 @@ out vec4 PixelColour;
 
 in vec2 FragmentTexCoord;
 
-float distToLine(vec2 p, vec2 o, vec2 d){
-	vec2 op = p - o;
+float distToLine(vec2 p, vec2 a, vec2 b){
+	vec2 d = b - a;
 	vec2 d_perp = normalize(vec2(-d.y, d.x));
-	if(dot(op, d) > 0)
-		return abs(dot(op, d_perp));
+	if(dot(p-a, d) > 0 && dot(p-b, -d) > 0)
+		return abs(dot(p-a, d_perp));
+	else if(dot(p-b, -d) < 0)
+		return length(p-b);
 	else
-		return length(op);
+		return length(p-a);
 }
-
-/*float distToLineSeg(vec2 p, vec2 a, vec2 b){
-	vec2 op = p - o;
-	vec2 d_perp = normalize(vec2(-d.y, d.x));
-	if(dot(op, d) > 0)
-		return abs(dot(op, d_perp));
-	else
-		return length(op);
-}*/
 
 float cubicBasis(float v){
 	float u = clamp(v, 0, 1);
@@ -65,20 +58,23 @@ void main(void)
 	vec2 o1 = vec2(0, 0);
 	vec2 o2 = vec2(0, -1);
 	vec2 o3 = vec2(0, 0);
-	vec2 d1 = vec2(1, 0.1);
-	vec2 d2 = vec2(0, 1);
+	vec2 d1 = vec2(1, 1);
+	vec2 d2 = vec2(0, 1.0);
 	vec2 d3 = vec2(-1, 1);
 	vec2 norm_coord = FragmentTexCoord*2.0 - vec2(1, 1);
 /*	float intensity = max(max(f(distToLine(norm_coord, o1, d1), 0.125), 
 						 f(distToLine(norm_coord, o2, d2), 0.25)),
 						 f(distToLine(norm_coord, o3, d3), 0.125));*/
 	float intensity = f(distToLine(norm_coord, o1, d1), 0.125, 0.25) + 
-						f(distToLine(norm_coord, o2, d2), 0.25, 0.5) +//trunkWidth(0.35, 0.25, norm_coord.y)) +
-						f(distToLine(norm_coord, o3, d3), 0.125, 0.25);
+						f(distToLine(norm_coord, o3, d3), 0.125, 0.25) +
+						f(distToLine(norm_coord, o2, d2), 0.125, 0.25);	//trunkWidth(0.35, 0.25, norm_coord.y)) +
 
+vec3 color = vec3(1, 1, 1);
 ///*
-	if(intensity < 0.5)
-		intensity = 0;
+	if(intensity < 0.5){
+		color = vec3(0.2, 1.0, 0.7);
+	//	intensity = 0;
+	}
 	else
 		intensity = 1;
 //*/	
