@@ -58,20 +58,38 @@ float trunkWidth(float bottomWidth, float topWidth, float y){
 	float u = (y +1)/2;
 	return (1-u)*bottomWidth + u*topWidth;
 }
+ 
+const float E = 0.0001;
 
-void main(void)
-{
+float calculateIntensity(vec2 norm_coord){
 	vec2 o1 = vec2(0, -0.25);
 	vec2 o2 = vec2(0, -1);
 	vec2 o3 = vec2(0, 0.25);
 	vec2 d1 = vec2(1, 1)*0.5;
 	vec2 d2 = vec2(0, 1.0);
 	vec2 d3 = vec2(-1, 1);
+
+	return basis(distToLine(norm_coord, o1, d1), 0.08, 0.08) + 
+						basis(distToLine(norm_coord, o3, d3), 0.0625, 0.0625) +
+						basis(distToLine(norm_coord, o2, d2), 0.15, 0.08);
+}
+
+void main(void)
+{
 	vec2 norm_coord = FragmentTexCoord*2.0 - vec2(1, 1);
 
-	float intensity = basis(distToLine(norm_coord, o1, d1), 0.08, 0.04) + 
-						basis(distToLine(norm_coord, o3, d3), 0.0625, 0.0625) +
-						basis(distToLine(norm_coord, o2, d2), 0.15, 0.09);	//trunkWidth(0.35, 0.25, norm_coord.y)) +
+	float intensity = calculateIntensity(norm_coord);
+
+	float dx = calculateIntensity(norm_coord+vec2(E, 0)) - 
+				calculateIntensity(norm_coord-vec2(E, 0));
+	float dy = calculateIntensity(norm_coord+vec2(0, E)) - 
+				calculateIntensity(norm_coord-vec2(0, E));
+
+	vec2 gradient;
+	if(abs(dx + dy) < 0.000001)
+		gradient = vec2(0, 0);
+	else
+		gradient = 0.5*normalize(vec2(dx, dy)) + vec2(0.5, 0.5);
 
 	vec3 color = vec3(1, 1, 1);
 
@@ -80,8 +98,10 @@ void main(void)
 	//	intensity = 0;
 	}
 	else
-		intensity = 1;	
-	PixelColour = vec4(intensity*color, 1);
+		intensity = intensity;	
+//	intensity *= 0.5;
+//	PixelColour = vec4(intensity*color, 1);
+	PixelColour = vec4(gradient, intensity, 1);
 }
 
 /*
