@@ -116,7 +116,7 @@ uniform int octaveNum = 8;
 uniform float baseWidth = 0.1;
 uniform float persistance = 0.5;
 uniform int seedValue = 71;
-uniform float turbulence = 0.5;
+uniform float turbulence = 1.0;
 
 uint hash( uint x ) {
     x += ( x << 10u );
@@ -234,6 +234,7 @@ void main(void)
 
 //	float intensity = sinLines(coord, noise*turbulence, noiseB*turbulence);
 	float intensity = radialSin(coord, noise*turbulence);
+//	float intensity = noise;
 	vec3 color = (1.0 - intensity*intensity*intensity*intensity*intensity)*vec3(1, 1, 1) + vec3(0.1, 0.07, 0.1);
 
 	if(length(position - vec3(0, 0, 0)) < 0.00001)
