@@ -5,11 +5,12 @@
 namespace renderlib {
 
 using namespace glm;
+using namespace std;
 
-Drawable::Drawable(Material *material, GLGeometryContainer *geometry,
+Drawable::Drawable(GLGeometryContainer *geometry, Material *material,
 	glm::vec3 position, glm::quat orientation) :
 	Object(position, orientation), 
-	material({ { material->getType(), material } }),
+	material({ { material->getType(), shared_ptr<Material>(material) } }),
 	geometry(geometry),
 	scale(1.f)
 {}
@@ -18,13 +19,25 @@ Drawable::Drawable(GLGeometryContainer *geometry, glm::vec3 position, glm::quat 
 	Object(position, orientation), material({}), geometry(geometry), scale(1.f)
 {}
 
+Drawable::Drawable(shared_ptr<GLGeometryContainer> geometry, shared_ptr<Material> material,
+	glm::vec3 position, glm::quat orientation) :
+	Object(position, orientation),
+	material({ { material->getType(), material } }),
+	geometry(geometry),
+	scale(1.f)
+{}
+
+Drawable::Drawable(shared_ptr<GLGeometryContainer> geometry, glm::vec3 position, glm::quat orientation) :
+	Object(position, orientation), material({}), geometry(geometry), scale(1.f)
+{}
+
+
 Drawable::Drawable(vec3 position, quat orientation) :Object(position, orientation),
 material({}), geometry(nullptr), scale(1.f) {}
 
-Material *Drawable::getMaterial(int type) {
+shared_ptr<Material> Drawable::getMaterial(int type) {
 	try {
-		Material *m = material.at(type);
-		return m;
+		return material.at(type);
 	}
 	catch (out_of_range) {
 		return nullptr;
@@ -32,7 +45,7 @@ Material *Drawable::getMaterial(int type) {
 }
 
 void Drawable::addMaterial(Material* newMaterial) {
-	material[newMaterial->getType()] = newMaterial;
+	material[newMaterial->getType()] = shared_ptr<Material>(newMaterial);
 }
 
 bool Drawable::removeMaterial(int type) {
@@ -47,17 +60,6 @@ bool Drawable::loadUniforms(int type, GLint *uniformLocations) const {
 	catch (out_of_range) {
 		return false;
 	}
-}
-
-void Drawable::deleteMaterialsAndGeometry() {
-	map<int, Material*>::iterator it;
-
-	for (it = material.begin(); it != material.end(); it++) {
-		delete it->second;
-	}
-	material.clear();
-
-	delete geometry;
 }
 
 mat4 Drawable::getTransform() const {

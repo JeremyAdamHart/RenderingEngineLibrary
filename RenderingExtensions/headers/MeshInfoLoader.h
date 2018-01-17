@@ -34,6 +34,6 @@ private:
 	vec3 max, min;
 };
 
-ElementGeometry objToElementGeometry(char *filename);
+ElementGeometry *objToElementGeometry(char *filename);
 
 }

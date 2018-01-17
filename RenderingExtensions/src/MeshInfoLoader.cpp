@@ -287,10 +287,10 @@ float MeshInfoLoader::getBoundingRadius()
 	return boundingRadius;
 }
 
-ElementGeometry objToElementGeometry(char *filename) {
+ElementGeometry *objToElementGeometry(char *filename) {
 	MeshInfoLoader minfo(filename);
 	
-	return ElementGeometry(minfo.vertices.data(), minfo.normals.data(),
+	return new ElementGeometry(minfo.vertices.data(), minfo.normals.data(),
 		minfo.uvs.data(), minfo.indices.data(), minfo.vertices.size(),
 		minfo.indices.size(), GL_TRIANGLES);
 }

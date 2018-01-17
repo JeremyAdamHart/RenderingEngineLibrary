@@ -155,8 +155,8 @@ void WindowManager::noiseLoop() {
 	SimpleTexManager tm;
 	PerlinNoiseShader2D perlinShader;
 	Drawable texSquare(
-		new TextureMat(createTexture2D(1, 1, &tm)),
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
+		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
+		new TextureMat(createTexture2D(1, 1, &tm)));
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -310,15 +310,14 @@ void WindowManager::mainLoop() {
 	}
 
 	//Dragon
-	ElementGeometry dragonGeom = objToElementGeometry("models/dragon.obj");
 	Drawable dragon(
-		new ColorMat(vec3(0.75f, 0.1f, 0.3f)),
-		&dragonGeom);
+		objToElementGeometry("models/dragon.obj"),
+		new ColorMat(vec3(0.75f, 0.1f, 0.3f)));
 	dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
 
 	Drawable texSquare(
-		new TextureMat(fbTex.getTexture(GL_COLOR_ATTACHMENT0)),
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
+		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
+		new TextureMat(fbTex.getTexture(GL_COLOR_ATTACHMENT0)));
 
 	texSquare.addMaterial(new TextureMat(pnFbo.getTexture(GL_COLOR_ATTACHMENT0), TextureMat::POSITION));
 	texSquare.addMaterial(new TextureMat(pnFbo.getTexture(GL_COLOR_ATTACHMENT1), TextureMat::NORMAL));
@@ -400,14 +399,41 @@ void WindowManager::mainLoop() {
 		glfwWaitEvents();
 	}
 
-	delete texSquare.getMaterial(TextureMat::id);
-	delete texSquare.getGeometryPtr();
-
-	delete dragon.getMaterial(ColorMat::id);
-	delete dragon.getMaterial(ShadedMat::id);
-
 	fbTex.deleteFramebuffer();
 	fbTex.deleteTextures();
+
+	glfwTerminate();
+}
+
+void WindowManager::testLoop() {
+
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+	//glfwSetCursorPosCallback(window, cursorPositionCallback);
+
+	//Dragon
+	Drawable dragon(
+		objToElementGeometry("models/dragon.obj"),
+		new ColorMat(vec3(0.75f, 0.1f, 0.3f)));
+	dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
+
+	vec3 lightPos(10.f, 10.f, 10.f);
+
+	TorranceSparrowShader tsShader;
+
+	while (!glfwWindowShouldClose(window)) {
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+		}
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		tsShader.draw(cam, lightPos, dragon);
+			
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
 
 	glfwTerminate();
 }

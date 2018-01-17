@@ -37,6 +37,7 @@ public:
 
 	void mainLoop();
 	void noiseLoop();
+	void testLoop();
 };
 
 void initGLExtensions();

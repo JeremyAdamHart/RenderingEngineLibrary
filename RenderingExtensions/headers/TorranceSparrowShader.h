@@ -13,7 +13,6 @@ namespace renderlib {
 
 class TorranceSparrowShader : public Shader {
 protected:
-	vector<int> uniformLocations;
 
 	bool usingTexture;
 
