@@ -27,7 +27,18 @@ static vector<pair<GLenum, string>> shaders{
 	{ GL_FRAGMENT_SHADER, "shaders/tsShaded.frag" }
 };
 
-TorranceSparrowShader::TorranceSparrowShader(map<GLenum, string> defines):
+TorranceSparrowShader::TorranceSparrowShader(TSTextureUsage texUsage):
+	usingTexture(texUsage == TSTextureUsage::TEXTURE)
+{
+	map<GLenum, string> defines = (usingTexture) ?
+		map<GLenum, string>{ {GL_FRAGMENT_SHADER, "#define USING_TEXTURE\n"} } :
+		map<GLenum, string>{};
+
+	createProgram(defines);
+	calculateUniformLocations();
+}
+
+TorranceSparrowShader::TorranceSparrowShader(map<GLenum, string> defines) :
 	usingTexture(false)
 {
 	createProgram(defines);

@@ -11,6 +11,11 @@
 
 namespace renderlib {
 
+enum class TSTextureUsage {
+	TEXTURE,
+	NONE
+};
+
 class TorranceSparrowShader : public Shader {
 protected:
 
@@ -20,7 +25,8 @@ protected:
 	void loadUniforms(const glm::mat4& vp_matrix, 
 		const glm::mat4& m_matrix, glm::vec3 camera_pos, glm::vec3 light_pos);
 public:
-	TorranceSparrowShader(map<GLenum, string> defines = map<GLenum, string>{});
+	TorranceSparrowShader(TSTextureUsage texUsage);
+	TorranceSparrowShader(map<GLenum, std::string> defines = map<GLenum, std::string>{});
 
 	virtual bool createProgram(map<GLenum, string> defines = map<GLenum, string>{});
 
