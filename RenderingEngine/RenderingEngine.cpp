@@ -6,6 +6,6 @@
 int main()
 {
 	WindowManager wm;
-	wm.noiseLoop();
+	wm.mainLoop();
 }
 

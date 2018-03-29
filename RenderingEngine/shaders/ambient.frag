@@ -26,7 +26,7 @@ const float THRESHOLD = 0.1;
 const float ks = 0.2;
 const float kd = 0.2;
 const float ka = 0.6;
-const float alpha = 5.0;
+const float alpha = 200.0;
 
 vec3 getTangentOfNormal(vec3 normal, vec3 direction){
 	vec3 n_proj_d = dot(normal, direction)/dot(direction, direction)*direction;
@@ -90,11 +90,18 @@ float torranceSparrowLighting(vec3 normal, vec3 position, vec3 viewPosition)
 {
 	vec3 viewer = normalize(viewPosition - position);
 	vec3 light = normalize(lightPos - position);
+	float attenuation = 1.f; //320.f/(length(position - lightPos)*length(position-lightPos));
 
 	vec3 h = normalize(viewer + light);
+	//Formula found here: http://www.farbrausch.de/~fg/stuff/phong.pdf
+	float normalizationFactor = (alpha+2)*(alpha+4)/(8*M_PI*(pow(sqrt(2), -alpha)+alpha));
+//	energyConservation = (alpha+2.0)*(0.5/M_PI);
 	
-	return max(dot(normal, light), 0)*ks*(alpha+2.0)*(0.5/M_PI) * pow(clamp(dot(normal, h), 0.0, 1.0), alpha)
-			+ kd*clamp(dot(normal, light), 0.0, 1.0);
+/*	return max(dot(normal, light), 0)*ks*(alpha+2.0)*(0.5/M_PI) * pow(clamp(dot(normal, h), 0.0, 1.0), alpha)
+			+ kd*clamp(dot(normal, light), 0.0, 1.0);*/
+	return max(dot(normal, light), 0)* (ks*normalizationFactor * pow(clamp(dot(normal, h), 0.0, 1.0), alpha)
+			+ kd*clamp(dot(normal, light), 0.0, 1.0))*attenuation;
+
 }
 
 float phongLighting(vec3 normal, vec3 position, vec3 viewPosition)
@@ -220,7 +227,7 @@ void main(void)
 	float ambientOcclusion = calculateAmbientOcclusion();
 	vec3 position = texture(positionTex, FragmentTexCoord).rgb;
 
-	 vec3 coord = position*0.75 + vec3(0.75, 0.75, 0.75);
+	vec3 coord = position*0.75 + vec3(0.75, 0.75, 0.75);
 
 	//Perlin noise
 	float noise = 0.0;
@@ -236,6 +243,8 @@ void main(void)
 	float intensity = radialSin(coord, noise*turbulence);
 //	float intensity = noise;
 	vec3 color = (1.0 - intensity*intensity*intensity*intensity*intensity)*vec3(1, 1, 1) + vec3(0.1, 0.07, 0.1);
+
+//	vec3 color = vec3(1, 1, 1);
 
 	if(length(position - vec3(0, 0, 0)) < 0.00001)
 		PixelColour = vec4(0, 0, 0, 1);

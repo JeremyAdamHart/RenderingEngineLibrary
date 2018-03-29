@@ -440,6 +440,9 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 				object.vertices, object.normals, object.texCoords, object.faces);
 		}
 		//Add other cases
+		else if (vFaces.size() != 0 && nFaces.size() != 0) {
+			sharedIndices2(vFaces, nFaces, normals, object.vertices, object.normals, object.faces);
+		}
 
 		float ka = length(materials[mat].ka);
 		float kd = length(materials[mat].kd);

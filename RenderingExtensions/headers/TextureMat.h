@@ -12,7 +12,7 @@ public:
 		COUNT
 	};
 
-	enum{
+	enum {		//Make int enum?
 		COLOR=0,
 		SHADOW=1 << 16,
 		POSITION=2 << 16,

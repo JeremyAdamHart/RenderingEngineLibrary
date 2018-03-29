@@ -412,6 +412,48 @@ void WindowManager::mainLoop() {
 	glfwTerminate();
 }
 
+void WindowManager::objLoadingLoop() {
+
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+
+	vec3 lightPos(10.f, 10.f, 10.f);
+
+	vector<Drawable> drawables;
+	
+	ElementGeometry objGeometry = objToElementGeometry("untrackedmodels/riccoSurface/riccoSurface.obj");
+	drawables.push_back(Drawable(new ShadedMat(0.3, 0.4, 0.4, 10.f), &objGeometry));
+	drawables[0].addMaterial(new ColorMat(vec3(1, 1, 1)));
+//	loadWavefront("untrackedmodels/OrganodronCity/", "Organodron_City", &drawables, &tm);
+//	loadWavefront("untrackedmodels/riccoSurface/", "riccoSurface", &drawables, &tm);
+
+	TorranceSparrowShader tsShader;
+
+	for (int i = 0; i < drawables.size(); i++) {
+		drawables[i].setPosition(vec3(0, 0, -2));
+		drawables[i].setScale(vec3(0.1f));
+	}
+
+	while (!glfwWindowShouldClose(window)) {
+
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		for (int i = 0; i < drawables.size(); i++) {
+			tsShader.draw(cam, lightPos, drawables[i]);
+		}
+
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
+
 void initGLExtensions() {
 #ifndef USING_GLEW
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
