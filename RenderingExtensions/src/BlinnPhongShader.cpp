@@ -23,8 +23,8 @@ enum {
 };
 
 static vector<pair<GLenum, string>> shaders{
-	{ GL_VERTEX_SHADER, "shaders/tsShaded.vert" },
-	{ GL_FRAGMENT_SHADER, "shaders/tsShaded.frag" }
+	{ GL_VERTEX_SHADER, "shaders/bpShaded.vert" },
+	{ GL_FRAGMENT_SHADER, "shaders/bpShaded.frag" }
 };
 
 BlinnPhongShader::BlinnPhongShader(BPTextureUsage texUsage):
