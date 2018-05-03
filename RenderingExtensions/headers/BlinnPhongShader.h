@@ -11,12 +11,12 @@
 
 namespace renderlib {
 
-enum class TSTextureUsage {
+enum class BPTextureUsage {
 	TEXTURE,
 	NONE
 };
 
-class TorranceSparrowShader : public Shader {
+class BlinnPhongShader : public Shader {
 protected:
 
 	bool usingTexture;
@@ -25,8 +25,8 @@ protected:
 	void loadUniforms(const glm::mat4& vp_matrix, 
 		const glm::mat4& m_matrix, glm::vec3 camera_pos, glm::vec3 light_pos);
 public:
-	TorranceSparrowShader(TSTextureUsage texUsage);
-	TorranceSparrowShader(map<GLenum, std::string> defines = map<GLenum, std::string>{});
+	BlinnPhongShader(BPTextureUsage texUsage);
+	BlinnPhongShader(map<GLenum, std::string> defines = map<GLenum, std::string>{});
 
 	virtual bool createProgram(map<GLenum, string> defines = map<GLenum, string>{});
 

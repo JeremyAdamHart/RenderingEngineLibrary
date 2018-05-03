@@ -18,4 +18,5 @@ Object::Object() :orientation(), position(0.f) {}
 Object::Object(vec3 position, quat orientation) : 
 	position(position), orientation(orientation) {}
 
+Object::~Object() {}
 }

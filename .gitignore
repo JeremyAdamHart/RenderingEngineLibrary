@@ -89,5 +89,8 @@ Debug/SampleTest.ilk
 *.a
 *.out
 *.opensdf
+*.opendb
+*.db-shm
+*.db-wal
 RenderingEngine.sdf
 GLFW/obj

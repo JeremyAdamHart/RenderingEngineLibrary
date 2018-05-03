@@ -17,7 +17,7 @@ using namespace std;
 #include "TextureMat.h"
 #include "MeshInfoLoader.h"
 #include "ShadedMat.h"
-#include "TorranceSparrowShader.h"
+#include "BlinnPhongShader.h"
 #include "Framebuffer.h"
 //Ambient occlusion
 #include "AOShader.h"
@@ -324,14 +324,14 @@ void WindowManager::mainLoop() {
 
 	SimpleTexShader texShader;
 	SimpleShader shader;
-	TorranceSparrowShader tsShader;
-	TorranceSparrowShader tsTexShader(
+	BlinnPhongShader bpShader;
+	BlinnPhongShader bpTexShader(
 	{ { GL_VERTEX_SHADER, "#define USING_TEXTURE\n" },
 	{ GL_FRAGMENT_SHADER, "#define USING_TEXTURE\n"} });
 
 	fbTex.use();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	tsShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
+	bpShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
 
 	fbWindow.use();
 
@@ -383,17 +383,17 @@ void WindowManager::mainLoop() {
 /*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		for (int i = 0; i < drawables.size(); i++) {
 			if (drawables[i].getMaterial(TextureMat::id) != nullptr) {
-				tsTexShader.draw(cam, lightPos, drawables[i]);
+				bpTexShader.draw(cam, lightPos, drawables[i]);
 			}
 			else
-				tsShader.draw(cam, lightPos, drawables[i]);
+				bpShader.draw(cam, lightPos, drawables[i]);
 		}
 		//texShader.draw(cam, debugSquare);
 */
 		
 
 //		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//		tsShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
+//		bpShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
@@ -419,7 +419,7 @@ void WindowManager::testLoop() {
 
 	vec3 lightPos(10.f, 10.f, 10.f);
 
-	TorranceSparrowShader tsShader;
+	BlinnPhongShader bpShader;
 
 	while (!glfwWindowShouldClose(window)) {
 		if (windowResized) {
@@ -429,7 +429,7 @@ void WindowManager::testLoop() {
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		tsShader.draw(cam, lightPos, dragon);
+		bpShader.draw(cam, lightPos, dragon);
 			
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

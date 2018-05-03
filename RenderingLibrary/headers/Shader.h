@@ -12,6 +12,9 @@ protected:
 	std::map<int, int> materialOffsets;
 
 	Shader();
+	Shader(std::map<int, int> materialOffsets);
+	Shader(int materialID);
+//	Shader(vector<int> materialIDs);
 
 public:
 	GLuint getID();

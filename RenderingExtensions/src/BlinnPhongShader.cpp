@@ -1,4 +1,4 @@
-#include "TorranceSparrowShader.h"
+#include "BlinnPhongShader.h"
 #include "ShadedMat.h"
 #include "TextureMat.h"
 #include "ColorMat.h"
@@ -27,8 +27,8 @@ static vector<pair<GLenum, string>> shaders{
 	{ GL_FRAGMENT_SHADER, "shaders/tsShaded.frag" }
 };
 
-TorranceSparrowShader::TorranceSparrowShader(TSTextureUsage texUsage):
-	usingTexture(texUsage == TSTextureUsage::TEXTURE)
+BlinnPhongShader::BlinnPhongShader(BPTextureUsage texUsage):
+	usingTexture(texUsage == BPTextureUsage::TEXTURE)
 {
 	map<GLenum, string> defines = (usingTexture) ?
 		map<GLenum, string>{ {GL_FRAGMENT_SHADER, "#define USING_TEXTURE\n"} } :
@@ -38,14 +38,14 @@ TorranceSparrowShader::TorranceSparrowShader(TSTextureUsage texUsage):
 	calculateUniformLocations();
 }
 
-TorranceSparrowShader::TorranceSparrowShader(map<GLenum, string> defines) :
+BlinnPhongShader::BlinnPhongShader(map<GLenum, string> defines) :
 	usingTexture(false)
 {
 	createProgram(defines);
 	calculateUniformLocations();
 }
 
-bool TorranceSparrowShader::createProgram(map<GLenum, string> defines) {
+bool BlinnPhongShader::createProgram(map<GLenum, string> defines) {
 	
 	try {
 		if (defines.at(GL_FRAGMENT_SHADER).find("#define USING_TEXTURE")
@@ -58,7 +58,7 @@ bool TorranceSparrowShader::createProgram(map<GLenum, string> defines) {
 	return programID != 0;
 }
 
-void TorranceSparrowShader::calculateUniformLocations() {
+void BlinnPhongShader::calculateUniformLocations() {
 	glUseProgram(programID);
 
 	//Material uniforms
@@ -87,7 +87,7 @@ void TorranceSparrowShader::calculateUniformLocations() {
 		"lightPos");
 }
 
-void TorranceSparrowShader::loadUniforms(const mat4& vp_matrix, 
+void BlinnPhongShader::loadUniforms(const mat4& vp_matrix, 
 	const mat4& m_matrix, vec3 camera_pos, vec3 light_pos) {
 	glUniformMatrix4fv(uniformLocations[VP_MATRIX_LOCATION], 1, false, &vp_matrix[0][0]);
 	glUniformMatrix4fv(uniformLocations[M_MATRIX_LOCATION], 1, false, &m_matrix[0][0]);
@@ -96,7 +96,7 @@ void TorranceSparrowShader::loadUniforms(const mat4& vp_matrix,
 		light_pos.x, light_pos.y, light_pos.z);
 }
 
-void TorranceSparrowShader::draw(const Camera &cam, vec3 lightPos, 
+void BlinnPhongShader::draw(const Camera &cam, vec3 lightPos, 
 	const Drawable &obj) {
 	glUseProgram(programID);
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), 

@@ -326,7 +326,7 @@
     <ClInclude Include="headers\simpleTexShader.h" />
     <ClInclude Include="headers\TextureCreation.h" />
     <ClInclude Include="headers\TextureMat.h" />
-    <ClInclude Include="headers\TorranceSparrowShader.h" />
+    <ClInclude Include="headers\BlinnPhongShader.h" />
     <ClInclude Include="headers\TrackballCamera.h" />
     <ClInclude Include="headers\TrackerCamera.h" />
   </ItemGroup>
@@ -347,7 +347,7 @@
     <ClCompile Include="src\simpleTexShader.cpp" />
     <ClCompile Include="src\TextureCreation.cpp" />
     <ClCompile Include="src\TextureMat.cpp" />
-    <ClCompile Include="src\TorranceSparrowShader.cpp" />
+    <ClCompile Include="src\BlinnPhongShader.cpp" />
     <ClCompile Include="src\TrackballCamera.cpp" />
     <ClCompile Include="src\TrackerCamera.cpp" />
   </ItemGroup>

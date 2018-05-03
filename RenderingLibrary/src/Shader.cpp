@@ -5,6 +5,16 @@ namespace renderlib {
 using namespace std;
 
 Shader::Shader() :programID(0) {}
+Shader::Shader(map<int, int> materialOffsets) : programID(0), materialOffsets(materialOffsets) {}
+Shader::Shader(int materialID) : programID(0), materialOffsets({ {materialID, 0} }) {}
+
+/*Shader::Shader(vector<int> materialIDs) : programID(0) {
+	int totalOffset = 0;
+	for (int i = 0; i < materialIDs.size(); i++) {
+		materialOffsets[materialIDs[i]] = totalOffset;
+		totalOffset += 
+	}
+}*/
 
 GLuint Shader::getID() { return programID; }
 void Shader::deleteProgram() { glDeleteProgram(programID); }

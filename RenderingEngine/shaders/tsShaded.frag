@@ -23,15 +23,20 @@ uniform float kd = 0.4;
 uniform float alpha = 5.0;
 uniform float ka = 0.3;
 
-float torranceSparrowLighting(vec3 normal, vec3 position, vec3 viewPosition)
+float blinnPhongLighting(vec3 normal, vec3 position, vec3 viewPosition)
 {
 	vec3 viewer = normalize(viewPosition - position);
 	vec3 light = normalize(lightPos - position);
-	vec3 h = normalize(viewer + light);
 
-	return ks*(alpha+2.0)*(0.5/M_PI) * clamp(pow(dot(normal, h), alpha), 0.0, 1.0)
-			+ kd*clamp(dot(normal, light), 0.0, 1.0) + ka;
+	vec3 h = normalize(viewer + light);
+	//Formula found here: http://www.farbrausch.de/~fg/stuff/phong.pdf
+	float normalizationFactor = (alpha+2)*(alpha+4)/(8*M_PI*(pow(sqrt(2), -alpha)+alpha));
+
+	return max(dot(normal, light), 0)* (ks*normalizationFactor * pow(clamp(dot(normal, h), 0.0, 1.0), alpha)
+			+ kd*clamp(dot(normal, light), 0.0, 1.0));
+
 }
+
 
 void main(void)
 {
@@ -42,7 +47,7 @@ void main(void)
 		vec3 baseColor = color;
 	#endif
 
- 	vec3 color = torranceSparrowLighting(normalize(FragmentNormal), ModelPosition, camera_position)
+ 	vec3 color = blinnPhongLighting(normalize(FragmentNormal), ModelPosition, camera_position)
  	*baseColor;
 
  	PixelColour = vec4(color, 1);

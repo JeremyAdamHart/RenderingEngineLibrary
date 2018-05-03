@@ -19,9 +19,9 @@ struct ATTRIB_LOCATION {
 			};
 };
 
-class GLGeometryContainer{
+class GLGeometryContainer {
 protected:
-	GLGeometryContainer(){}
+	GLGeometryContainer() {}
 
 public:
 	virtual void drawGeometry()const {}
@@ -33,6 +33,8 @@ public:
 	virtual GLint getVaoID() const { return -1; }		//Don't use to bind VAO, only for comparison
 
 	virtual bool usingDrawElements() const { return false; }
+
+	virtual ~GLGeometryContainer() {}
 };
 
 }
