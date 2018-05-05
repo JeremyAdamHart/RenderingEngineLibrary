@@ -8,11 +8,13 @@ namespace renderlib {
 using namespace glm;
 
 class ElementGeometry : public GLGeometryContainer {
+public:
+	enum { POSITION = 0, NORMAL, TEXCOORD, ELEMENTS, COUNT };
+protected:
 	GLuint vao;
 	size_t bufferSize;
 	size_t elementNum;
 
-	enum { POSITION = 0, NORMAL, TEXCOORD, ELEMENTS, COUNT };
 	GLuint vbo[COUNT];
 
 	bool initializeVAO();
@@ -28,6 +30,8 @@ public:
 		size_t _bufferSize, size_t _elementNum, GLenum usage = GL_STATIC_DRAW);
 
 	virtual void drawGeometry() const;
+
+	virtual GLuint getVboID(int num) const { return (num < COUNT) ? vbo[num] : 0; }
 
 	//Deprecated?
 	virtual void bindGeometry() const;

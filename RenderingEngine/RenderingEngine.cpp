@@ -6,6 +6,6 @@
 int main()
 {
 	WindowManager wm;
-	wm.mainLoop();
+	wm.objLoadingLoop();
 }
 

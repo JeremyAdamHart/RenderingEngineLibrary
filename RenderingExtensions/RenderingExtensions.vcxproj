@@ -312,10 +312,12 @@
     <ClInclude Include="headers\AOShader.h" />
     <ClInclude Include="headers\BlendShader.h" />
     <ClInclude Include="headers\ColorMat.h" />
+    <ClInclude Include="headers\ColorShader.h" />
     <ClInclude Include="headers\ElementGeometry.h" />
     <ClInclude Include="headers\Light.h" />
     <ClInclude Include="headers\MeshInfoLoader.h" />
     <ClInclude Include="headers\ModelLoader.h" />
+    <ClInclude Include="headers\MultiBuffer.h" />
     <ClInclude Include="headers\PerlinNoise.h" />
     <ClInclude Include="headers\PosNormalShader.h" />
     <ClInclude Include="headers\ProcessingShader.h" />
@@ -324,19 +326,24 @@
     <ClInclude Include="headers\SimpleShader.h" />
     <ClInclude Include="headers\SimpleTexManager.h" />
     <ClInclude Include="headers\simpleTexShader.h" />
+    <ClInclude Include="headers\StreamGeometry.h" />
+    <ClInclude Include="headers\TemplateParameterParsing.h" />
     <ClInclude Include="headers\TextureCreation.h" />
     <ClInclude Include="headers\TextureMat.h" />
     <ClInclude Include="headers\TorranceSparrowShader.h" />
     <ClInclude Include="headers\TrackballCamera.h" />
     <ClInclude Include="headers\TrackerCamera.h" />
+    <ClInclude Include="headers\VertexBufferTemplates.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AOShader.cpp" />
     <ClCompile Include="src\BlendShader.cpp" />
     <ClCompile Include="src\ColorMat.cpp" />
+    <ClCompile Include="src\ColorShader.cpp" />
     <ClCompile Include="src\ElementGeometry.cpp" />
     <ClCompile Include="src\MeshInfoLoader.cpp" />
     <ClCompile Include="src\ModelLoader.cpp" />
+    <ClCompile Include="src\MultiBuffer.cpp" />
     <ClCompile Include="src\PerlinNoise.cpp" />
     <ClCompile Include="src\PosNormalShader.cpp" />
     <ClCompile Include="src\ProcessingShader.cpp" />

@@ -31,6 +31,9 @@ using namespace std;
 #include "HeatParticleShader.h"
 #include "HeatParticleSystem.h"
 
+//Other
+#include "StreamGeometry.h"
+#include "ColorShader.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -422,32 +425,107 @@ void WindowManager::objLoadingLoop() {
 	vec3 lightPos(10.f, 10.f, 10.f);
 
 	vector<Drawable> drawables;
-	
-	ElementGeometry objGeometry = objToElementGeometry("untrackedmodels/riccoSurface/riccoSurface.obj");
-	drawables.push_back(Drawable(new ShadedMat(0.3, 0.4, 0.4, 10.f), &objGeometry));
+
+	vector<vec3> colors1;
+	vector<vec3> colors2;
+
+	enum {
+		POSITION = 0, NORMAL, COLOR
+	};
+//
+	MeshInfoLoader minfo("models/dragon.obj");	
+//	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
+	colors1.resize(minfo.vertices.size(), vec3(1, 0, 0));
+	StreamGeometry<vec3, vec3, vec3> streamGeometry;
+	streamGeometry.loadGeometry(minfo.vertices.size(), GL_STATIC_DRAW, 
+		minfo.vertices.data(), minfo.normals.data(), colors1.data());
+	streamGeometry.loadElementArray(minfo.indices.size(), GL_STATIC_DRAW, minfo.indices.data());
+
+	GLuint vboID = streamGeometry.getVboID(COLOR);
+
+
+	colors2.resize(colors1.size(), vec3(0, 0, 1));
+
+//	ElementGeometry objGeometry = objToElementGeometry("untrackedmodels\OrganodronCity");
+	drawables.push_back(Drawable(new ShadedMat(0.3, 0.4, 0.4, 10.f), &streamGeometry));
 	drawables[0].addMaterial(new ColorMat(vec3(1, 1, 1)));
 //	loadWavefront("untrackedmodels/OrganodronCity/", "Organodron_City", &drawables, &tm);
 //	loadWavefront("untrackedmodels/riccoSurface/", "riccoSurface", &drawables, &tm);
 
 	TorranceSparrowShader tsShader;
+	ColorShader colorShader;
 
 	for (int i = 0; i < drawables.size(); i++) {
-		drawables[i].setPosition(vec3(0, 0, -2));
-		drawables[i].setScale(vec3(0.1f));
+//		drawables[i].setPosition(vec3(0, 0, -2));
+//		drawables[i].setScale(vec3(0.1f));
 	}
+
+	float transition = 0.f;
+	vec3 startColor(1, 0, 0);
+	vec3 endColor(0, 0, 1);
+	float step = 0.01f;
+
+	double frameTime = 0.f;
+	int frameTimeSamples = 0;
+	double lastTime = glfwGetTime();
+
+	bool useColor1 = false;
+
+	glfwSwapInterval(0);
+
+	int interval = 0;
+	int maxInterval = 20;
 
 	while (!glfwWindowShouldClose(window)) {
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		for (int i = 0; i < drawables.size(); i++) {
-			tsShader.draw(cam, lightPos, drawables[i]);
+/*		for (int i = 0; i < colors1.size(); i++) {
+			colors[i] = startColor*(1 - transition) + transition*endColor;
+		}
+*/
+		vector<vec3>* colors;
+		if (useColor1)
+			colors = &colors1;
+		else
+			colors = &colors2;
+
+		streamGeometry.loadBuffer<COLOR>(colors->data(), GL_DYNAMIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vboID);
+		glBufferSubData(GL_ARRAY_BUFFER, interval / maxInterval*sizeof(vec3)*colors->size(), colors->size()/maxInterval * sizeof(vec3), colors->data());
+
+		interval++;
+		if (interval >= maxInterval) {
+			useColor1 = !useColor1;
+			interval = 0;
 		}
 
+		for (int i = 0; i < drawables.size(); i++) {
+			colorShader.draw(cam, drawables[i]);
+//			tsShader.draw(cam, lightPos, drawables[i]);
+		}
+
+		transition += step;
+		if (transition < 0 || transition > 1)
+			step *= -1.f;
+		transition = clamp(transition, 0.f, 1.f);
+
+		if (frameTimeSamples > 30) {
+			cout << "Time per frame = " << frameTime / double(frameTimeSamples) << endl;
+			frameTime = 0.0;
+			frameTimeSamples = 0;
+		}
+		else {
+			frameTimeSamples++;
+			double currentTime = glfwGetTime();
+			frameTime += currentTime - lastTime;
+			lastTime = currentTime;
+		}
 
 		glfwSwapBuffers(window);
-		glfwWaitEvents();
+		glfwPollEvents();
 	}
 
 	glfwTerminate();

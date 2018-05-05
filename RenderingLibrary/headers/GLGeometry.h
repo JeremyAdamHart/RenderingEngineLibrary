@@ -31,6 +31,7 @@ public:
 	virtual int numElements() const { return 0; }
 	virtual GLenum getMode() const { return 0; }
 	virtual GLint getVaoID() const { return -1; }		//Don't use to bind VAO, only for comparison
+	virtual GLuint getVboID(int num) const { return 0; }
 
 	virtual bool usingDrawElements() const { return false; }
 };

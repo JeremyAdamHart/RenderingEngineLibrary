@@ -9,11 +9,13 @@ namespace renderlib {
 using namespace glm;
 
 class SimpleGeometry : public GLGeometryContainer {
+public:
+	enum{ POSITION = 0, COUNT };
+private:
 	GLuint vao;
 	size_t bufferSize;
 	GLenum mode;
 
-	enum{ POSITION = 0, COUNT };
 	GLuint vbo[COUNT];
 
 	bool initializeVAO();
@@ -27,6 +29,7 @@ public:
 	void loadPositions(vec3 *positions, size_t numPositions, GLenum usage = GL_STATIC_DRAW);
 
 	virtual void drawGeometry() const;
+	virtual GLuint getVboID(int num) const { return (num < COUNT) ? vbo[num] : 0; }
 
 	//Deprecated?
 	virtual void bindGeometry() const;
@@ -39,15 +42,16 @@ public:
 };
 
 class SimpleTexGeometry : public GLGeometryContainer {
+public:
+	enum{POSITION=0, TEXCOORD, COUNT};
+private:
 	GLuint vao;
 	size_t bufferSize;
 	GLenum mode;
 
 	GLenum texCoordType;
 	
-	enum{POSITION=0, TEXCOORD, COUNT};
 	GLuint vbo[COUNT];
-
 	bool initializeVAO();
 
 public:
@@ -63,6 +67,8 @@ public:
 	void loadTexCoords(ivec2 *texCoords, size_t numTexCoords, GLenum usage = GL_STATIC_DRAW);
 
 	virtual void drawGeometry() const;
+
+	virtual GLuint getVboID(int num) const { return (num < COUNT) ? vbo[num] : 0; }
 
 	//Deprecated?
 	virtual void bindGeometry() const;
