@@ -93,6 +93,12 @@
     <ClInclude Include="headers\MultiBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="headers\DrawResourceHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\BufferQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ColorMat.cpp">

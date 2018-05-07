@@ -311,8 +311,10 @@
   <ItemGroup>
     <ClInclude Include="headers\AOShader.h" />
     <ClInclude Include="headers\BlendShader.h" />
+    <ClInclude Include="headers\BufferQueue.h" />
     <ClInclude Include="headers\ColorMat.h" />
     <ClInclude Include="headers\ColorShader.h" />
+    <ClInclude Include="headers\DrawResourceHandler.h" />
     <ClInclude Include="headers\ElementGeometry.h" />
     <ClInclude Include="headers\Light.h" />
     <ClInclude Include="headers\MeshInfoLoader.h" />

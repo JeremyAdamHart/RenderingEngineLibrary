@@ -435,8 +435,8 @@ void WindowManager::objLoadingLoop() {
 		POSITION = 0, NORMAL, COLOR
 	};
 //
-//	MeshInfoLoader minfo("models/dragon.obj");	
-	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
+	MeshInfoLoader minfo("models/dragon.obj");	
+//	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
 	StreamGeometry<vec3, vec3, char> streamGeometry(minfo.vertices.size());
 //	streamGeometry.loadGeometry(minfo.vertices.size(), GL_STATIC_DRAW, 
 //		minfo.vertices.data(), minfo.normals.data(), colors1.data());
@@ -493,6 +493,8 @@ void WindowManager::objLoadingLoop() {
 	int interval = 0;
 	int maxInterval = 20;
 
+	int counter = 0;
+
 	while (!glfwWindowShouldClose(window)) {
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -524,9 +526,12 @@ void WindowManager::objLoadingLoop() {
 	
 		int bufferNum = streamGeometry.buffManager.getWrite();
 		char *color = streamGeometry.vboPointer<COLOR>();
-		for (int i = 0; i < 10000; i++) {
-			color[i] = (color[i] == 0)?  1 : 0;
+		for (int i = 0; i < 1000; i++) {
+			int index = (counter + i) % streamGeometry.getBufferSize();
+			color[index] = (color[index] == 0)?  1 : 0;
 		}
+
+		counter = (counter + 1000) % streamGeometry.getBufferSize();
 		
 		streamGeometry.buffManager.endWrite();
 

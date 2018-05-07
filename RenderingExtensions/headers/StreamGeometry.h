@@ -3,10 +3,12 @@
 #include <GLGeometry.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <tuple>
 #include <glSupport.h>
 #include "VertexBufferTemplates.h"
 #include "TemplateParameterParsing.h"
 #include "MultiBuffer.h"
+#include "BufferQueue.h"
 
 namespace renderlib {
 
@@ -20,7 +22,7 @@ class StreamGeometry : public GLGeometryContainer {
 public:
 	const int BUFFER_COPIES = 3;
 	MultiBufferSwitch buffManager;
-
+	vector<wrap_tuple<BufferQueue, Ts...>> queue;
 protected:
 	GLuint vao;
 	size_t bufferSize;
@@ -63,6 +65,8 @@ public:
 		createBufferStorage();
 	}
 
+	size_t getBufferSize() const { return bufferSize; }
+
 	virtual GLuint getVboID(int num) const { return (num < vbo.size()) ? vbo[num] : 0; }
 
 	virtual void drawGeometry() {
@@ -70,11 +74,14 @@ public:
 
 		if (!firstDraw) {
 			GLenum syncStatus = GL_UNSIGNALED;
-			while (syncStatus != GL_ALREADY_SIGNALED && syncStatus != GL_CONDITION_SATISFIED)
+			while (syncStatus != GL_ALREADY_SIGNALED && syncStatus != GL_CONDITION_SATISFIED) {
 				syncStatus = glClientWaitSync(drawSync, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
+			//	printf("Waiting\n");
+			}
 		}
 
 		int bufferNum = buffManager.getRead();
+		printf("bufferNum %d\n", bufferNum);
 
 		glBindVertexArray(vao);
 		glDrawElementsBaseVertex(mode, elementNum, GL_UNSIGNED_INT, 0, bufferSize*bufferNum);

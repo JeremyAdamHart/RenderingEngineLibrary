@@ -1,7 +1,6 @@
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
-
 # Folder config file
 Desktop.ini
 
@@ -88,6 +87,9 @@ Debug/SampleTest.ilk
 *.ipch
 *.a
 *.out
+*.opendb
 *.opensdf
+*.db-shm
+*.db-wal
 RenderingEngine.sdf
 GLFW/obj

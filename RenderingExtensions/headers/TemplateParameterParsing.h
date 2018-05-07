@@ -22,3 +22,30 @@ struct nth_element_impl<0, T, Ts...> {
 
 template <std::size_t N, typename ...Ts>
 using nth_type = typename nth_element_impl<N, Ts...>::type;
+
+//PARAMETER PACK WRAPPER
+//Wraps parameter pack inside other class
+//template<class C, class T, class ...Ts>
+//using type_wrap = <Ts...>;
+
+
+//TEMPLATE CLASS LIST
+//Makes list of classes with the given templates
+// ie: a list of vectors
+//template<template<class C> class W, class ...Ts> class wrap_tuple;
+
+
+template<template<typename> typename W, typename T1, typename ...Ts>
+class wrap_tuple {
+	W<T1> item;
+	wrap_tuple<W, Ts...> tail;
+};
+
+template<template<typename> typename W, typename T>
+class wrap_tuple<W, T>{
+	W<T> item;
+};
+
+//https://gist.github.com/IvanVergiliev/9639530	-- Reference
+template<size_t N, template<typename> typename W, typename T, typename ...Ts>
+auto& get(wrap_tuple<W, Ts...>& t)
