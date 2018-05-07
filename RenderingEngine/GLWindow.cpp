@@ -183,71 +183,6 @@ void WindowManager::noiseLoop() {
 
 //Temporary testing
 void WindowManager::mainLoop() {
-
-	/*HeatParticleShader pShader;
-	
-	HeatParticleSystem pSystem;
-	HeatParticleGeometry pGeometry;
-	HeatParticleMat pMat(0.07f);
-
-	Drawable pDrawable(&pMat, &pGeometry);
-
-#define PI 3.14159265359f
-	
-	float initialVelocity = 7.0f;
-	float lifespan = 0.2f;
-	float heat = 0.2f;
-	float divergenceAngle = PI/8.f;
-	const int particlesPerStep = 250;
-	
-	Disk particleSpawner(0.05f, vec3(0.f, 0.f, 0.f), vec3(0, 1.f, 0));
-
-	for (int i = 0; i < 500; i++) {
-		pSystem.addParticleFromDisk(particleSpawner, initialVelocity, 
-			heat, lifespan, divergenceAngle);
-	}
-
-	float timeElapsed = 0.f;
-
-	float thrust = 0.f;
-
-	glClearColor(0.f, 0.f, 0.0f, 0.f);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-	while (!glfwWindowShouldClose(window)) {
-		glDepthMask(GL_TRUE);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glDepthMask(GL_FALSE);
-
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-			thrust = std::min(thrust + 0.02f, 1.f);
-		else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-			thrust = std::max(thrust - 0.02f, 0.f);
-
-		float currentTime = glfwGetTime();
-		float timeOffset = 0.f;
-		for(int i=0; i<int((0.f+2.f*thrust)*float(particlesPerStep)/2.f); i++){
-			float newHeat = heat*(float(rand()) / float(RAND_MAX))*(0.75f + thrust/4.f);
-			pSystem.addParticleFromDisk(particleSpawner, initialVelocity*(0.5f+thrust/2.f),
-				newHeat, lifespan, divergenceAngle*(1.f - thrust)*2.f, timeOffset);
-			timeOffset += (currentTime - timeElapsed) / float(particlesPerStep);
-		}
-
-		pSystem.runSimulation((currentTime - timeElapsed)*0.5f);
-
-		pGeometry.loadParticles(pSystem.particles.data(), pSystem.particles.size());
-
-		pShader.draw(cam, pDrawable);
-
-		timeElapsed = currentTime;
-
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-	}
-
-	return;*/
-
 	//Original main loop
 
 	//Test
@@ -403,6 +338,72 @@ void WindowManager::mainLoop() {
 	fbTex.deleteTextures();
 
 	glfwTerminate();
+}
+
+void WindowManager::particleLoop() {
+	HeatParticleShader pShader;
+
+	HeatParticleSystem pSystem;
+	shared_ptr<HeatParticleGeometry> pGeometry (new HeatParticleGeometry());
+	shared_ptr<HeatParticleMat> pMat(new HeatParticleMat(0.07f));
+
+	Drawable pDrawable(pGeometry, pMat);
+
+#define PI 3.14159265359f
+
+	float initialVelocity = 7.0f;
+	float lifespan = 0.2f;
+	float heat = 0.2f;
+	float divergenceAngle = PI/8.f;
+	const int particlesPerStep = 250;
+
+#undef PI
+
+	Disk particleSpawner(0.05f, vec3(0.f, 0.f, 0.f), vec3(0, 1.f, 0));
+
+	for (int i = 0; i < 500; i++) {
+	pSystem.addParticleFromDisk(particleSpawner, initialVelocity,
+	heat, lifespan, divergenceAngle);
+	}
+
+	float timeElapsed = 0.f;
+
+	float thrust = 0.f;
+
+	glClearColor(0.f, 0.f, 0.0f, 0.f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+	while (!glfwWindowShouldClose(window)) {
+		glDepthMask(GL_TRUE);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDepthMask(GL_FALSE);
+
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		thrust = std::min(thrust + 0.02f, 1.f);
+		else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		thrust = std::max(thrust - 0.02f, 0.f);
+
+		float currentTime = glfwGetTime();
+		float timeOffset = 0.f;
+		for(int i=0; i<int((0.f+2.f*thrust)*float(particlesPerStep)/2.f); i++){
+		float newHeat = heat*(float(rand()) / float(RAND_MAX))*(0.75f + thrust/4.f);
+		pSystem.addParticleFromDisk(particleSpawner, initialVelocity*(0.5f+thrust/2.f),
+		newHeat, lifespan, divergenceAngle*(1.f - thrust)*2.f, timeOffset);
+		timeOffset += (currentTime - timeElapsed) / float(particlesPerStep);
+		}
+
+		pSystem.runSimulation((currentTime - timeElapsed)*0.5f);
+
+		pGeometry->loadParticles(pSystem.particles.data(), pSystem.particles.size());
+
+		pShader.draw(cam, pDrawable);
+
+		timeElapsed = currentTime;
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
 }
 
 void WindowManager::testLoop() {

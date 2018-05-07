@@ -6,6 +6,7 @@
 int main()
 {
 	WindowManager wm;
-	wm.testLoop();
+//	wm.testLoop();
+	wm.particleLoop();
 }
 

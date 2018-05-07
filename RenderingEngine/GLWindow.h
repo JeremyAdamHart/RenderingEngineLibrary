@@ -38,6 +38,7 @@ public:
 	void mainLoop();
 	void noiseLoop();
 	void testLoop();
+	void particleLoop();
 };
 
 void initGLExtensions();
