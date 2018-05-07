@@ -17,7 +17,7 @@ public:
 
 	virtual bool createProgram(map<GLenum, string> defines = map<GLenum, string>{});
 
-	void draw(const Camera &cam, const Drawable &obj);
+	void draw(const Camera &cam, Drawable &obj);
 };
 
 }

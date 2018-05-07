@@ -24,9 +24,9 @@ protected:
 	GLGeometryContainer(){}
 
 public:
-	virtual void drawGeometry()const {}
+	virtual void drawGeometry() {}
 
-	virtual void bindGeometry() const {}
+	virtual void bindGeometry() {}
 	virtual int startIndex() const { return 0; }
 	virtual int numElements() const { return 0; }
 	virtual GLenum getMode() const { return 0; }

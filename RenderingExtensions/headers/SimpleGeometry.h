@@ -28,7 +28,7 @@ public:
 
 	void loadPositions(vec3 *positions, size_t numPositions, GLenum usage = GL_STATIC_DRAW);
 
-	virtual void drawGeometry() const;
+	virtual void drawGeometry();
 	virtual GLuint getVboID(int num) const { return (num < COUNT) ? vbo[num] : 0; }
 
 	//Deprecated?

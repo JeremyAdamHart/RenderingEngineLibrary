@@ -37,7 +37,7 @@ void BlendShader::calculateUniformLocations() {
 		glGetUniformLocation(programID, "translucentTexture");
 }
 
-void BlendShader::draw(const Drawable &obj) {
+void BlendShader::draw(Drawable &obj) {
 	glUseProgram(programID);
 	obj.loadUniforms(TextureMat::id, &uniformLocations[0]);
 	obj.loadUniforms(TextureMat::id | TextureMat::TRANSLUCENT, 

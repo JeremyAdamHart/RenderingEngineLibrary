@@ -68,7 +68,7 @@ void AOShader::loadUniforms(vec3 camera_pos, vec3 camera_right, vec3 camera_up, 
 		light_pos.x, light_pos.y, light_pos.z);
 }
 
-void AOShader::draw(const Camera &cam, vec3 lightPos, const Drawable &obj) {
+void AOShader::draw(const Camera &cam, vec3 lightPos, Drawable &obj) {
 	glUseProgram(programID);
 	vec4 cam_right = cam.getCameraMatrix()*vec4(1, 0, 0, 0);
 	vec4 cam_up = cam.getCameraMatrix()*vec4(0, 1, 0, 0);

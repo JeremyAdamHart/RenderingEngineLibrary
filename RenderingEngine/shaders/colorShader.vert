@@ -4,12 +4,12 @@
 // InitializeGeometry() function of the main program
 layout(location = 0) in vec3 VertexPosition;
 layout(location = 1) in vec3 VertexNormal;
-layout(location = 2) in vec3 VertexColor;
+layout(location = 2) in int VertexColor;
 
 uniform mat4 view_projection_matrix;
 uniform mat4 model_matrix;
 
-out vec3 FragmentColor;
+flat out int FragmentColor;
 out vec3 WorldPosition;
 out vec3 WorldNormal;
 

@@ -50,7 +50,7 @@ void HeatParticleShader::loadUniforms(const mat4& vp_matrix, const mat4& inv_rot
 	glUniformMatrix4fv(uniformLocations[INV_CAMERA_ROT_LOCATION], 1, false, &inv_rot_matrix[0][0]);
 }
 
-void HeatParticleShader::draw(const Camera &cam, const Drawable &obj) {
+void HeatParticleShader::draw(const Camera &cam, Drawable &obj) {
 	glUseProgram(programID);
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), cam.getRotationMatrix());
 	obj.loadUniforms(HeatParticleMat::id, &uniformLocations[0]);

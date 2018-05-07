@@ -104,7 +104,7 @@ void ElementGeometry::bindGeometry() const
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[ELEMENTS]);
 }
 
-void ElementGeometry::drawGeometry() const {
+void ElementGeometry::drawGeometry() {
 	bindGeometry();
 	glDrawElements(mode, elementNum, GL_UNSIGNED_INT, 0);
 }

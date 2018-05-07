@@ -10,15 +10,15 @@ template<class Arg, class... List> class verifyNthTemplateArg <0, Arg, Arg, List
 
 
 //Shamelessly taken from: https://ldionne.com/2015/11/29/efficient-parameter-pack-indexing/
-template<size_t I, class T, class ...Ts> 
+template<std::size_t I, typename T, typename...Ts> 
 struct nth_element_impl {
-	using type = class nth_element_impl<I - 1, Ts...>::type;
+	using type = typename nth_element_impl<I-1, Ts...>::type;
 };
 
-template<class T, class ...Ts>
+template<typename T, typename...Ts>
 struct nth_element_impl<0, T, Ts...> {
 	using type = T;
 };
 
-template <size_t N, typename ...Ts>
+template <std::size_t N, typename ...Ts>
 using nth_type = typename nth_element_impl<N, Ts...>::type;

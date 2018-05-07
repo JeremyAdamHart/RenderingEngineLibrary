@@ -48,7 +48,7 @@ void PosNormalShader::loadUniforms(const mat4& vp_matrix,
 }
 
 void PosNormalShader::draw(const Camera &cam, vec3 lightPos, 
-	const Drawable &obj) {
+	Drawable &obj) {
 	glUseProgram(programID);
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), 
 		obj.getTransform());

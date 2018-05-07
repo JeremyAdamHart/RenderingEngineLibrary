@@ -46,7 +46,7 @@ void SimpleShader::loadUniforms(const mat4& vp_matrix, const mat4& m_matrix) {
 	glUniformMatrix4fv(uniformLocations[M_MATRIX_LOCATION], 1, false, &m_matrix[0][0]);
 }
 
-void SimpleShader::draw(const Camera &cam, const Drawable &obj) {
+void SimpleShader::draw(const Camera &cam, Drawable &obj) {
 	glUseProgram(programID);
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), obj.getTransform());
 	obj.loadUniforms(ColorMat::id, &uniformLocations[0]);	

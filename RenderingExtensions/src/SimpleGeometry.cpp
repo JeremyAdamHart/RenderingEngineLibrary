@@ -58,7 +58,7 @@ void SimpleGeometry::loadPositions(vec3 *positions, size_t numPositions, GLenum 
 	checkGLErrors("SimpleGeometry::loadPositions");
 }
 
-void SimpleGeometry::drawGeometry() const {
+void SimpleGeometry::drawGeometry() {
 	bindGeometry();
 	glDrawArrays(mode, 0, bufferSize);
 }

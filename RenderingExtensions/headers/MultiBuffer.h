@@ -12,7 +12,7 @@ class MultiBufferSwitch {
 	int getOldestNotReading();
 	int getNewestNotWriting();
 public:
-	const int BUFFER_COPIES = 3;
+	static const int BUFFER_COPIES = 3;
 
 	MultiBufferSwitch();
 

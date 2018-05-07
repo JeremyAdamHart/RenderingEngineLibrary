@@ -23,7 +23,7 @@ public:
 
 	virtual bool createProgram(map<GLenum, string> defines = map<GLenum, string>{});
 
-	void draw(const Camera &cam, glm::vec3 lightPos, const Drawable &obj);		//Change to use pointer to drawable?
+	void draw(const Camera &cam, glm::vec3 lightPos, Drawable &obj);		//Change to use pointer to drawable?
 	void draw(const Camera &cam, glm::vec3 lightPos, Scene &scene);
 };
 

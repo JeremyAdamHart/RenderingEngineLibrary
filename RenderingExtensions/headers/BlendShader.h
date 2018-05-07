@@ -19,7 +19,7 @@ public:
 	//Samples if using a multisampled texture
 	virtual bool createProgram(int numSamples = 0);
 
-	void draw(const Drawable &obj);
+	void draw(Drawable &obj);
 };
 
 }

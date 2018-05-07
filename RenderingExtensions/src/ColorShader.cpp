@@ -48,7 +48,8 @@ void ColorShader::loadUniforms(const mat4& vp_matrix, const mat4& m_matrix, vec3
 	glUniform3f(uniformLocations[VIEW_LOCATION], viewPosition.x, viewPosition.y, viewPosition.z);
 }
 
-void ColorShader::draw(const Camera &cam, const Drawable &obj) {
+
+void ColorShader::draw(const Camera &cam, Drawable &obj) {
 	glUseProgram(programID);
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), obj.getTransform(), cam.getPosition());
 

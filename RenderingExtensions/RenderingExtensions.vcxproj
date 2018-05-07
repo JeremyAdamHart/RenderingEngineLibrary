@@ -352,6 +352,7 @@
     <ClCompile Include="src\SimpleShader.cpp" />
     <ClCompile Include="src\SimpleTexManager.cpp" />
     <ClCompile Include="src\simpleTexShader.cpp" />
+    <ClCompile Include="src\StreamGeometry.cpp" />
     <ClCompile Include="src\TextureCreation.cpp" />
     <ClCompile Include="src\TextureMat.cpp" />
     <ClCompile Include="src\TorranceSparrowShader.cpp" />

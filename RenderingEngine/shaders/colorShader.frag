@@ -3,7 +3,7 @@
 // first output is mapped to the framebuffer's colour index by default
 out vec4 OutputColor;
 
-in vec3 FragmentColor;
+flat in int FragmentColor;
 in vec3 WorldNormal;
 in vec3 WorldPosition;
 
@@ -40,13 +40,13 @@ float blinnPhongLighting(vec3 normal, vec3 position, vec3 viewPosition)
 
 void main(void)
 {
-/*	vec3 color;
+	vec3 color;
 	if(FragmentColor == 0)
 		color = colorA;
 	else
 		color = colorB;
-*/
-	vec3 color = FragmentColor*blinnPhongLighting(normalize(WorldNormal), WorldPosition, viewPosition);
+
+	color = color*blinnPhongLighting(normalize(WorldNormal), WorldPosition, viewPosition);
 
     // write colour output without modification
     OutputColor = vec4(color, 1);

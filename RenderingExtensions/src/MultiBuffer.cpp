@@ -3,7 +3,7 @@
 #include <limits>
 #include <algorithm>
 
-MultiBufferSwitch::MultiBufferSwitch(): timestamp(BUFFER_COPIES, 0), reading(-1), writing(-1){}
+MultiBufferSwitch::MultiBufferSwitch(): timestamp(3, 0), reading(-1), writing(-1){}
 
 int MultiBufferSwitch::getOldestNotReading() {
 	int oldestTime = std::numeric_limits<int>::max();
@@ -54,7 +54,7 @@ void MultiBufferSwitch::endRead() {
 }
 
 void MultiBufferSwitch::endWrite() {
-	int maxTimestamp = *std::max_element(timestamp.begin(), timestamp.end());
+	int maxTimestamp = *std::max_element(timestamp.begin(), timestamp.end()-1);
 	timestamp[writing] = maxTimestamp + 1;
 	writing = -1;
 }

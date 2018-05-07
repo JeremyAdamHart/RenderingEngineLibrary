@@ -35,7 +35,7 @@ public:
 	bool removeMaterial(int type);
 
 	void setGeometryContainer(GLGeometryContainer* newGeometry) { geometry = newGeometry; }
-	const GLGeometryContainer &getGeometry() const { return *geometry; }
+	GLGeometryContainer &getGeometry() { return *geometry; }
 
 	void deleteMaterialsAndGeometry();
 };

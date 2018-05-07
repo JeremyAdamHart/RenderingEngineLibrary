@@ -29,7 +29,7 @@ public:
 	void loadGeometry(vec3 *positions, vec3 *normals, vec2 *texCoords, unsigned int *elements,
 		size_t _bufferSize, size_t _elementNum, GLenum usage = GL_STATIC_DRAW);
 
-	virtual void drawGeometry() const;
+	virtual void drawGeometry();
 
 	virtual GLuint getVboID(int num) const { return (num < COUNT) ? vbo[num] : 0; }
 

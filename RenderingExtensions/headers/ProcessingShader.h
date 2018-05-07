@@ -15,7 +15,7 @@ public:
 
 	virtual bool createProgram(map<GLenum, string> defines = map<GLenum, string>{});
 
-	void draw(const Drawable &obj);		//Change to use pointer to drawable?
+	void draw(Drawable &obj);		//Change to use pointer to drawable?
 	void draw(Scene &scene);
 };
 

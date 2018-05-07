@@ -86,7 +86,7 @@ void TorranceSparrowShader::loadUniforms(const mat4& vp_matrix,
 }
 
 void TorranceSparrowShader::draw(const Camera &cam, vec3 lightPos, 
-	const Drawable &obj) {
+	Drawable &obj) {
 	glUseProgram(programID);
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), 
 		obj.getTransform(), cam.getPosition(), lightPos);
