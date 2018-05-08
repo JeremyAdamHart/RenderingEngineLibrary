@@ -441,7 +441,7 @@ void WindowManager::objLoadingLoop() {
 //
 //	MeshInfoLoader minfo("models/dragon.obj");	
 	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
-	StreamGeometry<vec3, vec3, char> streamGeometry(minfo.vertices.size());
+	StreamGeometry<vec3, vec3, char> streamGeometry(minfo.vertices.size(), { false, false, false});
 	streamGeometry.loadElementArray(minfo.indices.size(), GL_STATIC_DRAW, minfo.indices.data());
 
 	nth_type<2, int, vec3, char>* aChar;
@@ -487,6 +487,10 @@ void WindowManager::objLoadingLoop() {
 
 	char drawColor = 0;
 
+	std::vector<char> tempList = { true, true, false };
+
+	tempList.data();
+
 	while (!glfwWindowShouldClose(window)) {
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -508,7 +512,7 @@ void WindowManager::objLoadingLoop() {
 //		int bufferNum = streamGeometry.buffManager.getWrite();
 		int offset = 0;
 		char *color = streamGeometry.vboPointer<COLOR>();
-		const int UPDATE_NUM = 10000;
+		const int UPDATE_NUM = 0;
 		for (int i = 0; i < UPDATE_NUM; i++) {
 			if (counter + i >= streamGeometry.getBufferSize() && offset == 0) {
 				offset = -int(streamGeometry.getBufferSize());
@@ -516,7 +520,7 @@ void WindowManager::objLoadingLoop() {
 			}
 			int index = (counter + i) + offset;
 //			color[index] = (color[index] == 0)?  1 : 0;
-			streamGeometry.modify<COLOR>(index, drawColor);
+//			streamGeometry.modify<COLOR>(index, drawColor);
 		}
 
 		counter = counter+UPDATE_NUM+offset;
