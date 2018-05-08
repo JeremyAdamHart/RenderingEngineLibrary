@@ -36,16 +36,32 @@ using nth_type = typename nth_element_impl<N, Ts...>::type;
 
 
 template<template<typename> typename W, typename T1, typename ...Ts>
-class wrap_tuple {
+struct wrap_tuple {
 	W<T1> item;
 	wrap_tuple<W, Ts...> tail;
 };
 
 template<template<typename> typename W, typename T>
-class wrap_tuple<W, T>{
+struct wrap_tuple<W, T>{
 	W<T> item;
+};
+
+template<size_t N, template<typename> typename W, typename T, typename ...Ts>
+struct get_imp{
+	static auto value(wrap_tuple<W, T, Ts...>& t) {
+		return get_imp<N-1, W, Ts...>::value(t.tail);
+	}
+};
+
+template<template<typename> typename W, typename T, typename ...Ts>
+struct get_imp <0, W, T, Ts...>{
+	static auto value(wrap_tuple<W, T, Ts...>& t) {
+		return &(t.item);
+	}
 };
 
 //https://gist.github.com/IvanVergiliev/9639530	-- Reference
 template<size_t N, template<typename> typename W, typename T, typename ...Ts>
-auto& get(wrap_tuple<W, Ts...>& t)
+auto get(wrap_tuple<W, T, Ts...>& t) {
+	return get_imp<N, W, T, Ts...>::value(t);
+}

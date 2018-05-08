@@ -14,5 +14,6 @@ public:
 		for (int i = 0; i < pending.size(); i++) {
 			output[pending[i].first] = pending[i].second;
 		}
+		pending.clear();
 	}
 };

@@ -107,6 +107,16 @@ void allocateBufferStorage(GLuint* vbo, size_t bufferSize, void** pointer) {
 	glBufferStorage(GL_ARRAY_BUFFER, bufferSize * sizeof(T), nullptr, flags);
 	(*pointer) = glMapBufferRange(GL_ARRAY_BUFFER, 0, bufferSize * sizeof(T), flags);
 }
+
+template<>
+void allocateBufferStorage<glm::vec3>(GLuint* vbo, size_t bufferSize, void** pointer) {
+	glBindBuffer(GL_ARRAY_BUFFER, (*vbo));
+/*	GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+	glBufferStorage(GL_ARRAY_BUFFER, bufferSize * sizeof(glm::vec3), nullptr, flags);
+	(*pointer) = glMapBufferRange(GL_ARRAY_BUFFER, 0, bufferSize * sizeof(glm::vec3), flags);*/
+	glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+}
+
 //template<>
 //void allocateBufferStorage(GLuint* vbo, size_t bufferSize, void** pointers) {}
 

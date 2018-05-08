@@ -20,9 +20,7 @@ using namespace glm;
 template<class... Ts>
 class StreamGeometry : public GLGeometryContainer {
 public:
-	const int BUFFER_COPIES = 3;
 	MultiBufferSwitch buffManager;
-	vector<wrap_tuple<BufferQueue, Ts...>> queue;
 protected:
 	GLuint vao;
 	size_t bufferSize;
@@ -32,9 +30,10 @@ protected:
 	std::vector<void*> voidVboPointers;
 	GLsync drawSync;
 	GLuint vboElement;
+	std::vector<wrap_tuple<BufferQueue, Ts...>> queue;
 
 	std::vector<unsigned int> vboCopies;
-	
+
 	bool initVAO() {
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
@@ -50,22 +49,44 @@ protected:
 
 	void createBufferStorage() {
 		voidVboPointers.resize(vbo.size());
-		allocateBufferStorage<Ts...>(vbo.data(), bufferSize*BUFFER_COPIES, voidVboPointers.data());
+		allocateBufferStorage<Ts...>(vbo.data(), bufferSize*MultiBufferSwitch::BUFFER_COPIES, voidVboPointers.data());
 	}
 
 public:
-	StreamGeometry(GLenum mode = GL_TRIANGLES):bufferSize(0), elementNum(0), mode(mode){
+	StreamGeometry(GLenum mode = GL_TRIANGLES):bufferSize(0), elementNum(0), mode(mode), queue(MultiBufferSwitch::BUFFER_COPIES){
 		initVAO();
 		createBufferStorage();
 	}
 	StreamGeometry(size_t bufferSize, size_t elementNum=0, GLenum mode = GL_TRIANGLES) :
-		bufferSize(bufferSize), elementNum(elementNum), mode(mode) 
+		bufferSize(bufferSize), elementNum(elementNum), mode(mode), queue(MultiBufferSwitch::BUFFER_COPIES)
 	{
 		initVAO();
 		createBufferStorage();
 	}
 
+	template<size_t N>
+	void modify(size_t index, const nth_type<N, Ts...>& val) {
+		if (index > bufferSize)
+			printf("Bad\n");
+		for (int i = 0; i < queue.size(); i++) {
+			get<N, BufferQueue, Ts...>(queue[i])->add(index, val);
+		}
+	}
+
+	template<size_t N>
+	void dump() {
+		size_t bufferNum = buffManager.getWrite();
+		nth_type<N, Ts...>* data = vboPointer<N>();
+		get<N, BufferQueue, Ts...>(queue[bufferNum])->dump(data);
+	}
+
 	size_t getBufferSize() const { return bufferSize; }
+
+	template<size_t N>
+	void unmap() {
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[N]);
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+	}
 
 	virtual GLuint getVboID(int num) const { return (num < vbo.size()) ? vbo[num] : 0; }
 
@@ -74,14 +95,14 @@ public:
 
 		if (!firstDraw) {
 			GLenum syncStatus = GL_UNSIGNALED;
+			int numMilliseconds = 0;
 			while (syncStatus != GL_ALREADY_SIGNALED && syncStatus != GL_CONDITION_SATISFIED) {
-				syncStatus = glClientWaitSync(drawSync, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
-			//	printf("Waiting\n");
+				syncStatus = glClientWaitSync(drawSync, GL_SYNC_FLUSH_COMMANDS_BIT, 1000);
+				numMilliseconds++;
 			}
 		}
-
+		buffManager.endRead();	//Free buffer to be written to
 		int bufferNum = buffManager.getRead();
-		printf("bufferNum %d\n", bufferNum);
 
 		glBindVertexArray(vao);
 		glDrawElementsBaseVertex(mode, elementNum, GL_UNSIGNED_INT, 0, bufferSize*bufferNum);
@@ -89,22 +110,47 @@ public:
 		glDeleteSync(drawSync);
 		drawSync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
-		buffManager.endRead();	//Free buffer to be written to
 		firstDraw = false;
 	}
 
 	template<size_t N> 
 	nth_type<N, Ts...>* vboPointer() { 
-		size_t byteOffset = bufferSize * sizeof(nth_type<N, Ts...>)*buffManager.getWrite();
-		return reinterpret_cast<nth_type<N, Ts...>*>((char*)voidVboPointers[N]); 
+		size_t offset = bufferSize*buffManager.getWrite();
+		return reinterpret_cast<nth_type<N, Ts...>*>((char*)voidVboPointers[N]) + offset; 
 	}
 
 	template<size_t N>
 	void loadBuffer(nth_type<N, Ts...>* data){
 		size_t byteSize = bufferSize * sizeof(nth_type<N, Ts...>);
-		for (int i = 0; i < BUFFER_COPIES; i++) {
+		for (int i = 0; i < MultiBufferSwitch::BUFFER_COPIES; i++) {
 			std::memcpy((char*)voidVboPointers[N]+i*byteSize, data, byteSize);
 		}
+	}
+
+	template<>
+	void loadBuffer<0>(glm::vec3* data) {
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		std::vector<glm::vec3> buffer;
+
+		for (int i = 0; i < MultiBufferSwitch::BUFFER_COPIES; i++) {
+			for (int j = 0; j < bufferSize; j++) {
+				buffer.push_back(data[j]);
+			}
+		}
+		glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(glm::vec3), buffer.data(), GL_DYNAMIC_DRAW);
+	}
+
+	template<>
+	void loadBuffer<1>(glm::vec3* data) {
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		std::vector<glm::vec3> buffer;
+
+		for (int i = 0; i < MultiBufferSwitch::BUFFER_COPIES; i++) {
+			for (int j = 0; j < bufferSize; j++) {
+				buffer.push_back(data[j]);
+			}
+		}
+		glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(glm::vec3), buffer.data(), GL_DYNAMIC_DRAW);
 	}
 
 /*	//DON'T USE

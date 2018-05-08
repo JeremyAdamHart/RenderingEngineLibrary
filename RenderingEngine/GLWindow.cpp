@@ -61,6 +61,10 @@ void cursorPositionCallback(GLFWwindow *window, double xpos, double ypos) {
 		cam.trackballRight(-diff.x*3.14159f);
 		cam.trackballUp(-diff.y*3.14159f);
 	}
+	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
+		vec2 diff = mousePos - lastPos;
+		cam.zoom(pow(2.f, diff.y));
+	}
 
 	lastPos = mousePos;
 }
@@ -435,36 +439,22 @@ void WindowManager::objLoadingLoop() {
 		POSITION = 0, NORMAL, COLOR
 	};
 //
-	MeshInfoLoader minfo("models/dragon.obj");	
-//	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
+//	MeshInfoLoader minfo("models/dragon.obj");	
+	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
 	StreamGeometry<vec3, vec3, char> streamGeometry(minfo.vertices.size());
-//	streamGeometry.loadGeometry(minfo.vertices.size(), GL_STATIC_DRAW, 
-//		minfo.vertices.data(), minfo.normals.data(), colors1.data());
 	streamGeometry.loadElementArray(minfo.indices.size(), GL_STATIC_DRAW, minfo.indices.data());
 
 	nth_type<2, int, vec3, char>* aChar;
 	char otherChar = 'a';
 	aChar = &otherChar;
 
-//	GLuint vboID = streamGeometry.getVboID(COLOR);
-
 	vector<char> colors(minfo.vertices.size(), 0);
 
 	streamGeometry.loadBuffer<POSITION>(minfo.vertices.data());
 	streamGeometry.loadBuffer<NORMAL>(minfo.normals.data());
 	streamGeometry.loadBuffer<COLOR>(colors.data());
-
-/*	//Create three duplicates of geometry
-	vector<vec3> positions = minfo.vertices;
-	vector<vec3> normals = minfo.normals;
-	vector<char> colors (minfo.vertices.size()*3, 0);
-
-	positions.insert(positions.end(), minfo.vertices.begin(), minfo.vertices.end());
-	positions.insert(positions.end(), minfo.vertices.begin(), minfo.vertices.end());
-
-	normals.insert(normals.end(), minfo.normals.begin(), minfo.normals.end());
-	normals.insert(normals.end(), minfo.normals.begin(), minfo.normals.end());
-*/
+//	streamGeometry.unmap<POSITION>();
+//	streamGeometry.unmap<NORMAL>();
 
 	drawables.push_back(Drawable(new ShadedMat(0.3, 0.4, 0.4, 10.f), &streamGeometry));
 	drawables[0].addMaterial(new ColorMat(vec3(1, 1, 1)));
@@ -495,22 +485,14 @@ void WindowManager::objLoadingLoop() {
 
 	int counter = 0;
 
+	char drawColor = 0;
+
 	while (!glfwWindowShouldClose(window)) {
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-/*		for (int i = 0; i < colors1.size(); i++) {
-			colors[i] = startColor*(1 - transition) + transition*endColor;
-		}
-*/
 		int writeIndex = streamGeometry.buffManager.getWrite();
-
-		//OLD METHOD
-//		streamGeometry.loadBuffer<COLOR>(colors->data(), GL_DYNAMIC_DRAW);
-
-//		glBindBuffer(GL_ARRAY_BUFFER, vboID);
-//		glBufferSubData(GL_ARRAY_BUFFER, interval / maxInterval*sizeof(vec3)*colors->size(), colors->size()/maxInterval * sizeof(vec3), colors->data());
 
 		interval++;
 		if (interval >= maxInterval) {
@@ -522,19 +504,26 @@ void WindowManager::objLoadingLoop() {
 			colorShader.draw(cam, drawables[i]);
 //			tsShader.draw(cam, lightPos, drawables[i]);
 		}
-
 	
-		int bufferNum = streamGeometry.buffManager.getWrite();
+//		int bufferNum = streamGeometry.buffManager.getWrite();
+		int offset = 0;
 		char *color = streamGeometry.vboPointer<COLOR>();
-		for (int i = 0; i < 1000; i++) {
-			int index = (counter + i) % streamGeometry.getBufferSize();
-			color[index] = (color[index] == 0)?  1 : 0;
+		const int UPDATE_NUM = 10000;
+		for (int i = 0; i < UPDATE_NUM; i++) {
+			if (counter + i >= streamGeometry.getBufferSize() && offset == 0) {
+				offset = -int(streamGeometry.getBufferSize());
+				drawColor = (drawColor == 0) ? 1 : 0;
+			}
+			int index = (counter + i) + offset;
+//			color[index] = (color[index] == 0)?  1 : 0;
+			streamGeometry.modify<COLOR>(index, drawColor);
 		}
 
-		counter = (counter + 1000) % streamGeometry.getBufferSize();
+		counter = counter+UPDATE_NUM+offset;
 		
+		streamGeometry.dump<COLOR>();
 		streamGeometry.buffManager.endWrite();
-
+		
 		if (frameTimeSamples > 30) {
 			cout << "Time per frame = " << frameTime / double(frameTimeSamples) << endl;
 			frameTime = 0.0;
