@@ -439,9 +439,10 @@ void WindowManager::objLoadingLoop() {
 		POSITION = 0, NORMAL, COLOR
 	};
 //
-//	MeshInfoLoader minfo("models/dragon.obj");	
-	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
-	StreamGeometry<vec3, vec3, char> streamGeometry(minfo.vertices.size(), { false, false, false});
+	MeshInfoLoader minfo("models/dragon.obj");	
+//	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
+	StreamGeometry<vec3, vec3, char> streamGeometry(minfo.vertices.size(), 
+	{ false, false, true});
 	streamGeometry.loadElementArray(minfo.indices.size(), GL_STATIC_DRAW, minfo.indices.data());
 
 	nth_type<2, int, vec3, char>* aChar;
@@ -453,8 +454,6 @@ void WindowManager::objLoadingLoop() {
 	streamGeometry.loadBuffer<POSITION>(minfo.vertices.data());
 	streamGeometry.loadBuffer<NORMAL>(minfo.normals.data());
 	streamGeometry.loadBuffer<COLOR>(colors.data());
-//	streamGeometry.unmap<POSITION>();
-//	streamGeometry.unmap<NORMAL>();
 
 	drawables.push_back(Drawable(new ShadedMat(0.3, 0.4, 0.4, 10.f), &streamGeometry));
 	drawables[0].addMaterial(new ColorMat(vec3(1, 1, 1)));
@@ -485,11 +484,7 @@ void WindowManager::objLoadingLoop() {
 
 	int counter = 0;
 
-	char drawColor = 0;
-
-	std::vector<char> tempList = { true, true, false };
-
-	tempList.data();
+	char drawColor = 1;
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -512,7 +507,7 @@ void WindowManager::objLoadingLoop() {
 //		int bufferNum = streamGeometry.buffManager.getWrite();
 		int offset = 0;
 		char *color = streamGeometry.vboPointer<COLOR>();
-		const int UPDATE_NUM = 0;
+		const int UPDATE_NUM = 10000;
 		for (int i = 0; i < UPDATE_NUM; i++) {
 			if (counter + i >= streamGeometry.getBufferSize() && offset == 0) {
 				offset = -int(streamGeometry.getBufferSize());
@@ -520,7 +515,7 @@ void WindowManager::objLoadingLoop() {
 			}
 			int index = (counter + i) + offset;
 //			color[index] = (color[index] == 0)?  1 : 0;
-//			streamGeometry.modify<COLOR>(index, drawColor);
+			streamGeometry.modify<COLOR>(index, drawColor);
 		}
 
 		counter = counter+UPDATE_NUM+offset;

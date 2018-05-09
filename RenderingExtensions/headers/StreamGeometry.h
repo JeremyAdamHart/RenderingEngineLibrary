@@ -99,7 +99,7 @@ public:
 
 	virtual void drawGeometry() {
 		static bool firstDraw = true;
-
+		
 		if (!firstDraw) {
 			GLenum syncStatus = GL_UNSIGNALED;
 			int numMilliseconds = 0;

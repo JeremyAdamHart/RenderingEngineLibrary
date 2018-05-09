@@ -9,7 +9,7 @@ in vec3 WorldPosition;
 
 uniform vec3 viewPosition;
 
-const vec3 lightPos = vec3(10, 10, 10);
+const vec3 lightPos = vec3(-100, 100, 100);
 
 const float alpha = 20.0;
 const float ks = 0.4;
