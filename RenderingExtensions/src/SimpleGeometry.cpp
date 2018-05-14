@@ -199,7 +199,7 @@ void SimpleTexGeometry::bindGeometry() const
 	glBindVertexArray(vao);
 }
 
-void SimpleTexGeometry::drawGeometry() const {
+void SimpleTexGeometry::drawGeometry() {
 	bindGeometry();
 	glDrawArrays(mode, 0, bufferSize);
 }
@@ -281,7 +281,7 @@ void SimpleTexGeometryI::bindGeometry() const
 	glBindVertexArray(vao);
 }
 
-void SimpleTexGeometryI::drawGeometry() const {
+void SimpleTexGeometryI::drawGeometry() {
 	bindGeometry();
 	glDrawArrays(mode, 0, bufferSize);
 }

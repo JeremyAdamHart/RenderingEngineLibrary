@@ -9,15 +9,18 @@ layout(location = 2) in int VertexColor;
 uniform mat4 view_projection_matrix;
 uniform mat4 model_matrix;
 
-flat out int FragmentColor;
+out vec3 FragmentColor;
 out vec3 WorldPosition;
 out vec3 WorldNormal;
+
+uniform vec3 colorA = vec3(1, 0, 0);
+uniform vec3 colorB = vec3(0, 0, 1);
 
 void main()
 {
 	WorldNormal = (model_matrix*vec4(VertexNormal, 0.0)).xyz;
 	WorldPosition = (model_matrix*vec4(VertexPosition, 1.0)).xyz;
-	FragmentColor = VertexColor;
+	FragmentColor = (VertexColor == 0) ? colorA : colorB;
     // assign vertex position without modification
     gl_Position = view_projection_matrix*model_matrix*vec4(VertexPosition, 1.0);
 }

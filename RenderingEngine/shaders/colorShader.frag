@@ -3,7 +3,7 @@
 // first output is mapped to the framebuffer's colour index by default
 out vec4 OutputColor;
 
-flat in int FragmentColor;
+in vec3 FragmentColor;
 in vec3 WorldNormal;
 in vec3 WorldPosition;
 
@@ -16,9 +16,6 @@ const float ks = 0.4;
 const float kd = 0.4;
 const float ka = 0.4;
 #define M_PI 3.1415926535897932384626433832795
-
-uniform vec3 colorA = vec3(1, 0, 0);
-uniform vec3 colorB = vec3(0, 0, 1);
 
 float blinnPhongLighting(vec3 normal, vec3 position, vec3 viewPosition)
 {
@@ -40,11 +37,7 @@ float blinnPhongLighting(vec3 normal, vec3 position, vec3 viewPosition)
 
 void main(void)
 {
-	vec3 color;
-	if(FragmentColor == 0)
-		color = colorA;
-	else
-		color = colorB;
+	vec3 color = FragmentColor;
 
 	color = color*blinnPhongLighting(normalize(WorldNormal), WorldPosition, viewPosition);
 

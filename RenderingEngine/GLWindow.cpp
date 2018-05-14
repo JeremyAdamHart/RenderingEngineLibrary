@@ -439,8 +439,8 @@ void WindowManager::objLoadingLoop() {
 		POSITION = 0, NORMAL, COLOR
 	};
 //
-	MeshInfoLoader minfo("models/dragon.obj");	
-//	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
+//	MeshInfoLoader minfo("models/dragon.obj");	
+	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
 	StreamGeometry<vec3, vec3, char> streamGeometry(minfo.vertices.size(), 
 	{ false, false, true});
 	streamGeometry.loadElementArray(minfo.indices.size(), GL_STATIC_DRAW, minfo.indices.data());
