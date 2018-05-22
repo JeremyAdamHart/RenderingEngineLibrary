@@ -13,14 +13,17 @@ out vec3 FragmentColor;
 out vec3 WorldPosition;
 out vec3 WorldNormal;
 
-uniform vec3 colorA = vec3(1, 0, 0);
-uniform vec3 colorB = vec3(0, 0, 1);
+//uniform vec3 colorA = vec3(1, 0, 0);
+//uniform vec3 colorB = vec3(0, 0, 1);
+uniform vec3 colors [MAX_COLOR_NUM];
+const vec3 otherColors[2] = vec3[2](vec3(1, 0, 0), vec3(0, 1, 0));
 
 void main()
 {
 	WorldNormal = (model_matrix*vec4(VertexNormal, 0.0)).xyz;
 	WorldPosition = (model_matrix*vec4(VertexPosition, 1.0)).xyz;
-	FragmentColor = (VertexColor == 0) ? colorA : colorB;
+
+	FragmentColor = colors[VertexColor];
     // assign vertex position without modification
     gl_Position = view_projection_matrix*model_matrix*vec4(VertexPosition, 1.0);
 }

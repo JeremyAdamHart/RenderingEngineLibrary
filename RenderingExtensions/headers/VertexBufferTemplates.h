@@ -72,7 +72,7 @@ template<> bool initVertexBuffers<vec2>(std::vector<GLuint> *vbos) {
 	return !checkGLErrors("initVertexBuffers");
 }
 
-template<> bool initVertexBuffers<char>(std::vector<GLuint> *vbos) {
+template<> bool initVertexBuffers<unsigned char>(std::vector<GLuint> *vbos) {
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 
@@ -80,18 +80,17 @@ template<> bool initVertexBuffers<char>(std::vector<GLuint> *vbos) {
 
 	glEnableVertexAttribArray(index);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(
+	glVertexAttribIPointer(
 		index,
 		1,
-		GL_BYTE,
-		GL_FALSE,
-		sizeof(char),
+		GL_UNSIGNED_BYTE,
+		sizeof(unsigned char),
 		(void*)0
 	);
 
 	vbos->push_back(vbo);
 
-	return !checkGLErrors("initVertexBuffers");
+	return !checkGLErrors("<initVertexBuffers>");
 }
 
 template<class T1, class T2, class... Ts> 
@@ -113,6 +112,7 @@ void allocateBufferStorage(GLuint* vbo, char* streamed, size_t bufferSize, void*
 		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
 		(*pointer) = nullptr;
 	}
+	checkGLErrors("<allocateBufferStorage>");
 }
 
 /*

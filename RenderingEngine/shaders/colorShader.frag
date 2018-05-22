@@ -9,12 +9,12 @@ in vec3 WorldPosition;
 
 uniform vec3 viewPosition;
 
-const vec3 lightPos = vec3(-100, 100, 100);
+uniform vec3 lightPos = vec3(-100, 100, 100);
 
-const float alpha = 20.0;
-const float ks = 0.4;
-const float kd = 0.4;
-const float ka = 0.4;
+uniform float alpha = 20.0;
+uniform float ks = 0.4;
+uniform float kd = 0.4;
+uniform float ka = 0.4;
 #define M_PI 3.1415926535897932384626433832795
 
 float blinnPhongLighting(vec3 normal, vec3 position, vec3 viewPosition)
@@ -42,5 +42,5 @@ void main(void)
 	color = color*blinnPhongLighting(normalize(WorldNormal), WorldPosition, viewPosition);
 
     // write colour output without modification
-    OutputColor = vec4(color, 1);
+    OutputColor = vec4(color, 1.0);
 }

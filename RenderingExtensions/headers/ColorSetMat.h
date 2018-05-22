@@ -17,7 +17,7 @@ public:
 
 	std::vector<glm::vec3> colors;
 
-	ColorSetMat(std::vector<glm::vec3> colors) :colors(colors);
+	ColorSetMat(std::vector<glm::vec3> colors);
 
 	virtual  int getType() const override;
 	virtual void loadUniforms(GLint *locations) const override;

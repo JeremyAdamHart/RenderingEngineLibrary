@@ -27,7 +27,7 @@ protected:
 	size_t elementNum;
 	GLenum mode;
 	std::vector<GLuint> vbo;
-	std::vector<void*> voidVboPointers;
+	std::vector<void*> voidVboPointers; 
 	GLsync drawSync;
 	GLuint vboElement;
 	std::vector<wrap_tuple<BufferQueue, Ts...>> queue;
@@ -100,22 +100,22 @@ public:
 	virtual void drawGeometry() {
 		static bool firstDraw = true;
 		
-		if (!firstDraw) {
+/*		if (!firstDraw) {
 			GLenum syncStatus = GL_UNSIGNALED;
 			int numMilliseconds = 0;
 			while (syncStatus != GL_ALREADY_SIGNALED && syncStatus != GL_CONDITION_SATISFIED) {
 				syncStatus = glClientWaitSync(drawSync, GL_SYNC_FLUSH_COMMANDS_BIT, 1000);
 				numMilliseconds++;
 			}
-		}
+		}*/
 		buffManager.endRead();	//Free buffer to be written to
 		int bufferNum = buffManager.getRead();
 
 		glBindVertexArray(vao);
 		glDrawElementsBaseVertex(mode, elementNum, GL_UNSIGNED_INT, 0, bufferSize*bufferNum);
 		//Syncronize
-		glDeleteSync(drawSync);
-		drawSync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+//		glDeleteSync(drawSync);
+	//	drawSync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
 		firstDraw = false;
 	}

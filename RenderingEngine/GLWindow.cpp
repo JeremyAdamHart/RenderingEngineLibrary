@@ -34,6 +34,7 @@ using namespace std;
 //Other
 #include "StreamGeometry.h"
 #include "ColorShader.h"
+#include "ColorSetMat.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -438,28 +439,27 @@ void WindowManager::objLoadingLoop() {
 	enum {
 		POSITION = 0, NORMAL, COLOR
 	};
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 //
-//	MeshInfoLoader minfo("models/dragon.obj");	
-	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
-	StreamGeometry<vec3, vec3, char> streamGeometry(minfo.vertices.size(), 
+	MeshInfoLoader minfo("models/dragon.obj");
+//	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
+	StreamGeometry<vec3, vec3, unsigned char> streamGeometry(minfo.vertices.size(), 
 	{ false, false, true});
 	streamGeometry.loadElementArray(minfo.indices.size(), GL_STATIC_DRAW, minfo.indices.data());
 
-	nth_type<2, int, vec3, char>* aChar;
-	char otherChar = 'a';
-	aChar = &otherChar;
-
-	vector<char> colors(minfo.vertices.size(), 0);
+	vector<unsigned char> colors(minfo.vertices.size(), 1);
 
 	streamGeometry.loadBuffer<POSITION>(minfo.vertices.data());
 	streamGeometry.loadBuffer<NORMAL>(minfo.normals.data());
 	streamGeometry.loadBuffer<COLOR>(colors.data());
 
 	drawables.push_back(Drawable(new ShadedMat(0.3, 0.4, 0.4, 10.f), &streamGeometry));
-	drawables[0].addMaterial(new ColorMat(vec3(1, 1, 1)));
+	drawables[0].addMaterial(new ColorSetMat({ vec3(1, 0, 0), vec3(0, 0, 1) }));
 
 	TorranceSparrowShader tsShader;
-	ColorShader colorShader;
+	ColorShader colorShader(2);
 
 	for (int i = 0; i < drawables.size(); i++) {
 //		drawables[i].setPosition(vec3(0, 0, -2));
@@ -484,7 +484,7 @@ void WindowManager::objLoadingLoop() {
 
 	int counter = 0;
 
-	char drawColor = 1;
+	char drawColor = 0;
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -500,13 +500,13 @@ void WindowManager::objLoadingLoop() {
 		}
 
 		for (int i = 0; i < drawables.size(); i++) {
-			colorShader.draw(cam, drawables[i]);
+			colorShader.draw(cam, lightPos, drawables[i]);
 //			tsShader.draw(cam, lightPos, drawables[i]);
 		}
 	
 //		int bufferNum = streamGeometry.buffManager.getWrite();
 		int offset = 0;
-		char *color = streamGeometry.vboPointer<COLOR>();
+		unsigned char *color = streamGeometry.vboPointer<COLOR>();
 		const int UPDATE_NUM = 10000;
 		for (int i = 0; i < UPDATE_NUM; i++) {
 			if (counter + i >= streamGeometry.getBufferSize() && offset == 0) {
@@ -534,6 +534,8 @@ void WindowManager::objLoadingLoop() {
 			frameTime += currentTime - lastTime;
 			lastTime = currentTime;
 		}
+
+		checkGLErrors("End draw: ");
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
