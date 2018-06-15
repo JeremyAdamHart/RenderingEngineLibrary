@@ -224,6 +224,7 @@ GLuint createGLProgram(vector<pair<GLenum, string>> shaders,
 }
 
 bool checkGLErrors(string location){
+#ifdef NDEBUG		//TODO - Switch to Callbacks?
 	bool error = false;
 	for (GLenum flag = glGetError(); flag != GL_NO_ERROR; flag = glGetError())
 	{
@@ -245,6 +246,9 @@ bool checkGLErrors(string location){
 		error = true;
 	}
 	return error;
+#else
+	return false;
+#endif
 }
 
 }

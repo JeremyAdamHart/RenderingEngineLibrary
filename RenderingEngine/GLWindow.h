@@ -38,6 +38,7 @@ public:
 	void mainLoop();
 	void noiseLoop();
 	void objLoadingLoop();
+	void rigidBodyTest();
 };
 
 void initGLExtensions();

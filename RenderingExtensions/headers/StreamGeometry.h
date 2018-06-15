@@ -145,6 +145,8 @@ public:
 			}
 			glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(nth_type<N, Ts...>), buffer.data(), GL_DYNAMIC_DRAW);
 		}
+
+		checkGLErrors("StreamGeometry::loadBuffer()");
 	}
 /*
 	template<>

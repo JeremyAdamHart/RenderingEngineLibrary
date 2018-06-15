@@ -21,5 +21,5 @@ void main()
 	ModelPosition = (model_matrix*vec4(VertexPosition, 1)).xyz;
 
     // assign vertex position without modification
-    gl_Position = view_projection_matrix*model_matrix*vec4(VertexPosition, 1.0);
+    gl_Position = view_projection_matrix*vec4(ModelPosition, 1.0);
 }

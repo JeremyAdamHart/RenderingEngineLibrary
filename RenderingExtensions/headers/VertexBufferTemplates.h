@@ -28,7 +28,7 @@ bool initVertexBuffers(std::vector<GLuint> *vbos) {
 	return initVertexBuffers<Arg>(vbos) && initVertexBuffers<Args...>(vbos);
 }
 
-template<> bool initVertexBuffers<vec3>(std::vector<GLuint> *vbos) {
+template<> bool initVertexBuffers<vec3>(std::vector<GLuint> *vbos);	/* {
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 
@@ -48,9 +48,9 @@ template<> bool initVertexBuffers<vec3>(std::vector<GLuint> *vbos) {
 	vbos->push_back(vbo);
 
 	return !checkGLErrors("initVertexBuffers");
-}
+}*/
 
-template<> bool initVertexBuffers<vec2>(std::vector<GLuint> *vbos) {
+template<> bool initVertexBuffers<vec2>(std::vector<GLuint> *vbos);/* {
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 
@@ -70,9 +70,9 @@ template<> bool initVertexBuffers<vec2>(std::vector<GLuint> *vbos) {
 	vbos->push_back(vbo);
 
 	return !checkGLErrors("initVertexBuffers");
-}
+}*/
 
-template<> bool initVertexBuffers<unsigned char>(std::vector<GLuint> *vbos) {
+template<> bool initVertexBuffers<unsigned char>(std::vector<GLuint> *vbos); /* {
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 
@@ -91,7 +91,7 @@ template<> bool initVertexBuffers<unsigned char>(std::vector<GLuint> *vbos) {
 	vbos->push_back(vbo);
 
 	return !checkGLErrors("<initVertexBuffers>");
-}
+}*/
 
 template<class T1, class T2, class... Ts> 
 void allocateBufferStorage(GLuint* vbo, char* streamed, size_t bufferSize, void** pointers) {

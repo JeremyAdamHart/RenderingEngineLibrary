@@ -6,6 +6,7 @@
 int main()
 {
 	WindowManager wm;
-	wm.objLoadingLoop();
+	wm.rigidBodyTest();
+//	wm.mainLoop();
 }
 

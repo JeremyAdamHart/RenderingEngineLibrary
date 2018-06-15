@@ -134,11 +134,11 @@ void sharedIndices(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, 
 		printf("Mesh continuity violated\n");
 }
 
-MeshInfoLoader::MeshInfoLoader(char *filename) {
+MeshInfoLoader::MeshInfoLoader(const char *filename) {
 	loadModel(filename);
 }
 
-bool MeshInfoLoader::loadModel(char *filename)
+bool MeshInfoLoader::loadModel(const char *filename)
 {
 	FILE* f = fopen(filename, "r");
 	if (f == NULL)

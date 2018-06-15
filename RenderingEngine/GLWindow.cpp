@@ -36,7 +36,11 @@ using namespace std;
 #include "ColorShader.h"
 #include "ColorSetMat.h"
 
+//Rigid body test
+#include "Physics.h"
+
 #include <glm/gtc/matrix_transform.hpp>
+
 
 using namespace renderlib;
 
@@ -189,6 +193,114 @@ void WindowManager::noiseLoop() {
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
+void WindowManager::rigidBodyTest() {
+
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetCursorPosCallback(window, cursorPositionCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+
+	float width = 5.f;
+	float height = -4.f;
+	vec3 planePoints[4] = {
+		vec3(-width, height, -width),
+		vec3(width, height, -width),
+		vec3(width, height, width),
+		vec3(-width, height, width)
+	};
+	vec3 planeNormals[4] = {
+		vec3(0, 1, 0),
+		vec3(0, 1, 0),
+		vec3(0, 1, 0),
+		vec3(0, 1, 0)
+	};
+
+	unsigned int planeIndices[6] = { 0, 1, 2, 0, 2, 3 };
+
+	ElementGeometry planeGeom(planePoints, planeNormals, nullptr, planeIndices, 4, 6);
+	Drawable plane(new ShadedMat(0.2, 0.4f, 0.4f, 1.f), &planeGeom);
+	plane.addMaterial(new ColorMat(vec3(1.f, 0, 0)));
+
+	SimpleTexManager tm;
+	MeshInfoLoader minfo("models/coryPrism.obj");
+	ElementGeometry rectPrismGeom(
+		minfo.vertices.data(), minfo.normals.data(), minfo.uvs.data(), minfo.indices.data(), 
+		minfo.vertices.size(), minfo.indices.size());
+
+	Drawable rectPrism(new ShadedMat(0.2f, 0.4f, 0.4f, 10.f), &rectPrismGeom);
+	rectPrism.addMaterial(new ColorMat(vec3(1.f)));
+
+	TorranceSparrowShader tsShader;
+
+	cam = TrackballCamera(
+		vec3(0, 0, -1), vec3(0, 0, 5),
+		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 20.f));
+
+
+	//Dimensions 0.5 x 2 x 0.5
+//	RigidBody body(1.f, glm::mat3(0.354167f, 0, 0, 0, 0.0416667, 0, 0, 0, 0.354167));	//Cory's values
+	RigidBody body(1.f, glm::mat3((4.f+0.25f)/12.f, 0, 0, 0, (4.f+0.25f)/12.f, 0, 0, 0, (4.f+4.f)/12.f));	//My values
+//	RigidBody body(1.f, glm::mat3((4.f + 0.25f) / 12.f, 0, 0, 0, (0.25f + 0.25f) / 12.f, 0, 0, 0, (4.f + 0.25f) / 12.f));	//Flat
+	body.position = vec3(0, -3.11926, 0);
+	body.v = vec3(0, -0.789059, 0);
+	quat rx = angleAxis(0.785398f, vec3(1, 0, 0));
+	quat ry = angleAxis(0.785398f, vec3(0, 1, 0));
+	body.orientation = ry*rx;
+	rectPrism.position = body.position;
+	rectPrism.orientation = body.orientation;
+	body.addForce(vec3(1, 0, 0), vec3(0, 50, 1));
+	bool animating = false;
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		static bool animationKeyPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !animationKeyPressed) {
+			animating = !animating;
+			animationKeyPressed = true;
+		}else if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE){
+			animationKeyPressed = false;
+		}
+
+		if (animating) {
+			mat4 transform = body.getTransform();
+			for (const vec3 &point : minfo.vertices) {
+				vec3 transformedPoint = vec3(transform*vec4(point, 1.f));
+				if (transformedPoint.y <= -4.f) {
+					float fMagnitude = (-4.f - transformedPoint.y);
+					body.addForce(vec3(0, 0.5f, 0)*fMagnitude, transformedPoint);
+				}
+			}
+			
+			body.addForce(vec3(0, -9.81f, 0), body.position);
+//			body.addDampingForces(0.5f, 0.1f);
+			body.resolveForces(1.f / 64.f);
+
+			rectPrism.position = body.position;
+			rectPrism.orientation = body.orientation;
+		}
+
+		const vec3 lightPos(20.f, 20.f, 20.f);
+		tsShader.draw(cam, lightPos, rectPrism);
+		tsShader.draw(cam, lightPos, plane);
+
+//		static int count = 0;
+//		printf("count %d\n", count);
+//		count++;
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
 	}
 
 	glfwTerminate();

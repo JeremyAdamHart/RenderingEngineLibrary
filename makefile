@@ -6,8 +6,10 @@ LINKFLAGS=-O3
 
 #debug = true
 ifdef debug
-	CFLAGS +=-g
+	CFLAGS +=-g -D_DEBUG
 	LINKFLAGS += -flto
+else
+	CFLAGS += -DNDEBUG
 endif
 
 INCDIR= -I./include

@@ -307,6 +307,7 @@
     <ClInclude Include="HeatParticleMat.h" />
     <ClInclude Include="HeatParticleShader.h" />
     <ClInclude Include="HeatParticleSystem.h" />
+    <ClInclude Include="Physics.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLWindow.cpp" />
@@ -314,6 +315,7 @@
     <ClCompile Include="HeatParticleMat.cpp" />
     <ClCompile Include="HeatParticleShader.cpp" />
     <ClCompile Include="HeatParticleSystem.cpp" />
+    <ClCompile Include="Physics.cpp" />
     <ClCompile Include="RenderingEngine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -14,9 +14,10 @@ public:
 
 	static const int id;
 
-	glm::vec3 color;
+	glm::vec4 color;
 
-	ColorMat(glm::vec3 color=glm::vec3(1.f));
+	ColorMat(glm::vec4 color=glm::vec4(1.f));
+	ColorMat(glm::vec3 newColor);
 
 	virtual int getType() const;
 	virtual void loadUniforms(GLint *locations) const;	//Must have already called useProgram

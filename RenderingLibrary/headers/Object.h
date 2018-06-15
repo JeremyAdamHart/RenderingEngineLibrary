@@ -10,9 +10,9 @@ protected:
 	Object();
 	Object(glm::vec3 position, glm::quat orientation);
 
+public:
 	glm::quat orientation;
 	glm::vec3 position;
-public:
 	glm::quat getOrientationQuat() const;
 	glm::mat4 getOrientationMat4() const;
 	virtual glm::mat4 getTransform() const;

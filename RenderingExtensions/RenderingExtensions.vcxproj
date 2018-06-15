@@ -362,6 +362,7 @@
     <ClCompile Include="src\TorranceSparrowShader.cpp" />
     <ClCompile Include="src\TrackballCamera.cpp" />
     <ClCompile Include="src\TrackerCamera.cpp" />
+    <ClCompile Include="src\VertexBufferTemplates.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

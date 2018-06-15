@@ -14,9 +14,9 @@ using namespace glm;
 class MeshInfoLoader {
 public:
 	MeshInfoLoader() {};
-	MeshInfoLoader(char* filename);
+	MeshInfoLoader(const char* filename);
 
-	bool loadModel(char* filename);
+	bool loadModel(const char* filename);
 	void clearData();
 
 	vec3 getCenter();
