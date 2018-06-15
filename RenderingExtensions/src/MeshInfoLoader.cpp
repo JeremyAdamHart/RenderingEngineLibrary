@@ -5,9 +5,11 @@
 */
 
 #include "MeshInfoLoader.h"
+#include <../tinyply/source/tinyply.h>
 #include <fstream>
 #include <algorithm>
 #include <cstring>
+#include <iostream>
 
 #pragma warning(disable:4996)
 
@@ -136,6 +138,56 @@ void sharedIndices(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, 
 
 MeshInfoLoader::MeshInfoLoader(char *filename) {
 	loadModel(filename);
+}
+
+bool MeshInfoLoader::loadModelPly(char *filename) {
+	std::ifstream ss (filename, std::ios::binary);
+
+	using namespace tinyply;
+
+	PlyFile file;
+	file.parse_header(ss);
+
+	std::shared_ptr<PlyData> positionData, normalData, texcoordData, faceData;
+
+	try {
+		positionData = file.request_properties_from_element("vertex", { "x", "y", "z" }); 
+	}
+	catch (const std::exception e) { std::cout << "No vertices in mesh - " << e.what() << std::endl; }
+
+	try { 
+		normalData = file.request_properties_from_element("vertex", { "nx", "ny", "nz" });
+	}catch (const std::exception e) { std::cout << "No normals in mesh - " << e.what() << std::endl; }
+
+	try {
+		texcoordData = file.request_properties_from_element("vertex", { "u", "v" });
+	} catch (const std::exception e) { std::cout << "No texture coordinates in mesh - " << e.what() << std::endl; }
+	try {
+		faceData = file.request_properties_from_element("face", { "vertex_indices" });
+	}
+	catch (const std::exception e) { std::cout << "No faces in mesh - " << e.what() << std::endl; }
+
+	file.read(ss);
+
+	if (positionData) {
+		vertices.resize(positionData->count);
+		std::memcpy(vertices.data(), positionData->buffer.get(), positionData->buffer.size_bytes());
+	}
+	if (normalData) {
+		normals.resize(normalData->count);
+		std::memcpy(normals.data(), normalData->buffer.get(), normalData->buffer.size_bytes());
+	}
+	if (texcoordData) {
+		uvs.resize(texcoordData->count);
+		std::memcpy(uvs.data(), texcoordData->buffer.get(), texcoordData->buffer.size_bytes());
+	}
+	if (faceData) {
+		indices.resize(faceData->count*3);
+		size_t byteSize = faceData->buffer.size_bytes();
+		std::memcpy(indices.data(), faceData->buffer.get(), faceData->buffer.size_bytes());
+	}
+
+	return false;
 }
 
 bool MeshInfoLoader::loadModel(char *filename)
