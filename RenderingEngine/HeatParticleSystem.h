@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "HeatParticleGeometry.h""
+#include "HeatParticleGeometry.h"
 #include <vector>
 #include <queue>
 

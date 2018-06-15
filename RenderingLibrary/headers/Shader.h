@@ -29,4 +29,18 @@ public:
 	virtual void loadMaterialUniforms(const Drawable &drawable);
 };
 
+//void getMaterialOffsets(std::map<int, int>* offsetMap, int totalOffset = 0);
+
+template<typename T1, typename T2, typename ...Ts>
+void getMaterialOffsets(std::map<int, int>* offsetMap, int totalOffset = 0) {
+	getMaterialOffsets<T1>(offsetMap, totalOffset);
+	getMaterialOffsets<T2>(offsetMap, totalOffset + T1::COUNT);
+	getMaterialOffsets<Ts...>(offsetMap, totalOffset + T1::COUNT + T2::COUNT);
+}
+
+template<typename T>
+void getMaterialOffsets(std::map<int, int>* offsetMap, int totalOffset = 0) {
+	(*offsetMap)[T::id] = totalOffset;
+}
+
 }

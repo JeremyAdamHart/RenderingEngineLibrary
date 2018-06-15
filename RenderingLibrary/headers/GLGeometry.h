@@ -6,6 +6,10 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #endif
+#include <vector>
+#include <string>
+#include <map>
+#include <memory>
 
 namespace renderlib {
 
@@ -19,9 +23,55 @@ struct ATTRIB_LOCATION {
 			};
 };
 
+struct stringMapCompare{
+	bool operator()(const char* a, const char* b);
+};
+
+/**
+**For maximum reusability, use consistent naming for vertex attributes:
+**	VertexPosition
+**	VertexNormal
+**	VertexTexCoord
+**	VertexColor
+*/
+class VertexAttribLayout {
+public:
+	std::map<const char*, int, stringMapCompare> attribMap;
+	VertexAttribLayout(GLuint program, std::vector<const char*> attributeNames);
+
+	bool operator==(const VertexAttribLayout& b) const;
+	bool operator!=(const VertexAttribLayout& b) const;
+
+	int& operator[](const char* attribName);		//Should this exist?
+	const int &operator[](const char* attribName) const;
+
+	bool isComplete() const;
+};
+
+/*
+** Links programs to correct VAO that supports matches programs layout indices
+*/
+class VertexArraySelector{	// : public std::map<Key, std::shared_ptr<Value>>{
+public:
+	VertexArraySelector();
+
+	virtual GLuint getVAO(GLuint program);		//Returns 0 if not assigned
+	virtual bool isKnownProgram(GLuint program);
+	virtual bool registerLayout(GLuint program, const VertexAttribLayout& layout);	//Return true if layout already existed
+	virtual bool hasValidVAO(GLuint program);
+	virtual void registerVAO(GLuint program, GLuint vao);
+protected:
+	//Implementation subject to change
+	unsigned int nextMapValue;
+	std::map<GLuint, int> programMap;
+	std::map<int, VertexAttribLayout> layouts;
+	std::map<int, GLuint> vaoMap;
+};
+
 class GLGeometryContainer {
 protected:
 	GLGeometryContainer() {}
+	VertexArraySelector vaSelector;
 
 public:
 	virtual void drawGeometry()const {}
