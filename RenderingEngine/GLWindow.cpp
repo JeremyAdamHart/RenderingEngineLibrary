@@ -542,6 +542,9 @@ void WindowManager::objLoadingLoop() {
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 
+	MeshInfoLoader minfo1;
+	minfo1.loadModelPly("../tinyply/assets/icosahedron_ascii.ply");
+
 	SimpleTexManager tm;
 
 	vec3 lightPos(10.f, 10.f, 10.f);

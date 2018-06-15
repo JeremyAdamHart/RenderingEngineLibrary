@@ -309,6 +309,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\tinyply\source\tinyply.h" />
     <ClInclude Include="headers\AOShader.h" />
     <ClInclude Include="headers\BlendShader.h" />
     <ClInclude Include="headers\BufferQueue.h" />
@@ -339,6 +340,7 @@
     <ClInclude Include="headers\VertexBufferTemplates.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\tinyply\source\tinyply.cpp" />
     <ClCompile Include="headers\ColorSetMat.cpp" />
     <ClCompile Include="src\AOShader.cpp" />
     <ClCompile Include="src\BlendShader.cpp" />

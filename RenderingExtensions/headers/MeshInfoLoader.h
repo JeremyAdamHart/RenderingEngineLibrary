@@ -16,7 +16,9 @@ public:
 	MeshInfoLoader() {};
 	MeshInfoLoader(const char* filename);
 
-	bool loadModel(const char* filename);
+	bool loadModel(char* filename);
+	bool loadModelPly(char* filename);
+
 	void clearData();
 
 	vec3 getCenter();

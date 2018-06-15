@@ -102,6 +102,9 @@
     <ClInclude Include="headers\ColorSetMat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\tinyply\source\tinyply.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ColorMat.cpp">
@@ -174,6 +177,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\VertexBufferTemplates.cpp">
+    <ClCompile Include="..\tinyply\source\tinyply.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
