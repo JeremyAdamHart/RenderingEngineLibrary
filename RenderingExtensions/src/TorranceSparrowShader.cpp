@@ -47,6 +47,22 @@ bool TorranceSparrowShader::createProgram(map<GLenum, string> defines) {
 	return programID != 0;
 }
 
+bool TorranceSparrowShader::createNewProgram(vector<pair<GLenum, string>> shaderNames, map<GLenum, string> defines) {
+	try {
+		if (defines.at(GL_FRAGMENT_SHADER).find("#define USING_TEXTURE")
+			!= string::npos)
+			usingTexture = true;
+	}
+	catch (out_of_range) {}
+
+	programID = createGLProgram(shaderNames, defines);
+
+	if (programID != 0)
+		calculateUniformLocations();
+
+	return programID != 0;
+}
+
 void TorranceSparrowShader::calculateUniformLocations() {
 	glUseProgram(programID);
 

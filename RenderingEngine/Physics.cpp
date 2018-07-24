@@ -41,7 +41,7 @@ void RigidBody::resolveForces(float dt){
 	vec3 angVelocityV = IinvWorld*omega;	//World space
 	quat angVelocityQ (0, angVelocityV.x, angVelocityV.y, angVelocityV.z);
 
-		orientation += dt*	0.5f*angVelocityQ*orientation;
+	orientation += dt*	0.5f*angVelocityQ*orientation;
 	orientation = normalize(orientation);
 
 	force = vec3(0.0);

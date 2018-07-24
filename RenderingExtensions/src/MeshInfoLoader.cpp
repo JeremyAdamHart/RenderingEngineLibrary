@@ -140,7 +140,30 @@ MeshInfoLoader::MeshInfoLoader(const char *filename) {
 	loadModel(filename);
 }
 
-bool MeshInfoLoader::loadModelPly(char *filename) {
+vector<vec3> calculateNormalsImp(vector<vec3>* points, vector<unsigned int>* indices) {
+	vector<vec3> normals(points->size(), vec3(0));
+	for (int i = 0; i < indices->size(); i += 3) {
+		unsigned int ai = indices->at(i);
+		unsigned int bi = indices->at(i + 1);
+		unsigned int ci = indices->at(i + 2);
+		vec3 a = points->at(ai);
+		vec3 b = points->at(bi);
+		vec3 c = points->at(ci);
+
+		vec3 normal = cross(b - a, c - a);
+		normals[ai] += normal;
+		normals[bi] += normal;
+		normals[ci] += normal;
+	}
+
+	for (int i = 0; i < normals.size(); i++) {
+		normals[i] = normalize(normals[i]);
+	}
+
+	return normals;
+}
+
+bool MeshInfoLoader::loadModelPly(const char *filename) {
 	std::ifstream ss (filename, std::ios::binary);
 
 	using namespace tinyply;
@@ -173,24 +196,27 @@ bool MeshInfoLoader::loadModelPly(char *filename) {
 		vertices.resize(positionData->count);
 		std::memcpy(vertices.data(), positionData->buffer.get(), positionData->buffer.size_bytes());
 	}
-	if (normalData) {
-		normals.resize(normalData->count);
-		std::memcpy(normals.data(), normalData->buffer.get(), normalData->buffer.size_bytes());
-	}
-	if (texcoordData) {
-		uvs.resize(texcoordData->count);
-		std::memcpy(uvs.data(), texcoordData->buffer.get(), texcoordData->buffer.size_bytes());
-	}
 	if (faceData) {
 		indices.resize(faceData->count*3);
 		size_t byteSize = faceData->buffer.size_bytes();
 		std::memcpy(indices.data(), faceData->buffer.get(), faceData->buffer.size_bytes());
 	}
+	if (normalData) {
+		normals.resize(normalData->count);
+		std::memcpy(normals.data(), normalData->buffer.get(), normalData->buffer.size_bytes());
+	}
+	else {
+		normals = calculateNormalsImp(&vertices, &indices);
+	}
+	if (texcoordData) {
+		uvs.resize(texcoordData->count);
+		std::memcpy(uvs.data(), texcoordData->buffer.get(), texcoordData->buffer.size_bytes());
+	}
 
-	return false;
+	return positionData && faceData;
 }
 
-bool MeshInfoLoader::loadModel(char *filename)
+bool MeshInfoLoader::loadModel(const char *filename)
 {
 	FILE* f = fopen(filename, "r");
 	if (f == NULL)
@@ -285,7 +311,8 @@ bool MeshInfoLoader::loadModel(char *filename)
 		sharedIndices(_faces, _nfaces, _uvfaces, _normals, _uvs, vertices, normals, uvs, indices);
 	if (noUVs && noNormals) {
 		indices = _faces;
-		normals.resize(vertices.size(), vec3(0, 0, 0));
+		normals = calculateNormalsImp(&vertices, &indices);
+		//normals.resize(vertices.size(), vec3(0, 0, 0));
 		uvs.resize(vertices.size(), vec2(0, 0));
 	}
 
