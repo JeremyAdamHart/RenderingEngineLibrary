@@ -4,8 +4,12 @@
 #include "Drawable.h"
 #include "Camera.h"
 #include "Scene.h"
+#include "TemplatedShader.h"
+#include "ShadedMat.h"
+#include "ColorMat.h"
 #include <vector>
 #include <glm/glm.hpp>
+
 
 //Defines accepted: USING_TEXTURE
 
@@ -15,6 +19,15 @@ enum class BPTextureUsage {
 	TEXTURE,
 	NONE
 };
+
+class BlinnPhongShaderT : public ShaderT<ShadedMat, ColorMat> {
+public:
+	BlinnPhongShaderT();
+	
+	void draw(const Camera &cam, glm::vec3 lightPos, const Drawable &obj);
+};
+
+
 
 class BlinnPhongShader : public Shader {
 protected:

@@ -324,6 +324,7 @@
     <ClInclude Include="headers\SimpleShader.h" />
     <ClInclude Include="headers\SimpleTexManager.h" />
     <ClInclude Include="headers\simpleTexShader.h" />
+    <ClInclude Include="headers\TemplatedShader.h" />
     <ClInclude Include="headers\TextureCreation.h" />
     <ClInclude Include="headers\TextureMat.h" />
     <ClInclude Include="headers\BlinnPhongShader.h" />

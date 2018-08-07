@@ -34,9 +34,10 @@ public:
 template<typename T1, typename T2, typename ...Ts>
 void getMaterialOffsets(std::map<int, int>* offsetMap, int totalOffset = 0) {
 	getMaterialOffsets<T1>(offsetMap, totalOffset);
-	getMaterialOffsets<T2>(offsetMap, totalOffset + T1::COUNT);
-	getMaterialOffsets<Ts...>(offsetMap, totalOffset + T1::COUNT + T2::COUNT);
+	getMaterialOffsets<T2, Ts...>(offsetMap, totalOffset + T1::COUNT);
 }
+
+
 
 template<typename T>
 void getMaterialOffsets(std::map<int, int>* offsetMap, int totalOffset = 0) {

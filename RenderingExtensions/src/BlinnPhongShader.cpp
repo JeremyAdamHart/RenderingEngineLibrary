@@ -9,13 +9,13 @@ using namespace glm;
 
 namespace renderlib {
 
-constexpr int cMax (int a, int b){
+constexpr int cMax(int a, int b) {
 	return (a > b) ? a : b;
 }
 
 enum {
 	VP_MATRIX_LOCATION = ShadedMat::COUNT
-		+ cMax(int(TextureMat::COUNT), int(ColorMat::COUNT)),
+	+ cMax(int(TextureMat::COUNT), int(ColorMat::COUNT)),
 	M_MATRIX_LOCATION,
 	CAMERA_POS_LOCATION,
 	LIGHT_POS_LOCATION,
@@ -26,6 +26,34 @@ static vector<pair<GLenum, string>> shaders{
 	{ GL_VERTEX_SHADER, "shaders/bpShaded.vert" },
 	{ GL_FRAGMENT_SHADER, "shaders/bpShaded.frag" }
 };
+
+//TEST SHADER vv
+BlinnPhongShaderT::BlinnPhongShaderT() :
+	ShaderT<ShadedMat, ColorMat>(shaders, {},
+	{ "ka", "kd", "ks", "alpha", "color", 
+		"view_projection_matrix",  "model_matrix", "camera_position", "lightPos" }) 
+{}
+
+void BlinnPhongShaderT::draw(const Camera &cam, vec3 lightPos,
+	const Drawable &obj)
+{
+	glUseProgram(programID);
+
+	mat4 vp_matrix = cam.getProjectionMatrix()*cam.getCameraMatrix();
+	mat4 m_matrix = obj.getTransform();
+	vec3 camera_pos = cam.getPosition();
+
+	loadMaterialUniforms(obj);
+	glUniformMatrix4fv(uniformLocations[VP_MATRIX_LOCATION], 1, false, &vp_matrix[0][0]);
+	glUniformMatrix4fv(uniformLocations[M_MATRIX_LOCATION], 1, false, &m_matrix[0][0]);
+	glUniform3f(uniformLocations[CAMERA_POS_LOCATION], camera_pos.x, camera_pos.y, camera_pos.z);
+	glUniform3f(uniformLocations[LIGHT_POS_LOCATION],
+		lightPos.x, lightPos.y, lightPos.z);
+	obj.getGeometry().drawGeometry();
+	glUseProgram(0);
+}
+
+//TEST SHADER ^^
 
 BlinnPhongShader::BlinnPhongShader(BPTextureUsage texUsage):
 	usingTexture(texUsage == BPTextureUsage::TEXTURE)

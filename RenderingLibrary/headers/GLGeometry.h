@@ -11,6 +11,9 @@
 #include <map>
 #include <memory>
 
+#include <VertexAttribLayout.h>
+
+
 namespace renderlib {
 
 //Namespace for vertex attributes
@@ -23,8 +26,8 @@ struct ATTRIB_LOCATION {
 			};
 };
 
-struct stringMapCompare{
-	bool operator()(const char* a, const char* b);
+struct stringMapCompare {
+	bool operator()(const char* a, const char* b) const;
 };
 
 /**
@@ -37,6 +40,7 @@ struct stringMapCompare{
 class VertexAttribLayout {
 public:
 	std::map<const char*, int, stringMapCompare> attribMap;
+	VertexAttribLayout();
 	VertexAttribLayout(GLuint program, std::vector<const char*> attributeNames);
 
 	bool operator==(const VertexAttribLayout& b) const;
@@ -49,9 +53,9 @@ public:
 };
 
 /*
-** Links programs to correct VAO that supports matches programs layout indices
+** Links programs to correct VAO that supports matches program's layout indices
 */
-class VertexArraySelector{	// : public std::map<Key, std::shared_ptr<Value>>{
+class VertexArraySelector {	// : public std::map<Key, std::shared_ptr<Value>>{
 public:
 	VertexArraySelector();
 

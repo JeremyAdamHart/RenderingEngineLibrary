@@ -5,9 +5,11 @@ using namespace std;
 namespace renderlib {
 
 //GWW's answer: https://stackoverflow.com/questions/4157687/using-char-as-a-key-in-stdmap?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
-bool stringMapCompare::operator()(const char* a, const char* b) {
+bool stringMapCompare::operator()(const char* a, const char* b) const {
 	return strcmp(a, b) < 0;
 }
+
+VertexAttribLayout::VertexAttribLayout() {}
 
 VertexAttribLayout::VertexAttribLayout(GLuint program, vector<const char*> attributeNames){
 	for (const char* attrib : attributeNames) {
@@ -43,7 +45,7 @@ bool VertexAttribLayout::isComplete() const{
 VertexArraySelector::VertexArraySelector() :nextMapValue(1){}
 
 GLuint VertexArraySelector::getVAO(GLuint program) {
-	vaoMap[programMap[program]];
+	return vaoMap[programMap[program]];
 }
 
 bool VertexArraySelector::isKnownProgram(GLuint program) {

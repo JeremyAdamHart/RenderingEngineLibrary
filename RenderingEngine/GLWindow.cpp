@@ -420,7 +420,7 @@ void WindowManager::testLoop() {
 
 	vec3 lightPos(10.f, 10.f, 10.f);
 
-	BlinnPhongShader bpShader;
+	BlinnPhongShaderT bpShader;
 
 	while (!glfwWindowShouldClose(window)) {
 		if (windowResized) {
