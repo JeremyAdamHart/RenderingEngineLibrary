@@ -98,5 +98,8 @@
     <ClCompile Include="src\VertexAttribLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\GLObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

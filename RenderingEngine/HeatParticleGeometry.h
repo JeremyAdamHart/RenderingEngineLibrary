@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GLGeometry.h>
+#include <GLObject.h>
 #include <glm/glm.hpp>
 
 struct HeatParticle{
@@ -13,11 +14,11 @@ struct HeatParticle{
 
 //Stores heat, velocity, radius and position
 class HeatParticleGeometry : public renderlib::GLGeometryContainer {
-	GLuint vao;
+	renderlib::GLVAO vao;
 	size_t particleNum;
 	
 	enum { QUAD_POSITION=0, PARTICLE_POSITION, VELOCITY, HEAT, COUNT };
-	GLuint vbo[COUNT];
+	renderlib::GLBuffer vbo[COUNT];
 
 	bool initializeVAO();
 

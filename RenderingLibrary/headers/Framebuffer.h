@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glSupport.h"
+#include "GLObject.h"
 #include "Texture.h"
 #include <map>
 #include <iterator>
@@ -21,14 +22,14 @@ class Framebuffer {
 
 	vector<GLenum> drawBuffers;
 public:
-	GLuint id;
+	GLFramebuffer id;
 	Viewport vp;
 
 	Framebuffer();
-	Framebuffer(unsigned int width, unsigned int height, GLuint id=0);
-	Framebuffer(GLuint id, Texture tex, GLenum attachment);
+	Framebuffer(unsigned int width, unsigned int height, GLFramebuffer id=GLFramebuffer::wrap(0));
+	Framebuffer(GLFramebuffer id, Texture tex, GLenum attachment);
 
-	GLuint getID() const;
+	GLFramebuffer getID() const;
 	const Texture &getTexture(GLenum attachment) const;
 	bool addTexture(Texture newTex, GLenum attachment);
 	void use() const;
@@ -38,8 +39,8 @@ public:
 
 	void resize(int width, int height);
 
-	void deleteTextures();
-	void deleteFramebuffer();
+//	void deleteTextures();
+//	void deleteFramebuffer();
 };
 
 void blit(Framebuffer read, Framebuffer write);

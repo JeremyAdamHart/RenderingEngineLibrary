@@ -24,7 +24,7 @@ SimpleShader::SimpleShader(map<GLenum, string> defines):Shader(ColorMat::id) {
 bool SimpleShader::createProgram(map<GLenum, string> defines) {
 	programID = createGLProgram(shaders, defines);
 
-	return programID != 0;
+	return programID;
 }
 
 vector<string> SimpleShader::getUniformNames() { return{ "color", "view_projection_matrix", "model_matrix" }; }

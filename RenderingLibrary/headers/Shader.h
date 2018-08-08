@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GLObject.h"
 #include "glSupport.h"
 #include "Drawable.h"
 
@@ -7,7 +8,7 @@ namespace renderlib {
 
 class Shader {
 protected:
-	GLuint programID;
+	GLProgram programID;
 	vector<int> uniformLocations;
 	std::map<int, int> materialOffsets;
 
@@ -17,7 +18,7 @@ protected:
 //	Shader(vector<int> materialIDs);
 
 public:
-	GLuint getID();
+	GLProgram getID();
 	void deleteProgram();
 	virtual bool createProgram(map<GLenum, string> defines = map<GLenum, string>{});
 

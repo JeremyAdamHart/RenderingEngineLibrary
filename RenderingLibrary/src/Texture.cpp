@@ -12,16 +12,17 @@ TexInfo::TexInfo(GLenum target, std::vector<int> dimensions, GLint level,
 	 GLenum format, GLint internalFormat, GLenum type) :target(target), dimensions(dimensions),
 	level(level), internalFormat(internalFormat), format(format), type(type) {}
 
-Texture::Texture() :texID(-1), manager(nullptr), handle(-1){}
+Texture::Texture() : texID(GLTexture::wrap(0)), manager(nullptr), handle(-1){}
 
-Texture::Texture(GLuint texID, TexInfo info, TextureManager *manager) :
+Texture::Texture(GLTexture texID, TexInfo info, TextureManager *manager) :
 	texID(texID), info(info), manager(manager)
 {
 	if(manager) handle = manager->addTexture(*this);
 }
 
+/*
 void Texture::deleteTexture() {
-	if(texID > 0)
+	if(texID)
 		glDeleteTextures(1, (GLuint*)&texID);
 	if(manager)
 		manager->removeTexture(handle);
@@ -35,6 +36,7 @@ void Texture::newTexture(GLuint newTexID, TexInfo newInfo) {
 	info = newInfo;
 	if(manager) handle = manager->addTexture(*this);
 }
+*/
 
 int Texture::getTexUnit() const {
 	return manager->requestTexUnit(handle);

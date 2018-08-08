@@ -334,9 +334,6 @@ void WindowManager::mainLoop() {
 		glfwWaitEvents();
 	}
 
-	fbTex.deleteFramebuffer();
-	fbTex.deleteTextures();
-
 	glfwTerminate();
 }
 

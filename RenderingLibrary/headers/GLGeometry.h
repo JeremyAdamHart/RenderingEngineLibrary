@@ -54,6 +54,7 @@ public:
 
 /*
 ** Links programs to correct VAO that supports matches program's layout indices
+** Update with new GLuint wrapper
 */
 class VertexArraySelector {	// : public std::map<Key, std::shared_ptr<Value>>{
 public:
@@ -84,7 +85,7 @@ public:
 	virtual int startIndex() const { return 0; }
 	virtual int numElements() const { return 0; }
 	virtual GLenum getMode() const { return 0; }
-	virtual GLint getVaoID() const { return -1; }		//Don't use to bind VAO, only for comparison
+	virtual GLuint getVaoID() const { return 0; }		//Don't use to bind VAO, only for comparison
 
 	virtual bool usingDrawElements() const { return false; }
 

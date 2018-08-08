@@ -328,6 +328,7 @@
     <ClCompile Include="src\glad.cpp" />
     <ClCompile Include="src\GLGeometry.cpp" />
     <ClCompile Include="src\glmSupport.cpp" />
+    <ClCompile Include="src\GLObject.cpp" />
     <ClCompile Include="src\glSupport.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Object.cpp" />

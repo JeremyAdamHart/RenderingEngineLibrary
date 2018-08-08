@@ -128,9 +128,9 @@ GLuint createShader(const string &source, const string &defines, GLenum shaderTy
 	checkGLErrors("createShader");
 }
 
-GLuint createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessControlShader, GLuint tessEvalShader)
+GLProgram createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessControlShader, GLuint tessEvalShader)
 {
-	GLuint program = glCreateProgram();
+	GLProgram program;
 
 	if (vertexShader)	glAttachShader(program, vertexShader);
 	if (fragmentShader)	glAttachShader(program, fragmentShader);
@@ -153,7 +153,7 @@ GLuint createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessCo
 
 		glDeleteProgram(program);
 
-		return 0;
+		return GLProgram::wrap(0);
 	}
 
 	if (vertexShader) glDetachShader(program, vertexShader);
@@ -166,10 +166,10 @@ GLuint createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessCo
 	checkGLErrors("createProgram");
 }
 
-GLuint createGLProgram(vector<pair<GLenum, string>> shaders,
+GLProgram createGLProgram(vector<pair<GLenum, string>> shaders,
 	map<GLenum, string> defines) 
 {
-	GLuint program = glCreateProgram();
+	GLProgram program;
 
 	vector<GLuint> shaderIDs(shaders.size());
 
@@ -207,7 +207,7 @@ GLuint createGLProgram(vector<pair<GLenum, string>> shaders,
 
 		glDeleteProgram(program);
 
-		return 0;
+		return GLProgram::wrap(0);
 	}
 
 	//Clean up shaders

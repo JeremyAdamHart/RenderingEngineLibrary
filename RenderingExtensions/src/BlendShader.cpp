@@ -23,7 +23,7 @@ bool BlendShader::createProgram(int numSamples) {
 	else
 		programID = createGLProgram(shaders);
 
-	return programID != 0;
+	return programID;
 }
 
 void BlendShader::calculateUniformLocations() {

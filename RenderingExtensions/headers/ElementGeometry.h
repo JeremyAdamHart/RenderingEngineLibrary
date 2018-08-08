@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GLGeometry.h"
+#include "GLObject.h"
 #include <glm/glm.hpp>
 
 namespace renderlib {
@@ -8,12 +9,12 @@ namespace renderlib {
 using namespace glm;
 
 class ElementGeometry : public GLGeometryContainer {
-	GLuint vao;
+	GLVAO vao;
 	size_t bufferSize;
 	size_t elementNum;
 
 	enum { POSITION = 0, NORMAL, TEXCOORD, ELEMENTS, COUNT };
-	GLuint vbo[COUNT];
+	GLBuffer vbo[COUNT];
 
 	bool initializeVAO();
 
@@ -34,7 +35,7 @@ public:
 	virtual int startIndex() const;
 	virtual int numElements() const;
 	virtual GLenum getMode() const;
-	virtual GLint getVaoID() const;
+	virtual GLuint getVaoID() const;
 
 	virtual bool usingDrawElements() const;
 };

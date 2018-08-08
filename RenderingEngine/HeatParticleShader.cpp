@@ -26,7 +26,7 @@ HeatParticleShader::HeatParticleShader(map<GLenum, string> defines) {
 bool HeatParticleShader::createProgram(map<GLenum, string> defines) {
 	programID = createGLProgram(shaders, defines);
 
-	return programID != 0;
+	return programID;
 }
 
 void HeatParticleShader::calculateUniformLocations() {

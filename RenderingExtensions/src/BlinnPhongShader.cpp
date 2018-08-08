@@ -83,7 +83,7 @@ bool BlinnPhongShader::createProgram(map<GLenum, string> defines) {
 
 	programID = createGLProgram(shaders, defines);
 
-	return programID != 0;
+	return programID;
 }
 
 void BlinnPhongShader::calculateUniformLocations() {

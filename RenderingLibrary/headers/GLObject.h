@@ -7,54 +7,76 @@
 #include <GL/glew.h>
 #endif
 
+namespace renderlib {
+
 //Template arguments are creation and deletion functions
-template<typename GLuint (*cons)(void), typename void (*dest)(GLuint)>
+//Use this instead of GLuint handles
+//Can be passed directly to OpenGL functions via implicit conversion
+template<typename GLuint(*cons)(void), typename void(*dest)(GLuint)>
 class GLObject {
-public:
 	GLuint v;
 	int* refNum;
+	GLObject(GLuint v) :refNum(new int(1)), v(v) {}		//Consider getting rid of
 
-	GLObject() : refNum(new int(1)), v(cons()){}
-//	GLObject(GLuint v) :refNum(new(1)), v(v) {}		//Consider getting rid of
+public:
+	GLObject() : refNum(new int(1)), v(cons()) {}
 	GLObject(const GLObject<cons, dest> &other) :refNum(other.refNum), v(other.v) {
 		(*refNum)++;
 	}
 
 	GLObject<cons, dest>& operator=(const GLObject<cons, dest> &other) {
+		(*refNum)--;
+		if ((*refNum) < 1) {
+			delete refNum;
+			dest(v);
+		}
 		refNum = other.refNum;
 		v = other.v;
 		(*refNum)++;
+
+		return (*this);
 	}
 
-	operator GLuint&() const {
+	operator bool() const {
+		return v != 0;
+	}
+
+	operator GLuint() const {
 		return v;
+	}
+
+	static GLObject wrap(GLuint id) {
+		return GLObject(id);
 	}
 
 	~GLObject() {
 		(*refNum)--;
-		delete refNum;
-		if ((*refNum) < 1)
+		if ((*refNum) < 1) {
+			delete refNum;
 			dest(v);
+		}
 	}
 };
 
-GLuint createProgramID() { return glCreateProgram(); }
-void deleteProgramID(GLuint id) { glDeleteProgram(id); }
+GLuint createProgramID();
+void deleteProgramID(GLuint id);
 
-GLuint createVAOID() { GLuint vaoID;  glGenVertexArrays(1, &vaoID); return vaoID; }
-void deleteVAOID(GLuint id) { glDeleteVertexArrays(1, &id); }
+GLuint createVAOID();
+void deleteVAOID(GLuint id);
 
-GLuint createBufferID() { GLuint bufferID; glGenBuffers(1, &bufferID); return bufferID; }
-void deleteBufferID(GLuint id) { glDeleteBuffers(1, &id); }
+GLuint createBufferID();
+void deleteBufferID(GLuint id);
 
-GLuint createTextureID() { GLuint textureID; glGenTextures(1, &textureID); return textureID; }
-void deleteTextureID(GLuint id) { glDeleteTextures(1, &id); }
+GLuint createTextureID();
+void deleteTextureID(GLuint id);
 
-GLuint createFramebufferID() { GLuint framebufferID; glGenFramebuffers(1, &framebufferID); return framebufferID; }
-void deleteFramebufferID(GLuint id) { glDeleteFramebuffers(1, &id); }
+GLuint createFramebufferID();
+void deleteFramebufferID(GLuint id);
 
 using GLProgram = GLObject<&createProgramID, &deleteProgramID>;
 using GLVAO = GLObject<&createVAOID, &deleteVAOID>;
 using GLBuffer = GLObject<&createBufferID, &deleteBufferID>;
 using GLTexture = GLObject<&createTextureID, &deleteTextureID>;
-using GLFramebufferID = GLObject<&createFramebufferID, &deleteFramebufferID>;
+using GLFramebuffer = GLObject<&createFramebufferID, &deleteFramebufferID>;
+
+}

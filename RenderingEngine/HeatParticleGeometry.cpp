@@ -17,8 +17,6 @@ HeatParticleGeometry::HeatParticleGeometry() :particleNum(0){
 }
 
 bool HeatParticleGeometry::initializeVAO() {
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(COUNT, vbo);
 
 	glBindVertexArray(vao);
 	glEnableVertexAttribArray(ATTRIB_LOCATION::POSITION);

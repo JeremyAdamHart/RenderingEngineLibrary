@@ -47,9 +47,6 @@ void ElementGeometry::loadGeometry(vec3 *positions, vec3 *normals, vec2 *texCoor
 bool ElementGeometry::initializeVAO() {
 	checkGLErrors("-1");
 
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(COUNT, vbo);
-
 	glBindVertexArray(vao);
 
 	checkGLErrors("0");
@@ -112,7 +109,7 @@ void ElementGeometry::drawGeometry() const {
 int ElementGeometry::startIndex() const { return 0; }
 int ElementGeometry::numElements() const { return elementNum; }
 GLenum ElementGeometry::getMode() const { return mode; }
-GLint ElementGeometry::getVaoID() const { return vao; }
+GLuint ElementGeometry::getVaoID() const { return vao; }
 
 bool ElementGeometry::usingDrawElements() const { return true; }
 

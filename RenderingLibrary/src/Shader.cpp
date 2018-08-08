@@ -4,9 +4,9 @@ namespace renderlib {
 
 using namespace std;
 
-Shader::Shader() :programID(0) {}
-Shader::Shader(map<int, int> materialOffsets) : programID(0), materialOffsets(materialOffsets) {}
-Shader::Shader(int materialID) : programID(0), materialOffsets({ {materialID, 0} }) {}
+Shader::Shader() :programID(GLProgram::wrap(0)) {}
+Shader::Shader(map<int, int> materialOffsets) : programID(GLProgram::wrap(0)), materialOffsets(materialOffsets) {}
+Shader::Shader(int materialID) : programID(GLProgram::wrap(0)), materialOffsets({ {materialID, 0} }) {}
 
 /*Shader::Shader(vector<int> materialIDs) : programID(0) {
 	int totalOffset = 0;
@@ -16,7 +16,7 @@ Shader::Shader(int materialID) : programID(0), materialOffsets({ {materialID, 0}
 	}
 }*/
 
-GLuint Shader::getID() { return programID; }
+GLProgram Shader::getID() { return programID; }
 void Shader::deleteProgram() { glDeleteProgram(programID); }
 bool Shader::createProgram(map<GLenum, string> defines) { return false; }
 
