@@ -7,6 +7,8 @@
 #include <GL/glew.h>
 #endif
 
+#include <cstdio>
+
 namespace renderlib {
 
 //Template arguments are creation and deletion functions
@@ -28,7 +30,7 @@ public:
 		(*refNum)--;
 		if ((*refNum) < 1) {
 			delete refNum;
-			dest(v);
+			if(v) dest(v);
 		}
 		refNum = other.refNum;
 		v = other.v;
@@ -45,6 +47,10 @@ public:
 		return v;
 	}
 
+	void print() const {
+		printf("ID - %d | Num - %d\n", v, (*refNum));
+	}
+
 	static GLObject wrap(GLuint id) {
 		return GLObject(id);
 	}
@@ -53,7 +59,7 @@ public:
 		(*refNum)--;
 		if ((*refNum) < 1) {
 			delete refNum;
-			dest(v);
+			if(v) dest(v);
 		}
 	}
 };

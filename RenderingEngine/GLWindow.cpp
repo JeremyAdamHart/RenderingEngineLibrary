@@ -409,6 +409,34 @@ void WindowManager::testLoop() {
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 	//glfwSetCursorPosCallback(window, cursorPositionCallback);
 
+	//Testing object creation
+	GLTexture tex1;
+	tex1.print();
+
+	{
+		GLTexture tex4;
+		tex4 = tex1;
+		tex4.print();
+		tex1.print();
+	}
+	tex1.print();
+	GLTexture tex2;
+	tex2.print();
+	tex1 = tex2;
+	tex1.print();
+	tex2.print();
+	GLTexture tex3(tex1);
+	tex3.print();
+	tex1.print();
+
+	{
+		GLTexture tex5;
+		tex5.print();
+	}
+
+
+
+
 	//Dragon
 	Drawable dragon(
 		objToElementGeometry("models/dragon.obj"),
