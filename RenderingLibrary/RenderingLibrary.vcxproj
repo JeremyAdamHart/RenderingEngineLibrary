@@ -315,6 +315,7 @@
     <ClInclude Include="headers\glSupport.h" />
     <ClInclude Include="headers\Material.h" />
     <ClInclude Include="headers\Object.h" />
+    <ClInclude Include="headers\GLObject.h" />
     <ClInclude Include="headers\Scene.h" />
     <ClInclude Include="headers\Shader.h" />
     <ClInclude Include="headers\Texture.h" />

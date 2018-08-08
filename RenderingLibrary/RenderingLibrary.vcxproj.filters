@@ -54,6 +54,9 @@
     <ClInclude Include="headers\VertexAttribLayout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="headers\GLObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp">
