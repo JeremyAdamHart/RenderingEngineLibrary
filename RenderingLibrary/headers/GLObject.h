@@ -11,6 +11,7 @@
 
 namespace renderlib {
 
+//Todo? Make constructor as free function
 //Template arguments are creation and deletion functions
 //Use this instead of GLuint handles
 //Can be passed directly to OpenGL functions via implicit conversion

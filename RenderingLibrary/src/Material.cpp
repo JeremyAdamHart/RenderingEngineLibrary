@@ -15,6 +15,6 @@ int Material::getNextID() {
 
 int Material::getType() const { return 0; }
 void Material::loadUniforms(GLint *locations) const { }
-int Material::getUniformNum() const { return 0; }
+//int Material::getUniformNum() const { return 0; }
 Material::~Material() {}
 }

@@ -17,6 +17,6 @@ void ShadedMat::loadUniforms(GLint *locations) const {
 	glUniform1f(locations[ALPHA_LOCATION], alpha);
 }
 
-int ShadedMat::getUniformNum() const { return COUNT; }
+//int ShadedMat::getUniformNum() const { return COUNT; }
 
 }

@@ -26,7 +26,7 @@ public:
 
 	virtual int getType() const override;
 	virtual void loadUniforms(GLint *locations) const override;	//Must have already called useProgram
-	virtual int getUniformNum() const override;
+//	virtual int getUniformNum() const override;
 };
 
 }

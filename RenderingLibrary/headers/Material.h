@@ -16,7 +16,7 @@ protected:
 	Material(){}
 public:
 	virtual int getType() const;
-	virtual int getUniformNum() const;
+//	virtual int getUniformNum() const;
 	virtual void loadUniforms(GLint *locations) const;
 
 	virtual ~Material();

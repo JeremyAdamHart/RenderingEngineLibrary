@@ -12,6 +12,6 @@ void TextureMat::loadUniforms(GLint *locations) const {
 	glUniform1i(locations[TEXTURE_LOCATION], tex.getTexUnit());
 }
 
-int TextureMat::getUniformNum() const { return COUNT; }
+//int TextureMat::getUniformNum() const { return COUNT; }
 
 }
