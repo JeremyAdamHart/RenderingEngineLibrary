@@ -4,14 +4,14 @@
 
 namespace renderlib {
 
-ElementGeometry::ElementGeometry(GLenum mode) :bufferSize(0), elementNum(0), mode(mode)
+ElementGeometry::ElementGeometry(GLenum mode) :vao(createVAOID()), bufferSize(0), elementNum(0), mode(mode)
 {
 	initializeVAO();
 }
 
 ElementGeometry::ElementGeometry(vec3 *positions, vec3 *normals, vec2 *texCoords, unsigned int *elements,
 	size_t bufferSize, size_t elementNum, GLenum mode) :
-	mode(mode), bufferSize(bufferSize), elementNum(elementNum)
+	vao(createVAOID()), mode(mode), bufferSize(bufferSize), elementNum(elementNum)
 {
 	initializeVAO();
 
@@ -46,6 +46,9 @@ void ElementGeometry::loadGeometry(vec3 *positions, vec3 *normals, vec2 *texCoor
 
 bool ElementGeometry::initializeVAO() {
 	checkGLErrors("-1");
+
+	for (int i = 0; i < COUNT; i++)
+		vbo.push_back(createBufferID());
 
 	glBindVertexArray(vao);
 

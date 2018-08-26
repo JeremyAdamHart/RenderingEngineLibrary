@@ -3,6 +3,7 @@
 #include "GLGeometry.h"
 #include "GLObject.h"
 #include <glm/glm.hpp>
+#include <vector>
 
 namespace renderlib {
 
@@ -14,7 +15,7 @@ class ElementGeometry : public GLGeometryContainer {
 	size_t elementNum;
 
 	enum { POSITION = 0, NORMAL, TEXCOORD, ELEMENTS, COUNT };
-	GLBuffer vbo[COUNT];
+	std::vector<GLBuffer> vbo;
 
 	bool initializeVAO();
 

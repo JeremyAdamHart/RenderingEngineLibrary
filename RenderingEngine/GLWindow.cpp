@@ -410,17 +410,17 @@ void WindowManager::testLoop() {
 	//glfwSetCursorPosCallback(window, cursorPositionCallback);
 
 	//Testing object creation
-	GLTexture tex1;
+	GLTexture tex1 = createTextureID();
 	tex1.print();
 
 	{
-		GLTexture tex4;
+		GLTexture tex4 = createTextureID();
 		tex4 = tex1;
 		tex4.print();
 		tex1.print();
 	}
 	tex1.print();
-	GLTexture tex2;
+	GLTexture tex2 = createTextureID();
 	tex2.print();
 	tex1 = tex2;
 	tex1.print();
@@ -430,7 +430,7 @@ void WindowManager::testLoop() {
 	tex1.print();
 
 	{
-		GLTexture tex5;
+		GLTexture tex5 = createTextureID();
 		tex5.print();
 	}
 

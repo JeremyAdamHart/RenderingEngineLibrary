@@ -46,7 +46,7 @@ Texture createTexture2D(int width, int height, TextureManager *manager) {
 
 Texture createTexture2D(TexInfo info, TextureManager *manager, 
 	unsigned char *data) {
-	GLTexture texID;
+	GLTexture texID = createTextureID();
 	glActiveTexture(NO_ACTIVE_TEXTURE);	//Bind to avoid disturbing active units
 	glBindTexture(GL_TEXTURE_2D, texID);
 //	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -79,7 +79,7 @@ Texture createTexture2DMulti(int width, int height, TextureManager *manager, siz
 }
 
 Texture createTexture2DMulti(TexInfo info, TextureManager *manager, size_t num_samples) {
-	GLTexture texID;
+	GLTexture texID = createTextureID();
 	glActiveTexture(NO_ACTIVE_TEXTURE);	//Bind to avoid disturbing active units
 	glBindTexture(info.target, texID);
 	glTexParameteri(info.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

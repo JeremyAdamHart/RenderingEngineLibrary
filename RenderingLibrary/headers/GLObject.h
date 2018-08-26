@@ -15,19 +15,19 @@ namespace renderlib {
 //Template arguments are creation and deletion functions
 //Use this instead of GLuint handles
 //Can be passed directly to OpenGL functions via implicit conversion
-template<typename GLuint(*cons)(void), typename void(*dest)(GLuint)>
+template<typename void(*dest)(GLuint)>
 class GLObject {
 	GLuint v;
 	int* refNum;
-	GLObject(GLuint v) :refNum(new int(1)), v(v) {}		//Consider getting rid of
+	GLObject() : refNum(new int(1)), v(0) {}
 
 public:
-	GLObject() : refNum(new int(1)), v(cons()) {}
-	GLObject(const GLObject<cons, dest> &other) :refNum(other.refNum), v(other.v) {
+	GLObject(GLuint v) :refNum(new int(1)), v(v) {}		//Consider getting rid of
+	GLObject(const GLObject<dest> &other) :refNum(other.refNum), v(other.v) {
 		(*refNum)++;
 	}
 
-	GLObject<cons, dest>& operator=(const GLObject<cons, dest> &other) {
+	GLObject<dest>& operator=(const GLObject<dest> &other) {
 		(*refNum)--;
 		if ((*refNum) < 1) {
 			delete refNum;
@@ -65,25 +65,24 @@ public:
 	}
 };
 
-GLuint createProgramID();
 void deleteProgramID(GLuint id);
-
-GLuint createVAOID();
+void deleteShaderID(GLuint id);
 void deleteVAOID(GLuint id);
-
-GLuint createBufferID();
 void deleteBufferID(GLuint id);
-
-GLuint createTextureID();
 void deleteTextureID(GLuint id);
-
-GLuint createFramebufferID();
 void deleteFramebufferID(GLuint id);
 
-using GLProgram = GLObject<&createProgramID, &deleteProgramID>;
-using GLVAO = GLObject<&createVAOID, &deleteVAOID>;
-using GLBuffer = GLObject<&createBufferID, &deleteBufferID>;
-using GLTexture = GLObject<&createTextureID, &deleteTextureID>;
-using GLFramebuffer = GLObject<&createFramebufferID, &deleteFramebufferID>;
+using GLProgram = GLObject<&deleteProgramID>;
+using GLShader = GLObject<&deleteShaderID>;
+using GLVAO = GLObject<&deleteVAOID>;
+using GLBuffer = GLObject<&deleteBufferID>;
+using GLTexture = GLObject<&deleteTextureID>;
+using GLFramebuffer = GLObject<&deleteFramebufferID>;
 
+GLProgram createProgramID();
+GLShader createShaderID(GLenum type);
+GLVAO createVAOID();
+GLBuffer createBufferID();
+GLTexture createTextureID();
+GLFramebuffer createFramebufferID();
 }

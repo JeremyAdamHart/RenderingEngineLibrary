@@ -6,9 +6,7 @@
 
 namespace renderlib {
 
-const Texture NO_TEXTURE;
-
-Framebuffer::Framebuffer() : vp(0, 0, 0, 0){
+Framebuffer::Framebuffer() : id(createFramebufferID()), vp(0, 0, 0, 0){
 
 }
 
@@ -79,7 +77,7 @@ const Texture &Framebuffer::getTexture(GLenum attachment) const {
 		return tex.at(attachment);
 	}
 	catch (out_of_range) {
-		return NO_TEXTURE;		//Figure out better solution
+		std::cout << "Texture does not exist" << std::endl;		//Figure out better solution
 	}
 }
 

@@ -4,6 +4,7 @@
 #include "GLObject.h"
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
+#include <vector>
 
 namespace renderlib {
 
@@ -15,7 +16,7 @@ class SimpleGeometry : public GLGeometryContainer {
 	GLenum mode;
 
 	enum{ POSITION = 0, COUNT };
-	GLBuffer vbo[COUNT];
+	std::vector<GLBuffer> vbo;
 
 	bool initializeVAO();
 
@@ -47,7 +48,7 @@ class SimpleTexGeometry : public GLGeometryContainer {
 	GLenum texCoordType;
 	
 	enum{POSITION=0, TEXCOORD, COUNT};
-	GLBuffer vbo[COUNT];
+	std::vector<GLBuffer> vbo;
 
 	bool initializeVAO();
 
@@ -81,7 +82,7 @@ class SimpleTexGeometryI : public GLGeometryContainer {
 	GLenum mode;
 
 	enum { POSITION = 0, TEXCOORD, COUNT };
-	GLBuffer vbo[COUNT];
+	std::vector<GLBuffer> vbo;
 
 	bool initializeVAO();
 

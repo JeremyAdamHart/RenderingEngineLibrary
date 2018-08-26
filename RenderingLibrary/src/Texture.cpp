@@ -12,7 +12,7 @@ TexInfo::TexInfo(GLenum target, std::vector<int> dimensions, GLint level,
 	 GLenum format, GLint internalFormat, GLenum type) :target(target), dimensions(dimensions),
 	level(level), internalFormat(internalFormat), format(format), type(type) {}
 
-Texture::Texture() : texID(GLTexture::wrap(0)), manager(nullptr), handle(-1){}
+Texture::Texture() : texID(createTextureID()), manager(nullptr), handle(-1){}
 
 Texture::Texture(GLTexture texID, TexInfo info, TextureManager *manager) :
 	texID(texID), info(info), manager(manager)

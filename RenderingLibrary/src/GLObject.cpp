@@ -2,19 +2,22 @@
 
 namespace renderlib {
 
-GLuint createProgramID() { return glCreateProgram(); }
+GLProgram createProgramID() { return GLProgram(glCreateProgram()); }
 void deleteProgramID(GLuint id) { glDeleteProgram(id); }
 
-GLuint createVAOID() { GLuint vaoID;  glGenVertexArrays(1, &vaoID); return vaoID; }
+GLShader createShaderID(GLenum type) { return GLShader(glCreateShader(type)); }
+void deleteShaderID(GLuint id) { glDeleteShader(id); }
+
+GLVAO createVAOID() { GLuint vaoID;  glGenVertexArrays(1, &vaoID); return GLVAO(vaoID); }
 void deleteVAOID(GLuint id) { glDeleteVertexArrays(1, &id); }
 
-GLuint createBufferID() { GLuint bufferID; glGenBuffers(1, &bufferID); return bufferID; }
+GLBuffer createBufferID() { GLuint bufferID; glGenBuffers(1, &bufferID); return GLBuffer(bufferID); }
 void deleteBufferID(GLuint id) { glDeleteBuffers(1, &id); }
 
-GLuint createTextureID() { GLuint textureID; glGenTextures(1, &textureID); return textureID; }
+GLTexture createTextureID() { GLuint textureID; glGenTextures(1, &textureID); return GLTexture(textureID); }
 void deleteTextureID(GLuint id) { glDeleteTextures(1, &id); }
 
-GLuint createFramebufferID() { GLuint framebufferID; glGenFramebuffers(1, &framebufferID); return framebufferID; }
+GLFramebuffer createFramebufferID() { GLuint framebufferID; glGenFramebuffers(1, &framebufferID); return GLFramebuffer(framebufferID); }
 void deleteFramebufferID(GLuint id) { glDeleteFramebuffers(1, &id); }
 
 };

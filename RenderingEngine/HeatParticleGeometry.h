@@ -3,6 +3,7 @@
 #include <GLGeometry.h>
 #include <GLObject.h>
 #include <glm/glm.hpp>
+#include <vector>
 
 struct HeatParticle{
 	HeatParticle(glm::vec3 position, glm::vec3 velocity, float heat);
@@ -18,7 +19,7 @@ class HeatParticleGeometry : public renderlib::GLGeometryContainer {
 	size_t particleNum;
 	
 	enum { QUAD_POSITION=0, PARTICLE_POSITION, VELOCITY, HEAT, COUNT };
-	renderlib::GLBuffer vbo[COUNT];
+	std::vector<renderlib::GLBuffer> vbo;
 
 	bool initializeVAO();
 
