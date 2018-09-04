@@ -37,5 +37,5 @@ private:
 };
 
 ElementGeometry objToElementGeometry(char *filename);
-
+vector<vec3> calculateNormalsImp(vector<vec3>* points, vector<unsigned int>* indices);
 }

@@ -6,7 +6,8 @@
 int main()
 {
 	WindowManager wm;
-	wm.rigidBodyTest();
+	wm.testLoop();
+//	wm.rigidBodyTest();
 //	wm.mainLoop();
 }
 

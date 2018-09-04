@@ -39,6 +39,9 @@ using namespace std;
 //Rigid body test
 #include "Physics.h"
 
+//Convex Hull
+#include "ConvexHull.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 
 
@@ -142,6 +145,52 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 #define M_PI 3.1415926535897932384626433832795
 #define MOD_MAX 8388608
 
+void WindowManager::testLoop() {
+
+	std::vector<int>::iterator it;
+
+	cam = TrackballCamera(
+		vec3(0, 0, -1), vec3(0, 0, 5),
+		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 20.f));
+
+	HalfEdgeMesh<glm::vec3> mesh;
+	generateTetrahedron(mesh, glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+
+	std::vector<glm::vec3> points;
+	std::vector<unsigned int> indices;
+	halfEdgeToFaceList(&points, &indices, mesh);
+	faceListToHalfEdge(&mesh, points, indices);
+	points.clear(); indices.clear();
+	halfEdgeToFaceList(&points, &indices, mesh);
+	std::vector<glm::vec3> normals = calculateNormalsImp(&points, &indices);
+
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+	TorranceSparrowShader tsShader;
+	ElementGeometry geom(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
+
+	Drawable heObject(new ColorMat(vec3(1, 0, 0)), &geom);
+	heObject.addMaterial(new ShadedMat(0.3, 0.5, 0.4, 10.f));
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		tsShader.draw(cam, glm::vec3(10, 10, 10), heObject);
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
 
 void WindowManager::noiseLoop() {
 	vec3 points[6] = {

@@ -39,6 +39,7 @@ public:
 	void noiseLoop();
 	void objLoadingLoop();
 	void rigidBodyTest();
+	void testLoop();
 };
 
 void initGLExtensions();
