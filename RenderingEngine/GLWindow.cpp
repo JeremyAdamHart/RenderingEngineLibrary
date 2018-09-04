@@ -154,14 +154,16 @@ void WindowManager::testLoop() {
 		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 20.f));
 
 	HalfEdgeMesh<glm::vec3> mesh;
-	generateTetrahedron(mesh, glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+	auto vert = generateTetrahedron(mesh, glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+	auto boundaryEdge = mesh.deleteFace(mesh.edge(mesh[vert]).face);
 
 	std::vector<glm::vec3> points;
 	std::vector<unsigned int> indices;
 	halfEdgeToFaceList(&points, &indices, mesh);
-	faceListToHalfEdge(&mesh, points, indices);
-	points.clear(); indices.clear();
-	halfEdgeToFaceList(&points, &indices, mesh);
+	//faceListToHalfEdge(&mesh, points, indices);
+	//points.clear(); indices.clear();
+	//halfEdgeToFaceList(&points, &indices, mesh);
+	fillBoundary(mesh, mesh[boundaryEdge], vec3(1, 1, 1));
 	std::vector<glm::vec3> normals = calculateNormalsImp(&points, &indices);
 
 	glfwSetKeyCallback(window, keyCallback);

@@ -161,6 +161,14 @@ struct Face {
 };
 
 
+//template<typename P>
+//using HalfEdgeIndex = SlotMap<HalfEdge<P>>::Index;
+//template<typename P>
+//using VertexIndex = SlotMap<Vertex<P>>::Index;
+//template<typename P>
+//using FaceIndex = SlotMap<Face<P>>::Index;
+
+
 template<typename P>
 class HalfEdgeMesh {	
 public:
@@ -200,6 +208,41 @@ public:
 
 		return head(e);
 	}
+
+	P normal(Face<P> f) {
+		P a = head(edge(f)).pos;
+		P b = head(next(edge(f))).pos;
+		P c = head(next(next(edge(f)))).pos;
+
+		return normalize(cross(b - a, c - a));
+	}
+
+	//Returns half edge on other side of new boundary
+	typename SlotMap<HalfEdge<P>>::Index deleteFace(typename SlotMap<Face<P>>::Index f) {
+		SlotMap<HalfEdge<P>>::Index returnedEdge;
+
+		SlotMap<HalfEdge<P>>::Index e = edge(faces[f]).next;
+		while (e != faces[f].edge) {
+			if (edges[e].pair) {
+				returnedEdge = edges[e].pair;
+				pair(edges[e]).pair = {};
+			}
+
+			SlotMap<HalfEdge<P>>::Index temp = e;
+			e = edges[e].next;
+			edges.remove(temp);
+		}
+
+		if (edges[e].pair) {
+			pair(edges[e]).pair = {};
+		}
+
+		edges.remove(e);
+		faces.remove(f);
+	
+		return returnedEdge;
+	}
+
 };
 
 template<typename P, typename I>
@@ -438,5 +481,11 @@ typename SlotMap<Vertex<P>>::Index generateTetrahedron(HalfEdgeMesh<P>& mesh, P 
 	};
 
 	return v_a;
+}
+
+template<typename P>
+void fillBoundary(HalfEdgeMesh<P>& mesh, HalfEdge<P> boundaryEdge, P newPoint) {
+	SlotMap<Vertex<P>>::Index newVertex = mesh.vertices.add({ newPoint});
+	
 	
 }
