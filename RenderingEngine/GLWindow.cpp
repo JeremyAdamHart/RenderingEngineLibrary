@@ -42,6 +42,10 @@ using namespace std;
 //Convex Hull
 #include "ConvexHull.h"
 
+//Random
+#include <random>
+#include <ctime>
+
 #include <glm/gtc/matrix_transform.hpp>
 
 
@@ -145,6 +149,14 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 #define M_PI 3.1415926535897932384626433832795
 #define MOD_MAX 8388608
 
+float floatRand() {
+	return float(rand()) / float(RAND_MAX);
+}
+
+int intRand(int range) {
+	return rand() % range;
+}
+
 void WindowManager::testLoop() {
 
 	std::vector<int>::iterator it;
@@ -156,6 +168,7 @@ void WindowManager::testLoop() {
 	HalfEdgeMesh<glm::vec3> mesh;
 	auto vert = generateTetrahedron(mesh, glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
 	auto boundaryEdge = mesh.deleteFace(mesh.edge(mesh[vert]).face);
+	fillBoundary(mesh, boundaryEdge, vec3(0, 0, -1));
 
 	std::vector<glm::vec3> points;
 	std::vector<unsigned int> indices;
@@ -163,18 +176,36 @@ void WindowManager::testLoop() {
 	//faceListToHalfEdge(&mesh, points, indices);
 	//points.clear(); indices.clear();
 	//halfEdgeToFaceList(&points, &indices, mesh);
-	fillBoundary(mesh, mesh[boundaryEdge], vec3(1, 1, 1));
 	std::vector<glm::vec3> normals = calculateNormalsImp(&points, &indices);
 
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 
 	SimpleTexManager tm;
+	SimpleShader simpleShader;
 	TorranceSparrowShader tsShader;
 	ElementGeometry geom(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
 
 	Drawable heObject(new ColorMat(vec3(1, 0, 0)), &geom);
 	heObject.addMaterial(new ShadedMat(0.3, 0.5, 0.4, 10.f));
+
+	std::vector<glm::vec3> hullPoints;
+
+	srand(time(0));
+	const int POINT_NUM = 100;
+	for (int i = 0; i < 100; i++) {
+		hullPoints.push_back(
+			(glm::vec3(
+			floatRand(),
+			floatRand(),
+			floatRand()) + glm::vec3(-0.5, -0.5, -0.5)
+				)*4.f);
+	}
+
+	glPointSize(3.f);
+
+	Drawable hullObject(new ColorMat(vec3(0, 0, 0)),
+		new SimpleGeometry(hullPoints.data(), hullPoints.size(), GL_POINTS));
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -185,6 +216,7 @@ void WindowManager::testLoop() {
 			glViewport(0, 0, window_width, window_height);
 		}
 
+		simpleShader.draw(cam, hullObject);
 		tsShader.draw(cam, glm::vec3(10, 10, 10), heObject);
 
 		glfwSwapBuffers(window);

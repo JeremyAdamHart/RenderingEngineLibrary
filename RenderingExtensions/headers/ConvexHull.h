@@ -35,6 +35,7 @@ public:
 		operator size_t() const { return index; }
 		operator bool() { return index >= 0; }
 		bool operator==(Index other) const { return other.index == index && other.timestamp == timestamp; }
+		bool operator!=(Index other) const { return !((*this) == other); }
 		bool operator<(Index other) const { return index < other.index; }
 		bool operator>(Index other) const { return index > other.index; }
 		bool operator<=(Index other) const { return index <= other.index; }
@@ -58,8 +59,8 @@ public:
 	}
 
 	void remove(Index i) {
-		emptySlots.push_back(i);
-		timestamp[i]++;
+		emptySlots.push_back(i.index);
+		timestamp[i.index]++;
 		dataSize = (dataSize == 0) ? dataSize : dataSize-1;
 	}
 
@@ -147,17 +148,29 @@ struct HalfEdge {
 	typename SlotMap<HalfEdge<P>>::Index next;
 	typename SlotMap<HalfEdge<P>>::Index pair;
 	typename SlotMap<Face<P>>::Index face;
+
+	bool operator==(const HalfEdge<P>& other) const { 
+		return head == other.head && next == other.next && pair == other.pair && face == other.face; 
+	}
 };
 
 template<typename P>
 struct Vertex {
 	P pos;
 	typename SlotMap<HalfEdge<P>>::Index edge;
+
+	bool operator==(const Vertex<P>& other) const { 
+		return pos == other.pos && edge 
+	}
 };
 
 template<typename P>
 struct Face {
 	typename SlotMap<HalfEdge<P>>::Index edge;
+
+	bool operator==(const Face<P>& other) const {
+		return edge == other.edge;
+	}
 };
 
 
@@ -200,13 +213,20 @@ public:
 	const Face<P>& operator[](typename SlotMap<Face<P>>::Index index) const { return faces[index]; }
 	Face<P>& operator[](typename SlotMap<Face<P>>::Index index) { return faces[index]; }
 
-	Vertex<P>& nextOnBoundary(Vertex<P> v) {
-		HalfEdge<P> e = next(edge(v));
-		while (!pair(e) && head(e != v)) {
-			e = next(pair(e));
-		}
+	typename SlotMap<HalfEdge<P>>::Index prev(typename SlotMap<HalfEdge<P>>::Index start) {
+		SlotMap<HalfEdge<P>>::Index current = start;
+		while (edges[current].next != start)
+			current = edges[current].next;
 
-		return head(e);
+		return current;
+	}
+
+	typename SlotMap<HalfEdge<P>>::Index nextOnBoundary(typename SlotMap<HalfEdge<P>>::Index start) {
+		SlotMap<HalfEdge<P>>::Index e = edges[start].next;
+		while (edges[e].pair && edges[e].pair != start) 
+			e = edges[edges[e].pair].next;
+
+		return (edges[e].pair == start) ? SlotMap<HalfEdge<P>>::Index() : e;
 	}
 
 	P normal(Face<P> f) {
@@ -219,13 +239,21 @@ public:
 
 	//Returns half edge on other side of new boundary
 	typename SlotMap<HalfEdge<P>>::Index deleteFace(typename SlotMap<Face<P>>::Index f) {
+		
+		//NO HALF EDGES ON BOUNDARY VERSION
 		SlotMap<HalfEdge<P>>::Index returnedEdge;
 
-		SlotMap<HalfEdge<P>>::Index e = edge(faces[f]).next;
+		SlotMap<HalfEdge<P>>::Index e = edges[faces[f].edge].next;
 		while (e != faces[f].edge) {
 			if (edges[e].pair) {
 				returnedEdge = edges[e].pair;
 				pair(edges[e]).pair = {};
+			}
+
+			//Can speed up with half-edges on boundary
+			for (SlotMap<HalfEdge<P>>::Iterator edge = edges.begin(); edge != edges.end(); ++edge) {
+				if (edge.toIndex() != e && edge->head == edges[e].head)
+					vertices[edge->head].edge = edge.toIndex();
 			}
 
 			SlotMap<HalfEdge<P>>::Index temp = e;
@@ -241,8 +269,34 @@ public:
 		faces.remove(f);
 	
 		return returnedEdge;
-	}
 
+		/*
+		//HALF EDGES ON BOUNDARY VERSION
+		SlotMap<HalfEdge<P>>::Index returnedEdge;
+
+		SlotMap<HalfEdge<P>>::Index e = edge(faces[f]).next;
+		while (e != faces[f].edge) {
+			if (!pair(edges[e]).face) {
+				returnedEdge = edges[e].pair;
+				pair(edges[e]).pair = {};
+			
+				SlotMap<HalfEdge<P>>::Index temp = e;
+				edges.remove(temp);
+			}
+
+			e = edges[e].next;
+		}
+
+		if (edges[e].pair) {
+			pair(edges[e]).pair = {};
+		}
+
+		edges.remove(e);
+		faces.remove(f);
+
+		return returnedEdge;
+		*/
+	}
 };
 
 template<typename P, typename I>
@@ -427,7 +481,7 @@ typename SlotMap<Vertex<P>>::Index generateTetrahedron(HalfEdgeMesh<P>& mesh, P 
 	mesh[e_db] = {
 		v_b,
 		e_ba,
-		e_ab,
+		e_bd,
 		f_adb
 	};
 
@@ -484,8 +538,63 @@ typename SlotMap<Vertex<P>>::Index generateTetrahedron(HalfEdgeMesh<P>& mesh, P 
 }
 
 template<typename P>
-void fillBoundary(HalfEdgeMesh<P>& mesh, HalfEdge<P> boundaryEdge, P newPoint) {
+void fillBoundary(HalfEdgeMesh<P>& mesh, typename SlotMap<HalfEdge<P>>::Index boundaryEdge, P newPoint) {
 	SlotMap<Vertex<P>>::Index newVertex = mesh.vertices.add({ newPoint});
 	
+	//SlotMap<HalfEdge<P>>::Index currentEdge = boundaryEdge;
+	SlotMap<HalfEdge<P>>::Index lastLeadingEdge;
+
+	std::vector <SlotMap<HalfEdge<P>>::Index> boundaryEdgeList = { boundaryEdge };
+	do {
+		boundaryEdgeList.push_back(mesh.nextOnBoundary(boundaryEdgeList.back()));
+	} while (boundaryEdgeList.back() != boundaryEdge);
+
+	boundaryEdgeList.pop_back();
+
+	//do {
+	for (auto currentEdge : boundaryEdgeList) {
+
+		SlotMap<Face<P>>::Index newFace = mesh.faces.add({});
+
+		mesh[currentEdge].pair = mesh.edges.add({
+			mesh[mesh.prev(currentEdge)].head,	//Head
+			{},									//Next
+			currentEdge,						//Pair
+			newFace								//Face
+		});
+
+		mesh[mesh[currentEdge].pair].next = mesh.edges.add({
+			newVertex,	//Head
+			{},			//Next
+			lastLeadingEdge,			//Pair
+			newFace		//Face
+		});
+		if (lastLeadingEdge)
+			mesh[lastLeadingEdge].pair = mesh[mesh[currentEdge].pair].next;
+
+		//mesh.next(currentEdge).next = 
+		mesh[mesh[mesh[currentEdge].pair].next].next = mesh.edges.add({
+			mesh[currentEdge].head,		//Head
+			mesh[currentEdge].pair,		//Next
+			{},							//Pair
+			newFace						//Face
+		});
+
+		lastLeadingEdge = mesh[mesh[mesh[currentEdge].pair].next].next;
+		mesh[newFace].edge = mesh[currentEdge].pair;
+		
+		//currentEdge = mesh.nextOnBoundary(currentEdge);
+	}
+
+
+	//} while (currentEdge);	// boundaryEdge != currentEdge);
 	
+	//mesh[mesh[mesh[currentEdge].next].next].pair = lastLeadingEdge;
+	mesh[lastLeadingEdge].pair = mesh[mesh[boundaryEdge].pair].next;
+	mesh[mesh[lastLeadingEdge].pair].pair = lastLeadingEdge;
+	mesh[newVertex].edge = mesh[mesh[boundaryEdge].pair].next;
 }
+
+
+//template<typename P>
+//void convexHullIteration()
