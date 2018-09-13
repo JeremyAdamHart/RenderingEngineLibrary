@@ -159,6 +159,19 @@ int intRand(int range) {
 
 void WindowManager::testLoop() {
 
+	SlotMap<int> testMap;
+	testMap.add(1);
+	testMap.add(2);
+	testMap.add(3);
+	testMap.add(4);
+	auto last = testMap.add(5);
+	testMap.remove(last);
+
+	for (auto it = testMap.begin(); it != testMap.end(); ++it) {
+		//auto ending = testMap.end();
+  		printf("%d\n", *it);
+	}
+
 	std::vector<int>::iterator it;
 
 	cam = TrackballCamera(
@@ -204,11 +217,31 @@ void WindowManager::testLoop() {
 
 	glPointSize(3.f);
 
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	Drawable hullObject(new ColorMat(vec3(0, 0, 0)),
 		new SimpleGeometry(hullPoints.data(), hullPoints.size(), GL_POINTS));
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		static bool iterationPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+			
+			if (!iterationPressed) {
+				using namespace glm;
+				convexHullIteration(mesh, hullPoints);
+				points.clear(); indices.clear();
+				halfEdgeToFaceList(&points, &indices, mesh);
+				normals = calculateNormalsImp(&points, &indices);
+				geom.loadGeometry(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
+			}
+
+			iterationPressed = true;
+		}
+		else {
+			iterationPressed = false;
+		}
 
 		if (windowResized) {
 			window_width = windowWidth;

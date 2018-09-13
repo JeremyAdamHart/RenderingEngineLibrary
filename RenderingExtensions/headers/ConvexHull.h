@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <random>
 
 //Container which reserves space in middle
 template<typename T>
@@ -68,6 +69,14 @@ public:
 		return data[i.index];
 	}
 
+	Index random() const {
+		int i;
+		do {
+			i = rand() % timestamp.size();
+		} while (timestamp[i] % 2);
+		return{ i, timestamp[i] };
+	}
+
 	/*const T& operator[] const (Index i) {
 		return data[i];
 	}*/
@@ -90,7 +99,10 @@ public:
 				index++;
 			} while (index < container->data.size() && (container->timestamp[index] % 2) == 1);
 
-			return (index < container->data.size()) ? *this : container->end();
+			if (index >= container->data.size())
+				*this = container->end();
+			return *this;
+//			return (index < container->data.size()) ? *this : container->end();
 		}
 
 		Iterator& operator--() {
@@ -98,7 +110,9 @@ public:
 				index--;
 			} while (index > 0 && (container->timestamp[index] % 2) == 1);
 
-			return (index > 0) ? *this : container->end();
+			if (index < 0)
+				*this = container->begin();
+			return *this;
 		}
 
 		//operator Index() const { return{ index, timestamp[index] }; }
@@ -237,6 +251,15 @@ public:
 		return normalize(cross(b - a, c - a));
 	}
 
+	//Only supports 3 point faces currently
+	P center(Face<P> f) {
+		P a = head(edge(f)).pos;
+		P b = head(next(edge(f))).pos;
+		P c = head(next(next(edge(f)))).pos;
+
+		return (a + b + c) / 3.f;
+	}
+
 	//Returns half edge on other side of new boundary
 	typename SlotMap<HalfEdge<P>>::Index deleteFace(typename SlotMap<Face<P>>::Index f) {
 		
@@ -251,6 +274,7 @@ public:
 			}
 
 			//Can speed up with half-edges on boundary
+			auto endIterator = edges.end();
 			for (SlotMap<HalfEdge<P>>::Iterator edge = edges.begin(); edge != edges.end(); ++edge) {
 				if (edge.toIndex() != e && edge->head == edges[e].head)
 					vertices[edge->head].edge = edge.toIndex();
@@ -596,5 +620,34 @@ void fillBoundary(HalfEdgeMesh<P>& mesh, typename SlotMap<HalfEdge<P>>::Index bo
 }
 
 
-//template<typename P>
-//void convexHullIteration()
+template<typename P>
+void convexHullIteration(HalfEdgeMesh<P>& mesh, const std::vector<P>& points) {
+	SlotMap<Face<P>>::Index extrudedFace = mesh.faces.random();
+	P faceCenter = mesh.center(mesh[extrudedFace]);
+	P faceNormal = mesh.normal(mesh[extrudedFace]);
+
+	float maxProjectedDistance = 0.f;
+	P furthestPoint;
+	for (P point : points) {
+		float projectedDistance = dot(faceNormal, faceCenter - point);
+		if (projectedDistance > maxProjectedDistance) {
+			maxProjectedDistance = projectedDistance;
+			furthestPoint = point;
+		}
+	}
+
+	SlotMap<HalfEdge<P>>::Index boundaryEdge;
+	std::vector<SlotMap<Face<P>>::Index> faceDeleteList;
+	for (auto face = mesh.faces.begin(); face != mesh.faces.end(); ++face) {
+		if (dot(mesh.normal(*face), furthestPoint - mesh.center(*face)) > 0.f)
+			faceDeleteList.push_back(face.toIndex());	// boundaryEdge = mesh.deleteFace(face.toIndex());
+	}
+
+	for (auto f : faceDeleteList) {
+		boundaryEdge = mesh.deleteFace(f);
+	}
+
+	if (boundaryEdge) {
+		fillBoundary(mesh, boundaryEdge, furthestPoint);
+	}
+}
