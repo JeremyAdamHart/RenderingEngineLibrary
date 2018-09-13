@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <random>
+#include <stdexcept>
 
 //Container which reserves space in middle
 template<typename T>
@@ -66,6 +67,8 @@ public:
 	}
 
 	T& operator[](Index i) {
+		if (timestamp[i.index] != i.timestamp)
+			throw std::invalid_argument("Timestamp expired");
 		return data[i.index];
 	}
 

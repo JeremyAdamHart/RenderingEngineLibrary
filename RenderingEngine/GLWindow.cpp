@@ -157,6 +157,28 @@ int intRand(int range) {
 	return rand() % range;
 }
 
+void loadGeometryWithHalfEdgeMesh(SimpleGeometry* geom, HalfEdgeMesh<vec3>& mesh) {
+	vector<vec3> points;
+
+	for (auto f : mesh.faces) {
+		vec3 center = mesh.center(f);
+		vec3 normal = mesh.normal(f);
+		auto e = f.edge;
+
+		int count = 0;
+		do {
+			points.push_back(center + normal*0.01f);
+			points.push_back(mesh[mesh[e].head].pos + normal*0.01f);
+			e = mesh[e].next;
+			count++;
+		} while (e != f.edge && count < 10);
+
+		if (count >= 10) printf("Face with > 10 sides detected\n");
+	}
+
+	geom->loadGeometry(points.data(), points.size());
+}
+
 void WindowManager::testLoop() {
 
 	SlotMap<int> testMap;
@@ -180,8 +202,8 @@ void WindowManager::testLoop() {
 
 	HalfEdgeMesh<glm::vec3> mesh;
 	auto vert = generateTetrahedron(mesh, glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
-	auto boundaryEdge = mesh.deleteFace(mesh.edge(mesh[vert]).face);
-	fillBoundary(mesh, boundaryEdge, vec3(0, 0, -1));
+	//auto boundaryEdge = mesh.deleteFace(mesh.edge(mesh[vert]).face);
+	//fillBoundary(mesh, boundaryEdge, vec3(0, 0, -1));
 
 	std::vector<glm::vec3> points;
 	std::vector<unsigned int> indices;
@@ -205,8 +227,8 @@ void WindowManager::testLoop() {
 	std::vector<glm::vec3> hullPoints;
 
 	srand(time(0));
-	const int POINT_NUM = 100;
-	for (int i = 0; i < 100; i++) {
+	const int POINT_NUM = 10;
+	for (int i = 0; i < POINT_NUM; i++) {
 		hullPoints.push_back(
 			(glm::vec3(
 			floatRand(),
@@ -217,24 +239,82 @@ void WindowManager::testLoop() {
 
 	glPointSize(3.f);
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	Drawable hullObject(new ColorMat(vec3(0, 0, 0)),
+	Drawable hullObject(new ColorMat(vec3(1, 1, 1)),
 		new SimpleGeometry(hullPoints.data(), hullPoints.size(), GL_POINTS));
+
+	vector<vec3> debugPoints;
+	SimpleGeometry debugGeometry(GL_POINTS);
+	Drawable debugObject(new ColorMat(vec3(0.2, 0.5, 1)), &debugGeometry);
+
+	SimpleGeometry halfEdgeDebugGeometry(GL_LINES);
+	Drawable halfEdgeDebugObject(new ColorMat(vec3(1.f, 0.f, 1.f)), &halfEdgeDebugGeometry);
+	
+	glClearColor(0.f, 0.f, 0.f, 0.f);
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		static int iterationStep = 1;
 		static bool iterationPressed = false;
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 			
 			if (!iterationPressed) {
+				iterationStep = (iterationStep + 1)%2;
+
 				using namespace glm;
-				convexHullIteration(mesh, hullPoints);
+				//convexHullIteration(mesh, hullPoints);
+
+				//Expanded function here vvvvvvvvvvvvvvvvvvvvvvv
+				{
+					static SlotMap<HalfEdge<vec3>>::Index boundaryEdge2;
+					static vec3 furthestPoint = vec3(0);
+
+					if (iterationStep == 0) {
+						debugPoints.clear();
+
+						float maxProjectedDistance = 0.f;
+						SlotMap<Face<vec3>>::Index extrudedFace = mesh.faces.random();
+						vec3 faceCenter = mesh.center(mesh[extrudedFace]);
+						vec3 faceNormal = mesh.normal(mesh[extrudedFace]);
+						for (vec3 point : hullPoints) {
+							float projectedDistance = dot(faceNormal, faceCenter - point);
+							if (projectedDistance > maxProjectedDistance) {
+								maxProjectedDistance = projectedDistance;
+								furthestPoint = point;
+							}
+						}
+
+						debugPoints.push_back(furthestPoint);
+
+						std::vector<SlotMap<Face<vec3>>::Index> faceDeleteList;
+						for (auto face = mesh.faces.begin(); face != mesh.faces.end(); ++face) {
+							if (dot(mesh.normal(*face), furthestPoint - mesh.center(*face)) > 0.f) {
+								faceDeleteList.push_back(face.toIndex());	// boundaryEdge = mesh.deleteFace(face.toIndex());
+								debugPoints.push_back(mesh.center(*face));
+							}
+						}
+						printf("");
+						//SlotMap<HalfEdge<vec3>>::Index boundaryEdge2;	// = SlotMap<HalfEdge<vec3>>::Index();
+						for (auto f : faceDeleteList) {
+							boundaryEdge2 = mesh.deleteFace(f);
+						}
+						printf("");
+					}
+					else if (iterationStep == 1) {
+						if (boundaryEdge2) {
+							fillBoundary(mesh, boundaryEdge2, furthestPoint);
+						}
+					}
+				}
+				//Expanded function here ^^^^^^^
+				
 				points.clear(); indices.clear();
 				halfEdgeToFaceList(&points, &indices, mesh);
 				normals = calculateNormalsImp(&points, &indices);
 				geom.loadGeometry(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
+				debugGeometry.loadGeometry(debugPoints.data(), debugPoints.size());
 			}
 
 			iterationPressed = true;
@@ -249,7 +329,11 @@ void WindowManager::testLoop() {
 			glViewport(0, 0, window_width, window_height);
 		}
 
+		loadGeometryWithHalfEdgeMesh(&halfEdgeDebugGeometry, mesh);
+
 		simpleShader.draw(cam, hullObject);
+		simpleShader.draw(cam, debugObject);
+		simpleShader.draw(cam, halfEdgeDebugObject);
 		tsShader.draw(cam, glm::vec3(10, 10, 10), heObject);
 
 		glfwSwapBuffers(window);
