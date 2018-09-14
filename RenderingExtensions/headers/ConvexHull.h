@@ -230,6 +230,8 @@ public:
 	const Face<P>& operator[](typename SlotMap<Face<P>>::Index index) const { return faces[index]; }
 	Face<P>& operator[](typename SlotMap<Face<P>>::Index index) { return faces[index]; }
 
+	bool isBoundary(typename SlotMap<HalfEdge<P>>::Index edge) { return !edges[edge].face; }
+
 	typename SlotMap<HalfEdge<P>>::Index prev(typename SlotMap<HalfEdge<P>>::Index start) {
 		SlotMap<HalfEdge<P>>::Index current = start;
 		while (edges[current].next != start)
@@ -238,12 +240,26 @@ public:
 		return current;
 	}
 
+	//Follows around the vertex until the halfedge is found which either has start as next->pair, or no next
+	typename SlotMap<HalfEdge<P>>::Index circleVertex(typename SlotMap<HalfEdge<P>>::Index start) {
+		SlotMap<HalfEdge<P>>::Index current = start;
+		while (edges[current].next && edges[edges[current].next].pair != start)
+			current = edges[edges[current].next].pair;
+
+		return current;
+	}
+
+	//Deprecated function
 	typename SlotMap<HalfEdge<P>>::Index nextOnBoundary(typename SlotMap<HalfEdge<P>>::Index start) {
-		SlotMap<HalfEdge<P>>::Index e = edges[start].next;
+		/*SlotMap<HalfEdge<P>>::Index e = edges[start].next;
 		while (edges[e].pair && edges[e].pair != start) 
 			e = edges[edges[e].pair].next;
 
 		return (edges[e].pair == start) ? SlotMap<HalfEdge<P>>::Index() : e;
+		*/
+
+		//HALF EDGES ON BOUNDARY VERSION
+
 	}
 
 	P normal(Face<P> f) {
@@ -263,9 +279,10 @@ public:
 		return (a + b + c) / 3.f;
 	}
 
-	//Returns half edge on other side of new boundary
+	//Returns half edge on other side of new boundary -- REVISED VERSION returns half edge on boundary
 	typename SlotMap<HalfEdge<P>>::Index deleteFace(typename SlotMap<Face<P>>::Index f) {
 		
+		/*
 		//NO HALF EDGES ON BOUNDARY VERSION
 		SlotMap<HalfEdge<P>>::Index returnedEdge;
 
@@ -296,33 +313,46 @@ public:
 		faces.remove(f);
 	
 		return returnedEdge;
-
-		/*
+		*/
+		
 		//HALF EDGES ON BOUNDARY VERSION
 		SlotMap<HalfEdge<P>>::Index returnedEdge;
 
 		SlotMap<HalfEdge<P>>::Index e = edge(faces[f]).next;
 		while (e != faces[f].edge) {
-			if (!pair(edges[e]).face) {
-				returnedEdge = edges[e].pair;
-				pair(edges[e]).pair = {};
+			SlotMap<HalfEdge<P>>::Index e_pair = edges[e].pair;
+			if (!isBoundary(e_pair)) {
+				returnedEdge = e;
 			
-				SlotMap<HalfEdge<P>>::Index temp = e;
-				edges.remove(temp);
+				//if ()
+
+				SlotMap<HalfEdge<P>>::Index e_prev = prev(e);
+				SlotMap<HalfEdge<P>>::Index e_pair_next = edges[e_pair].next;
+				SlotMap<HalfEdge<P>>::Index e_pair_prev = prev(e_pair);
+				SlotMap<HalfEdge<P>>::Index e_next = edges[e].next;
+				edges[e_prev].next = e_pair_next;
+				edges[e_pair_prev].next = e_next;
+
+				//Reassign vertex edges if they would be removed
+				SlotMap<Vertex<P>>::Index vert = edges[e].head;
+				if (vertices[vert].edge = e) {
+					SlotMap<HalfEdge<P>>::Index newEdge = edges[edges[e].next].pair;
+					if (newEdge == e)
+						vertices.remove(vert);		//Might not be robust?
+					else
+						vertices[vert].edge = newEdge;
+				}
+				edges.remove(e);
+				edges.remove(e_pair);
 			}
 
 			e = edges[e].next;
 		}
 
-		if (edges[e].pair) {
-			pair(edges[e]).pair = {};
-		}
-
-		edges.remove(e);
 		faces.remove(f);
 
 		return returnedEdge;
-		*/
+		
 	}
 };
 
@@ -398,7 +428,7 @@ typename SlotMap<Vertex<P>>::Index faceListToHalfEdge(HalfEdgeMesh<P>* mesh, con
 					{},		//Pair
 					face	//Face
 				});
-				edgeMap[VertexPair(b, a)] = mesh->edges.add({
+				edgeMap[VertexPair(b, a)] = mesh->edges[edges[j]].pair = mesh->edges.add({
 					v_b,	//Head
 					{},		//Next
 					edges[j],	//Pair
@@ -407,10 +437,10 @@ typename SlotMap<Vertex<P>>::Index faceListToHalfEdge(HalfEdgeMesh<P>* mesh, con
 				(*mesh)[v_a].edge = edges[i];
 			}
 			else {
-				mesh->pair((*mesh)[edgeMap[VertexPair(a, b)]]).pair = edgeMap[VertexPair(a, b)];
+				//mesh->pair((*mesh)[edgeMap[VertexPair(a, b)]]).pair = edgeMap[VertexPair(a, b)];
 				(*mesh)[edgeMap[VertexPair(a, b)]].face = face;
 				edges[j] = edgeMap[VertexPair(a, b)];
-				edgeMap.erase(VertexPair(a, b));
+				//edgeMap.erase(VertexPair(a, b));
 			}
 		}
 
@@ -423,7 +453,8 @@ typename SlotMap<Vertex<P>>::Index faceListToHalfEdge(HalfEdgeMesh<P>* mesh, con
 	}
 
 	for (auto edgeIter = edgeMap.begin(); edgeIter != edgeMap.end(); edgeIter++) {
-		mesh->edges.remove(edgeIter->second);
+		//mesh->edges.remove(edgeIter->second);
+		mesh[edgeIter->second].next = mesh.circleVertex(mesh[edgeIter->second].pair)
 	}
 
 	return vertIndices.back();
