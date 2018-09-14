@@ -601,14 +601,14 @@ void fillBoundary(HalfEdgeMesh<P>& mesh, typename SlotMap<HalfEdge<P>>::Index bo
 	SlotMap<Vertex<P>>::Index newVertex = mesh.vertices.add({ newPoint});
 	
 	//Temporary until nextOnBoundary is phased out
-	boundaryEdge = mesh[boundaryEdge].pair;
+	//boundaryEdge = mesh[boundaryEdge].pair;
 
 	//SlotMap<HalfEdge<P>>::Index currentEdge = boundaryEdge;
 	SlotMap<HalfEdge<P>>::Index lastLeadingEdge;
 
 	std::vector <SlotMap<HalfEdge<P>>::Index> boundaryEdgeList = { boundaryEdge };
 	do {
-		boundaryEdgeList.push_back(mesh.nextOnBoundary(boundaryEdgeList.back()));
+		boundaryEdgeList.push_back(mesh[boundaryEdgeList.back()].next);
 	} while (boundaryEdgeList.back() != boundaryEdge);
 
 	boundaryEdgeList.pop_back();
@@ -618,24 +618,20 @@ void fillBoundary(HalfEdgeMesh<P>& mesh, typename SlotMap<HalfEdge<P>>::Index bo
 
 		SlotMap<Face<P>>::Index newFace = mesh.faces.add({});
 
-		mesh[currentEdge].pair = mesh.edges.add({
-			mesh[mesh.prev(currentEdge)].head,	//Head
-			{},									//Next
-			currentEdge,						//Pair
-			newFace								//Face
-		});
+		mesh[currentEdge].face = newFace;
 
-		mesh[mesh[currentEdge].pair].next = mesh.edges.add({
+		lastLeadingEdge = mesh[currentEdge].next = mesh.edges.add({
 			newVertex,	//Head
 			{},			//Next
-			lastLeadingEdge,			//Pair
+			{},			//Pair
 			newFace		//Face
 		});
-		if (lastLeadingEdge)
+
+		if (lastLeadingEdge)		//
 			mesh[lastLeadingEdge].pair = mesh[mesh[currentEdge].pair].next;
 
-		//mesh.next(currentEdge).next = 
-		mesh[mesh[mesh[currentEdge].pair].next].next = mesh.edges.add({
+		
+		mesh[mesh[currentEdge].next].next = mesh.edges.add({
 			mesh[currentEdge].head,		//Head
 			mesh[currentEdge].pair,		//Next
 			{},							//Pair
