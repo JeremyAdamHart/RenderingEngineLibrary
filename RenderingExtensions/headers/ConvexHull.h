@@ -251,15 +251,12 @@ public:
 
 	//Deprecated function
 	typename SlotMap<HalfEdge<P>>::Index nextOnBoundary(typename SlotMap<HalfEdge<P>>::Index start) {
-		/*SlotMap<HalfEdge<P>>::Index e = edges[start].next;
-		while (edges[e].pair && edges[e].pair != start) 
+		SlotMap<HalfEdge<P>>::Index e = edges[start].next;
+		while (!isBoundary(edges[e].pair) && edges[e].pair != start) 
 			e = edges[edges[e].pair].next;
 
 		return (edges[e].pair == start) ? SlotMap<HalfEdge<P>>::Index() : e;
-		*/
-
-		//HALF EDGES ON BOUNDARY VERSION
-
+		
 	}
 
 	P normal(Face<P> f) {
@@ -318,14 +315,11 @@ public:
 		//HALF EDGES ON BOUNDARY VERSION
 		SlotMap<HalfEdge<P>>::Index returnedEdge;
 
-		SlotMap<HalfEdge<P>>::Index e = edge(faces[f]).next;
-		while (e != faces[f].edge) {
+		SlotMap<HalfEdge<P>>::Index e = faces[f].edge;
+		do {
 			SlotMap<HalfEdge<P>>::Index e_pair = edges[e].pair;
-			if (!isBoundary(e_pair)) {
-				returnedEdge = e;
+			if (isBoundary(e_pair)) {
 			
-				//if ()
-
 				SlotMap<HalfEdge<P>>::Index e_prev = prev(e);
 				SlotMap<HalfEdge<P>>::Index e_pair_next = edges[e_pair].next;
 				SlotMap<HalfEdge<P>>::Index e_pair_prev = prev(e_pair);
@@ -342,12 +336,19 @@ public:
 					else
 						vertices[vert].edge = newEdge;
 				}
-				edges.remove(e);
+
+				e = edges[e].next;	//Increment to next edge
 				edges.remove(e_pair);
+				edges.remove(e);
+			}
+			else {
+				returnedEdge = e;
+				edges[e].face = SlotMap<Face<P>>::Index();
+
+				e = edges[e].next;	//Increment to next edge
 			}
 
-			e = edges[e].next;
-		}
+		} while (e != faces[f].edge);
 
 		faces.remove(f);
 
@@ -599,6 +600,9 @@ template<typename P>
 void fillBoundary(HalfEdgeMesh<P>& mesh, typename SlotMap<HalfEdge<P>>::Index boundaryEdge, P newPoint) {
 	SlotMap<Vertex<P>>::Index newVertex = mesh.vertices.add({ newPoint});
 	
+	//Temporary until nextOnBoundary is phased out
+	boundaryEdge = mesh[boundaryEdge].pair;
+
 	//SlotMap<HalfEdge<P>>::Index currentEdge = boundaryEdge;
 	SlotMap<HalfEdge<P>>::Index lastLeadingEdge;
 
