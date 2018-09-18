@@ -130,7 +130,7 @@ public:
 		bool operator<=(const Iterator& it) const { return index <= it.index; }
 		bool operator>=(const Iterator& it) const { return index >= it.index; }
 
-		Index toIndex() const { return index; }
+		Index toIndex() const { return{ index, container->timestamp[index] }; }
 		//T operator
 	};
 
@@ -313,13 +313,22 @@ public:
 		*/
 		
 		//HALF EDGES ON BOUNDARY VERSION
+		SlotMap<HalfEdge<P>>::Index lastLeadingEdge;
+
+		std::vector <SlotMap<HalfEdge<P>>::Index> edgeList = { faces[f].edge };
+		do {
+			edgeList.push_back(edges[edgeList.back()].next);
+		} while (edgeList.back() != faces[f].edge);
+
+		edgeList.pop_back();
+
 		SlotMap<HalfEdge<P>>::Index returnedEdge;
 
-		SlotMap<HalfEdge<P>>::Index e = faces[f].edge;
-		do {
+		//SlotMap<HalfEdge<P>>::Index e = faces[f].edge;
+		for(SlotMap<HalfEdge<P>>::Index e : edgeList){
 			SlotMap<HalfEdge<P>>::Index e_pair = edges[e].pair;
 			if (isBoundary(e_pair)) {
-			
+
 				SlotMap<HalfEdge<P>>::Index e_prev = prev(e);
 				SlotMap<HalfEdge<P>>::Index e_pair_next = edges[e_pair].next;
 				SlotMap<HalfEdge<P>>::Index e_pair_prev = prev(e_pair);
@@ -337,9 +346,10 @@ public:
 						vertices[vert].edge = newEdge;
 				}
 
-				e = edges[e].next;	//Increment to next edge
 				edges.remove(e_pair);
 				edges.remove(e);
+
+				e = e_next;	//Increment to next edge
 			}
 			else {
 				returnedEdge = e;
@@ -348,7 +358,7 @@ public:
 				e = edges[e].next;	//Increment to next edge
 			}
 
-		} while (e != faces[f].edge);
+		}	// while (e != faces[f].edge);
 
 		faces.remove(f);
 
@@ -613,44 +623,37 @@ void fillBoundary(HalfEdgeMesh<P>& mesh, typename SlotMap<HalfEdge<P>>::Index bo
 
 	boundaryEdgeList.pop_back();
 
-	//do {
 	for (auto currentEdge : boundaryEdgeList) {
 
 		SlotMap<Face<P>>::Index newFace = mesh.faces.add({});
 
 		mesh[currentEdge].face = newFace;
 
-		lastLeadingEdge = mesh[currentEdge].next = mesh.edges.add({
+		mesh[currentEdge].next = mesh.edges.add({
 			newVertex,	//Head
 			{},			//Next
 			{},			//Pair
 			newFace		//Face
 		});
 
-		if (lastLeadingEdge)		//
-			mesh[lastLeadingEdge].pair = mesh[mesh[currentEdge].pair].next;
-
 		
 		mesh[mesh[currentEdge].next].next = mesh.edges.add({
-			mesh[currentEdge].head,		//Head
-			mesh[currentEdge].pair,		//Next
-			{},							//Pair
-			newFace						//Face
+			mesh[mesh[currentEdge].pair].head,		//Head
+			currentEdge,							//Next
+			lastLeadingEdge,										//Pair
+			newFace									//Face
 		});
 
-		lastLeadingEdge = mesh[mesh[mesh[currentEdge].pair].next].next;
-		mesh[newFace].edge = mesh[currentEdge].pair;
-		
-		//currentEdge = mesh.nextOnBoundary(currentEdge);
+		if (lastLeadingEdge)
+			mesh[lastLeadingEdge].pair = mesh[mesh[currentEdge].next].next;
+		lastLeadingEdge = mesh[currentEdge].next;
+		mesh[newFace].edge = currentEdge;
 	}
-
-
-	//} while (currentEdge);	// boundaryEdge != currentEdge);
 	
 	//mesh[mesh[mesh[currentEdge].next].next].pair = lastLeadingEdge;
-	mesh[lastLeadingEdge].pair = mesh[mesh[boundaryEdge].pair].next;
+	mesh[lastLeadingEdge].pair = mesh[mesh[boundaryEdge].next].next;
 	mesh[mesh[lastLeadingEdge].pair].pair = lastLeadingEdge;
-	mesh[newVertex].edge = mesh[mesh[boundaryEdge].pair].next;
+	mesh[newVertex].edge = mesh[boundaryEdge].next;
 }
 
 

@@ -204,6 +204,21 @@ void WindowManager::testLoop() {
 	auto vert = generateTetrahedron(mesh, glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
 	//auto boundaryEdge = mesh.deleteFace(mesh.edge(mesh[vert]).face);
 	//fillBoundary(mesh, boundaryEdge, vec3(0, 0, -1));
+	//mesh.deleteFace({ 2, 0 });
+	//mesh.deleteFace({ 3, 0 });
+	srand(time(0));
+	const int POINT_NUM = 100;
+	std::vector<glm::vec3> hullPoints;
+	for (int i = 0; i < POINT_NUM; i++) {
+		hullPoints.push_back(
+			(glm::vec3(
+			floatRand(),
+			floatRand(),
+			floatRand()) + glm::vec3(-0.5, -0.5, -0.5)
+				)*4.f);
+	}
+
+	//convexHullIteration(mesh, hullPoints);
 
 	std::vector<glm::vec3> points;
 	std::vector<unsigned int> indices;
@@ -220,22 +235,13 @@ void WindowManager::testLoop() {
 	SimpleShader simpleShader;
 	TorranceSparrowShader tsShader;
 	ElementGeometry geom(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
+	//enum {POSITIONS=0, NORMALS};
+	//StreamGeometry<vec3, vec3> geom({ false, false })
 
 	Drawable heObject(new ColorMat(vec3(1, 0, 0)), &geom);
 	heObject.addMaterial(new ShadedMat(0.3, 0.5, 0.4, 10.f));
 
-	std::vector<glm::vec3> hullPoints;
 
-	srand(time(0));
-	const int POINT_NUM = 10;
-	for (int i = 0; i < POINT_NUM; i++) {
-		hullPoints.push_back(
-			(glm::vec3(
-			floatRand(),
-			floatRand(),
-			floatRand()) + glm::vec3(-0.5, -0.5, -0.5)
-				)*4.f);
-	}
 
 	glPointSize(3.f);
 
@@ -250,7 +256,11 @@ void WindowManager::testLoop() {
 
 	SimpleGeometry halfEdgeDebugGeometry(GL_LINES);
 	Drawable halfEdgeDebugObject(new ColorMat(vec3(1.f, 0.f, 1.f)), &halfEdgeDebugGeometry);
-	
+
+	SimpleGeometry halfEdgeTrackingGeometry(GL_LINES);
+	Drawable halfEdgeTrackingObject(new ColorMat(vec3(0, 1.f, 0.f)), &halfEdgeTrackingGeometry);
+	SlotMap<HalfEdge<vec3>>::Index trackingEdge = mesh.edges.begin().toIndex();
+
 	glClearColor(0.f, 0.f, 0.f, 0.f);
 
 	while (!glfwWindowShouldClose(window)) {
@@ -285,6 +295,8 @@ void WindowManager::testLoop() {
 								furthestPoint = point;
 							}
 						}
+						
+						printf("Normal = (%f %f %f)\nDistance %f\n------------\n", faceNormal.x, faceNormal.y, faceNormal.z, maxProjectedDistance);
 
 						debugPoints.push_back(furthestPoint);
 
@@ -307,20 +319,50 @@ void WindowManager::testLoop() {
 							fillBoundary(mesh, boundaryEdge2, furthestPoint);
 						}
 					}
+
+					trackingEdge = mesh.edges.begin().toIndex();
+					vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos, mesh[mesh[mesh.prev(trackingEdge)].head].pos };
+					halfEdgeTrackingGeometry.loadGeometry(endPoints, 2);
 				}
 				//Expanded function here ^^^^^^^
 				
 				points.clear(); indices.clear();
 				halfEdgeToFaceList(&points, &indices, mesh);
 				normals = calculateNormalsImp(&points, &indices);
-				geom.loadGeometry(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
+				vector<vec2> texCoords(normals.size());
+				geom.loadGeometry(points.data(), normals.data(), texCoords.data(), &indices[0], points.size(), indices.size());
 				debugGeometry.loadGeometry(debugPoints.data(), debugPoints.size());
+				
 			}
 
 			iterationPressed = true;
 		}
-		else {
+		else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE){
 			iterationPressed = false;
+		}
+
+		static bool pKeyPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pKeyPressed) {
+			pKeyPressed = true;
+			vec3 normal = (!mesh.isBoundary(trackingEdge)) ? mesh.normal(mesh[mesh[trackingEdge].face]) : vec3(0.f);
+			trackingEdge = mesh[trackingEdge].pair;
+			vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos + normal*0.01f, mesh[mesh[mesh.prev(trackingEdge)].head].pos + normal*0.01f };
+			halfEdgeTrackingGeometry.loadGeometry(endPoints, 2);
+		}
+		else if(glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE){
+			pKeyPressed = false;
+		}
+
+		static bool nKeyPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !nKeyPressed) {
+			nKeyPressed = true;
+			vec3 normal = (!mesh.isBoundary(trackingEdge)) ? mesh.normal(mesh[mesh[trackingEdge].face]) : vec3(0.f);
+			trackingEdge = mesh[trackingEdge].next;
+			vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos + normal*0.01f, mesh[mesh[mesh.prev(trackingEdge)].head].pos + normal*0.01f };
+			halfEdgeTrackingGeometry.loadGeometry(endPoints, 2);
+		}
+		else if(glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE){
+			nKeyPressed = false;
 		}
 
 		if (windowResized) {
@@ -331,6 +373,7 @@ void WindowManager::testLoop() {
 
 		loadGeometryWithHalfEdgeMesh(&halfEdgeDebugGeometry, mesh);
 
+		simpleShader.draw(cam, halfEdgeTrackingObject);
 		simpleShader.draw(cam, hullObject);
 		simpleShader.draw(cam, debugObject);
 		simpleShader.draw(cam, halfEdgeDebugObject);

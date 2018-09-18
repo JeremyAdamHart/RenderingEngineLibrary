@@ -37,8 +37,19 @@ void ElementGeometry::loadGeometry(vec3 *positions, vec3 *normals, vec2 *texCoor
 	}
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[ELEMENTS]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementNum * sizeof(unsigned int),
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _elementNum * sizeof(unsigned int),
 		elements, usage);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	/*unsigned int arr[100];
+	vec3 vecArr[100];
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[ELEMENTS]);
+	glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, _elementNum * sizeof(unsigned int), arr);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[POSITION]);
+	glGetBufferSubData(GL_ARRAY_BUFFER, 0, _bufferSize * sizeof(vec3), vecArr);
+	printf("");*/
 
 	bufferSize = _bufferSize;
 	elementNum = _elementNum;
@@ -91,6 +102,8 @@ bool ElementGeometry::initializeVAO() {
 		(void*)0			//Offset
 	);
 
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[ELEMENTS]);
+
 	glBindVertexArray(0);
 
 	return !checkGLErrors("ElementGeometry::initVao");
@@ -101,12 +114,13 @@ bool ElementGeometry::initializeVAO() {
 void ElementGeometry::bindGeometry() const
 {
 	glBindVertexArray(vao);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[ELEMENTS]);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[ELEMENTS]);
 }
 
 void ElementGeometry::drawGeometry() {
-	bindGeometry();
+	glBindVertexArray(vao);
 	glDrawElements(mode, elementNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 }
 
 int ElementGeometry::startIndex() const { return 0; }
