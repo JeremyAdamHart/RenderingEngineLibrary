@@ -46,6 +46,8 @@ using namespace std;
 #include <random>
 #include <ctime>
 
+#include <limits>
+
 #include <glm/gtc/matrix_transform.hpp>
 
 
@@ -167,8 +169,17 @@ void loadGeometryWithHalfEdgeMesh(SimpleGeometry* geom, HalfEdgeMesh<vec3>& mesh
 
 		int count = 0;
 		do {
+//			points.push_back(center + normal*0.01f);
+//			points.push_back(mesh[mesh[e].head].pos + normal*0.01f);
+			points.push_back(mesh[mesh[e].head].pos);
+			points.push_back(mesh[mesh[mesh[e].next].head].pos);
+			points.push_back(mesh[mesh[mesh[e].next].head].pos);
+			points.push_back(mesh[mesh[mesh[mesh[e].next].next].head].pos);
+			points.push_back(mesh[mesh[mesh[mesh[e].next].next].head].pos);
+			points.push_back(mesh[mesh[e].head].pos);
+
 			points.push_back(center + normal*0.01f);
-			points.push_back(mesh[mesh[e].head].pos + normal*0.01f);
+			points.push_back(center + normal*0.5f);
 			e = mesh[e].next;
 			count++;
 		} while (e != f.edge && count < 10);
@@ -179,7 +190,20 @@ void loadGeometryWithHalfEdgeMesh(SimpleGeometry* geom, HalfEdgeMesh<vec3>& mesh
 	geom->loadGeometry(points.data(), points.size());
 }
 
+template<typename T>
+bool allDistinct(T* arr, size_t size) {
+	for (int i = 0; i < size-1; i++) {
+		for (int j = i+1; j < size; j++) {
+			if (arr[i] == arr[j])
+				return false;
+		}
+	}
+
+	return true;
+}
+
 void WindowManager::testLoop() {
+	srand(13);	//time(0));
 
 	SlotMap<int> testMap;
 	testMap.add(1);
@@ -188,6 +212,13 @@ void WindowManager::testLoop() {
 	testMap.add(4);
 	auto last = testMap.add(5);
 	testMap.remove(last);
+
+	MeshInfoLoader modelMinfo("models/dragon.obj");
+	ElementGeometry modelGeom(modelMinfo.vertices.data(), modelMinfo.normals.data(), nullptr, 
+		modelMinfo.indices.data(), modelMinfo.vertices.size(), modelMinfo.indices.size());
+
+	Drawable modelDrawable(new ColorMat(vec3(0, 1, 0)), &modelGeom);
+	modelDrawable.addMaterial(new ShadedMat(0.3f, 0.4f, 0.4f, 5.f));
 
 	for (auto it = testMap.begin(); it != testMap.end(); ++it) {
 		//auto ending = testMap.end();
@@ -200,14 +231,20 @@ void WindowManager::testLoop() {
 		vec3(0, 0, -1), vec3(0, 0, 5),
 		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 20.f));
 
+	//Find starting tetrahedron for model
+	vec3 tetPoints[4];
+	do {
+		tetPoints[0] = modelMinfo.vertices[rand() % modelMinfo.vertices.size()];
+		tetPoints[1] = modelMinfo.vertices[rand() % modelMinfo.vertices.size()];
+		tetPoints[2] = modelMinfo.vertices[rand() % modelMinfo.vertices.size()];
+		tetPoints[3] = modelMinfo.vertices[rand() % modelMinfo.vertices.size()];
+	} while (!allDistinct(tetPoints, 4));
+
 	HalfEdgeMesh<glm::vec3> mesh;
-	auto vert = generateTetrahedron(mesh, glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
-	//auto boundaryEdge = mesh.deleteFace(mesh.edge(mesh[vert]).face);
-	//fillBoundary(mesh, boundaryEdge, vec3(0, 0, -1));
-	//mesh.deleteFace({ 2, 0 });
-	//mesh.deleteFace({ 3, 0 });
-	srand(time(0));
-	const int POINT_NUM = 100;
+	//auto vert = generateTetrahedron(mesh, glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+	auto vert = generateTetrahedron(mesh, tetPoints[0], tetPoints[1], tetPoints[2], tetPoints[3]);
+
+	const int POINT_NUM = 1000;
 	std::vector<glm::vec3> hullPoints;
 	for (int i = 0; i < POINT_NUM; i++) {
 		hullPoints.push_back(
@@ -274,8 +311,8 @@ void WindowManager::testLoop() {
 				iterationStep = (iterationStep + 1)%2;
 
 				using namespace glm;
-				//convexHullIteration(mesh, hullPoints);
-
+				convexHullIteration(mesh, modelMinfo.vertices);//*/		hullPoints);
+				/*
 				//Expanded function here vvvvvvvvvvvvvvvvvvvvvvv
 				{
 					static SlotMap<HalfEdge<vec3>>::Index boundaryEdge2;
@@ -284,19 +321,29 @@ void WindowManager::testLoop() {
 					if (iterationStep == 0) {
 						debugPoints.clear();
 
+						const float MINIMUM_PROJECTED_DISTANCE = 0.2f;
 						float maxProjectedDistance = 0.f;
-						SlotMap<Face<vec3>>::Index extrudedFace = mesh.faces.random();
-						vec3 faceCenter = mesh.center(mesh[extrudedFace]);
-						vec3 faceNormal = mesh.normal(mesh[extrudedFace]);
-						for (vec3 point : hullPoints) {
-							float projectedDistance = dot(faceNormal, faceCenter - point);
-							if (projectedDistance > maxProjectedDistance) {
-								maxProjectedDistance = projectedDistance;
-								furthestPoint = point;
+						const int MIN_FACES_CHECKED = 3;
+						const int MAX_FACES_CHECKED = 10;
+						int facesChecked = 0;
+						do {
+							SlotMap<Face<vec3>>::Index extrudedFace = mesh.faces.random();
+							vec3 faceCenter = mesh.center(mesh[extrudedFace]);
+							vec3 faceNormal = mesh.normal(mesh[extrudedFace]);
+							for (vec3 point : hullPoints) {
+								float projectedDistance = dot(faceNormal, point - faceCenter);
+								if (projectedDistance > maxProjectedDistance) {
+									maxProjectedDistance = projectedDistance;
+									furthestPoint = point;
+								}
 							}
-						}
+
+							facesChecked++;
+						} while (
+							(maxProjectedDistance <= MINIMUM_PROJECTED_DISTANCE || facesChecked >= MIN_FACES_CHECKED) 
+							&& facesChecked <= MAX_FACES_CHECKED);
 						
-						printf("Normal = (%f %f %f)\nDistance %f\n------------\n", faceNormal.x, faceNormal.y, faceNormal.z, maxProjectedDistance);
+						//printf("Distance %f\n------------\n", faceNormal.x, faceNormal.y, faceNormal.z, maxProjectedDistance);
 
 						debugPoints.push_back(furthestPoint);
 
@@ -325,7 +372,7 @@ void WindowManager::testLoop() {
 					halfEdgeTrackingGeometry.loadGeometry(endPoints, 2);
 				}
 				//Expanded function here ^^^^^^^
-				
+				*/
 				points.clear(); indices.clear();
 				halfEdgeToFaceList(&points, &indices, mesh);
 				normals = calculateNormalsImp(&points, &indices);
@@ -334,7 +381,7 @@ void WindowManager::testLoop() {
 				debugGeometry.loadGeometry(debugPoints.data(), debugPoints.size());
 				
 			}
-
+			
 			iterationPressed = true;
 		}
 		else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE){
@@ -348,6 +395,23 @@ void WindowManager::testLoop() {
 			trackingEdge = mesh[trackingEdge].pair;
 			vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos + normal*0.01f, mesh[mesh[mesh.prev(trackingEdge)].head].pos + normal*0.01f };
 			halfEdgeTrackingGeometry.loadGeometry(endPoints, 2);
+
+			//Temporary testing
+			vec3 furthestPoint;
+			float maxProjectedDistance = 0.f;
+			SlotMap<Face<vec3>>::Index extrudedFace = mesh[trackingEdge].face;	//mesh.faces.random();
+			vec3 faceCenter = mesh.center(mesh[extrudedFace]);
+			vec3 faceNormal = mesh.normal(mesh[extrudedFace]);
+			for (vec3 point : hullPoints) {
+				float projectedDistance = dot(faceNormal, point - faceCenter);
+				if (projectedDistance > maxProjectedDistance) {
+					maxProjectedDistance = projectedDistance;
+					furthestPoint = point;
+				}
+			}
+
+			vec3 arr[2] = { furthestPoint, faceCenter };
+			debugGeometry.loadGeometry(arr, 2);
 		}
 		else if(glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE){
 			pKeyPressed = false;
@@ -374,10 +438,11 @@ void WindowManager::testLoop() {
 		loadGeometryWithHalfEdgeMesh(&halfEdgeDebugGeometry, mesh);
 
 		simpleShader.draw(cam, halfEdgeTrackingObject);
-		simpleShader.draw(cam, hullObject);
+//		simpleShader.draw(cam, hullObject);
 		simpleShader.draw(cam, debugObject);
 		simpleShader.draw(cam, halfEdgeDebugObject);
 		tsShader.draw(cam, glm::vec3(10, 10, 10), heObject);
+		tsShader.draw(cam, glm::vec3(10, 10, 10), modelDrawable);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

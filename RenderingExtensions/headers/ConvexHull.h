@@ -67,6 +67,16 @@ public:
 	}
 
 	T& operator[](Index i) {
+		if (i.index == -1 || i.index >= timestamp.size())
+			throw std::invalid_argument("Out of bounds");
+		if (timestamp[i.index] != i.timestamp)
+			throw std::invalid_argument("Timestamp expired");
+		return data[i.index];
+	}
+
+	const T& operator[](Index i) const {
+		if (i.index == -1 || i.index >= timestamp.size())
+			throw std::invalid_argument("Out of bounds");
 		if (timestamp[i.index] != i.timestamp)
 			throw std::invalid_argument("Timestamp expired");
 		return data[i.index];
@@ -636,11 +646,10 @@ void fillBoundary(HalfEdgeMesh<P>& mesh, typename SlotMap<HalfEdge<P>>::Index bo
 			newFace		//Face
 		});
 
-		
 		mesh[mesh[currentEdge].next].next = mesh.edges.add({
 			mesh[mesh[currentEdge].pair].head,		//Head
 			currentEdge,							//Next
-			lastLeadingEdge,										//Pair
+			lastLeadingEdge,						//Pair
 			newFace									//Face
 		});
 
@@ -659,7 +668,7 @@ void fillBoundary(HalfEdgeMesh<P>& mesh, typename SlotMap<HalfEdge<P>>::Index bo
 
 template<typename P>
 void convexHullIteration(HalfEdgeMesh<P>& mesh, const std::vector<P>& points) {
-	SlotMap<Face<P>>::Index extrudedFace = mesh.faces.random();
+	/*SlotMap<Face<P>>::Index extrudedFace = mesh.faces.random();
 	P faceCenter = mesh.center(mesh[extrudedFace]);
 	P faceNormal = mesh.normal(mesh[extrudedFace]);
 
@@ -680,6 +689,45 @@ void convexHullIteration(HalfEdgeMesh<P>& mesh, const std::vector<P>& points) {
 			faceDeleteList.push_back(face.toIndex());	// boundaryEdge = mesh.deleteFace(face.toIndex());
 	}
 
+	for (auto f : faceDeleteList) {
+		boundaryEdge = mesh.deleteFace(f);
+	}
+
+	if (boundaryEdge) {
+		fillBoundary(mesh, boundaryEdge, furthestPoint);
+	}*/
+
+	vec3 furthestPoint;
+
+	const float MINIMUM_PROJECTED_DISTANCE = 0.2f;
+	float maxProjectedDistance = 0.f;
+	const int MIN_FACES_CHECKED = 3;
+	const int MAX_FACES_CHECKED = 10;
+	int facesChecked = 0;
+	do {
+		SlotMap<Face<vec3>>::Index extrudedFace = mesh.faces.random();
+		vec3 faceCenter = mesh.center(mesh[extrudedFace]);
+		vec3 faceNormal = mesh.normal(mesh[extrudedFace]);
+		for (vec3 point : points) {
+			float projectedDistance = dot(faceNormal, point - faceCenter);
+			if (projectedDistance > maxProjectedDistance) {
+				maxProjectedDistance = projectedDistance;
+				furthestPoint = point;
+			}
+		}
+
+		facesChecked++;
+	} while (
+		(maxProjectedDistance <= MINIMUM_PROJECTED_DISTANCE || facesChecked >= MIN_FACES_CHECKED)
+		&& facesChecked <= MAX_FACES_CHECKED);
+
+	std::vector<SlotMap<Face<vec3>>::Index> faceDeleteList;
+	for (auto face = mesh.faces.begin(); face != mesh.faces.end(); ++face) {
+		if (dot(mesh.normal(*face), furthestPoint - mesh.center(*face)) > 0.f) {
+			faceDeleteList.push_back(face.toIndex());	
+		}
+	}
+	SlotMap<HalfEdge<P>>::Index boundaryEdge;
 	for (auto f : faceDeleteList) {
 		boundaryEdge = mesh.deleteFace(f);
 	}
