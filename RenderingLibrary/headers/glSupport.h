@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #endif
 
+#include "GLObject.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -22,11 +23,11 @@ GLuint createShader(const string &source, GLenum shaderType);
 
 GLuint createShader(const string &source, const string &defines, GLenum shaderType);
 
-GLuint createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessControlShader=0, GLuint tessEvalShader=0);
+GLProgram createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessControlShader=0, GLuint tessEvalShader=0);
 
 bool checkGLErrors(string location);
 
-GLuint createGLProgram(vector<pair<GLenum, string>> shaders,
+GLProgram createGLProgram(vector<pair<GLenum, string>> shaders,
 	map<GLenum, string> defines = map<GLenum, string>{});
 
 }

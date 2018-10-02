@@ -35,16 +35,16 @@ ColorShader::ColorShader(map<GLenum, string> defines) {
 bool ColorShader::createProgram(map<GLenum, string> defines) {
 	programID = createGLProgram(shaders, defines);
 
-	return programID != 0;
+	return programID;
 }
 
 bool ColorShader::createNewProgram(vector<pair<GLenum, string>> shaderNames, map<GLenum, string> defines) {
 	programID = createGLProgram(shaderNames, defines);
 
-	if (programID != 0)
+	if (programID)
 		calculateUniformLocations();
 
-	return programID != 0;
+	return programID;
 }
 
 void ColorShader::calculateUniformLocations() {

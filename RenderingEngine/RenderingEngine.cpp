@@ -2,11 +2,15 @@
 //
 #include "GLWindow.h"
 
-
 int main()
 {
 	WindowManager wm;
-	wm.rigidBodyTest();
+
+	wm.glowTest();
+//	wm.rigidBodyTest();
 //	wm.mainLoop();
+//	wm.testLoop();
+//	wm.noiseLoop();
+//	wm.particleLoop();
 }
 

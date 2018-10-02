@@ -1,21 +1,21 @@
 #pragma once
 
 #include "GLGeometry.h"
+#include "GLObject.h"
 #include <glm/glm.hpp>
+#include <vector>
 
 namespace renderlib {
 
 using namespace glm;
 
 class ElementGeometry : public GLGeometryContainer {
-public:
-	enum { POSITION = 0, NORMAL, TEXCOORD, ELEMENTS, COUNT };
-protected:
-	GLuint vao;
+	GLVAO vao;
 	size_t bufferSize;
 	size_t elementNum;
 
-	GLuint vbo[COUNT];
+	enum { POSITION = 0, NORMAL, TEXCOORD, ELEMENTS, COUNT };
+	std::vector<GLBuffer> vbo;
 
 	bool initializeVAO();
 
@@ -38,7 +38,7 @@ public:
 	virtual int startIndex() const;
 	virtual int numElements() const;
 	virtual GLenum getMode() const;
-	virtual GLint getVaoID() const;
+	virtual GLuint getVaoID() const;
 
 	virtual bool usingDrawElements() const;
 };

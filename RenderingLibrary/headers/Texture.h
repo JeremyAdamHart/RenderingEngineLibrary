@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glSupport.h"
+#include "GLObject.h"
 #include <vector>
 
 namespace renderlib {
@@ -25,7 +26,7 @@ struct TexInfo {
 };
 
 class Texture {
-	int texID;
+	GLTexture texID;
 	TexInfo info;
 
 	TextureManager *manager;
@@ -33,7 +34,7 @@ class Texture {
 
 public:
 	Texture();
-	Texture(GLuint texID, TexInfo info, TextureManager *manager);
+	Texture(GLTexture texID, TexInfo info, TextureManager *manager);
 
 	void newTexture(GLuint texID, TexInfo info);
 	void deleteTexture();

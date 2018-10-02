@@ -24,8 +24,9 @@ public:
 
 	ShadedMat(float ka, float kd, float ks, float alpha);
 
-	virtual int getType() const;
-	virtual void loadUniforms(GLint *locations) const;	//Must have already called useProgram
+	virtual int getType() const override;
+	virtual void loadUniforms(GLint *locations) const override;	//Must have already called useProgram
+//	virtual int getUniformNum() const override;
 };
 
 }

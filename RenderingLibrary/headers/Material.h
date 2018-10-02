@@ -9,7 +9,6 @@
 
 namespace renderlib{
 
-//All derived subclasses are singletons
 class Material{
 protected:
 	static int getNextID();
@@ -17,7 +16,10 @@ protected:
 	Material(){}
 public:
 	virtual int getType() const;
+//	virtual int getUniformNum() const;
 	virtual void loadUniforms(GLint *locations) const;
+
+	virtual ~Material();
 };
 
 }

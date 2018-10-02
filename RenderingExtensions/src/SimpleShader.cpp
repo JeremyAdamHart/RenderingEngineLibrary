@@ -16,7 +16,7 @@ vector<pair<GLenum, string>> SimpleShader::defaultShaders(){
 	{GL_FRAGMENT_SHADER, "shaders/simple.frag"} };
 }
 
-SimpleShader::SimpleShader(map<GLenum, string> defines) {
+SimpleShader::SimpleShader(map<GLenum, string> defines):Shader(ColorMat::id) {
 	createProgram(defines);
 	calculateUniformLocations();
 }
@@ -30,22 +30,10 @@ SimpleShader::SimpleShader(vector<pair<GLenum, string>> alt_shaders, map<GLenum,
 bool SimpleShader::createProgram(map<GLenum, string> defines) {
 	programID = createGLProgram(defaultShaders(), defines);
 
-	return programID != 0;
+	return programID;
 }
 
-void SimpleShader::calculateUniformLocations() {
-	glUseProgram(programID);
-	
-	//Material uniforms
-	uniformLocations.resize(COUNT);
-	uniformLocations[ColorMat::COLOR_LOCATION] = glGetUniformLocation(programID, "color");
-
-	//Other uniforms
-	uniformLocations[VP_MATRIX_LOCATION] = glGetUniformLocation(programID, 
-		"view_projection_matrix");
-	uniformLocations[M_MATRIX_LOCATION] = glGetUniformLocation(programID,
-		"model_matrix");
-}
+vector<string> SimpleShader::getUniformNames() { return{ "color", "view_projection_matrix", "model_matrix" }; }
 
 void SimpleShader::loadUniforms(const mat4& vp_matrix, const mat4& m_matrix) {
 	glUniformMatrix4fv(uniformLocations[VP_MATRIX_LOCATION], 1, false, &vp_matrix[0][0]);
@@ -55,7 +43,8 @@ void SimpleShader::loadUniforms(const mat4& vp_matrix, const mat4& m_matrix) {
 void SimpleShader::draw(const Camera &cam, Drawable &obj) {
 	glUseProgram(programID);
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), obj.getTransform());
-	obj.loadUniforms(ColorMat::id, &uniformLocations[0]);	
+	
+	loadMaterialUniforms(obj);
 	
 	obj.getGeometry().drawGeometry();
 	glUseProgram(0);
