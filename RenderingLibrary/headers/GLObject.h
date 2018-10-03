@@ -49,6 +49,10 @@ public:
 		return v;
 	}
 
+	//operator GLuint() {
+	//	return v;
+	//}
+
 	void print() const {
 		printf("ID - %d | Num - %d\n", v, (*refNum));
 	}

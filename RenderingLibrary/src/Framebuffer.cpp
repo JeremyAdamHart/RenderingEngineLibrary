@@ -23,12 +23,15 @@ Framebuffer::Framebuffer(unsigned int width, unsigned int height, GLFramebuffer 
 bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 	tex[attachment] = newTex;
 
+
+	glBindTexture(GL_TEXTURE_2D, newTex.getID());
 	glBindFramebuffer(GL_FRAMEBUFFER, id);
 	glFramebufferTexture2D(GL_FRAMEBUFFER,
 		attachment,
 		newTex.getTarget(),
 		newTex.getID(),
 		newTex.getLevel());
+
 
 	bool status = true;
 
@@ -69,6 +72,7 @@ bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return status;
 }

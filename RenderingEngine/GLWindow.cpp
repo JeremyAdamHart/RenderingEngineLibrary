@@ -257,11 +257,16 @@ void WindowManager::glowTest() {
 		new TextureMat(gaussianFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
 
 
+	BlinnPhongShader bpShader;
+
 	//Dragon
 	Drawable dragon(
 		objToElementGeometry("models/dragon.obj"),
 		new ColorMat(vec3(0.75f, 0.1f, 0.3f)));
 	//dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
+
+	const int N = 41;
+	const float SIGMA = 0.4f*float(N + 1)*0.5f;
 
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	while (!glfwWindowShouldClose(window)) {
@@ -279,11 +284,15 @@ void WindowManager::glowTest() {
 
 		gaussianFramebuffer.use();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		gaussianShader.draw(5.f, 2, GaussianBlurShader::Direction::X, texSquareHorizontal);
+		gaussianShader.draw(SIGMA, N, GaussianBlurShader::Direction::X, texSquareHorizontal);
 
 		fbWindow.use();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		gaussianShader.draw(5.f, 2, GaussianBlurShader::Direction::Y, texSquareVertical);
+		gaussianShader.draw(SIGMA, N, GaussianBlurShader::Direction::Y, texSquareVertical);
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+		bpShader.draw(cam, vec3(10, 10, 10), dragon);
+
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

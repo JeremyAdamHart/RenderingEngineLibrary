@@ -10,13 +10,13 @@ namespace renderlib {
 
 Texture createTexture2D(string filename, TextureManager *manager) {
 	int width, height, comp;
-	unsigned char *image = stbi_load(filename.c_str(), 
+	unsigned char *image = stbi_load(filename.c_str(),
 		&width, &height, &comp, 0);
 
 	//Calculate alignment
 	int alignment = 4 - (width * comp) % 4;
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	
+
 	if ((image == nullptr) || (comp > 4)) {
 		cout << "Texture invalid - " << filename.c_str() << endl;
 		return Texture();
@@ -24,12 +24,12 @@ Texture createTexture2D(string filename, TextureManager *manager) {
 
 	const GLenum formats[4] = { GL_RED, GL_RG, GL_RGB, GL_RGBA };
 
-	TexInfo info(GL_TEXTURE_2D, { width, height }, 0, 
-		formats[comp-1], formats[comp-1], GL_UNSIGNED_BYTE);
-		
+	TexInfo info(GL_TEXTURE_2D, { width, height }, 0,
+		formats[comp - 1], formats[comp - 1], GL_UNSIGNED_BYTE);
+
 	Texture tex = createTexture2D(info, manager, image);
 	stbi_image_free(image);
-	
+
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);		//Return to default
 
 	return tex;
@@ -44,12 +44,13 @@ Texture createTexture2D(int width, int height, TextureManager *manager) {
 		GL_RGBA, GL_RGBA8, GL_FLOAT), manager);
 }
 
-Texture createTexture2D(TexInfo info, TextureManager *manager, 
+Texture createTexture2D(TexInfo info, TextureManager *manager,
 	unsigned char *data) {
 	GLTexture texID = createTextureID();
+
 	glActiveTexture(NO_ACTIVE_TEXTURE);	//Bind to avoid disturbing active units
 	glBindTexture(GL_TEXTURE_2D, texID);
-//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -57,8 +58,6 @@ Texture createTexture2D(TexInfo info, TextureManager *manager,
 
 	glTexImage2D(GL_TEXTURE_2D, info.level, info.internalFormat, info.dimensions[0],
 		info.dimensions[1], 0, info.format, GL_UNSIGNED_BYTE, data);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return Texture(texID, info, manager);
 }
@@ -82,6 +81,7 @@ Texture createTexture2DMulti(int width, int height, TextureManager *manager, siz
 
 Texture createTexture2DMulti(TexInfo info, TextureManager *manager, size_t num_samples) {
 	GLTexture texID = createTextureID();
+
 	glActiveTexture(NO_ACTIVE_TEXTURE);	//Bind to avoid disturbing active units
 	glBindTexture(info.target, texID);
 	glTexParameteri(info.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

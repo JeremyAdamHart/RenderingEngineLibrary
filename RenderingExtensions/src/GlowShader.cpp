@@ -38,7 +38,7 @@ enum {
 	COUNT
 };
 
-GaussianBlurShader::GaussianBlurShader() : ShaderT<TextureMat>(gaussianShaderNames, {}, {"colorTexture", "sigma", "n", "blurDirection" }) 
+GaussianBlurShader::GaussianBlurShader() : ShaderT<TextureMat>(gaussianShaderNames, {}, {"colorTex", "sigma", "n", "blurDirection" }) 
 {
 	
 }

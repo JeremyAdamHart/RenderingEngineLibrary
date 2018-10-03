@@ -22,7 +22,7 @@ struct TexInfo {
 
 	TexInfo();
 	TexInfo(GLenum target, std::vector<int> dimensions, GLint level,
-	GLenum format, GLint internalFormat, GLenum type);
+		GLenum format, GLint internalFormat, GLenum type);
 };
 
 class Texture {
@@ -44,7 +44,7 @@ public:
 	TexInfo& getInfoRef();
 
 	//Access info 
-	int getID() const;
+	GLTexture getID() const;
 	size_t numDimensions() const;
 	int getWidth() const;
 	int getHeight() const;
@@ -65,8 +65,8 @@ public:
 	virtual void removeTexture(int handle);
 	virtual int addTexture(Texture tex);	//Adds texture and returns handle
 
-	//Gets texture unit handle is bound to, binding it if necessary
-	//Returns NO_ACTIVE_TEXTURE if failed
+											//Gets texture unit handle is bound to, binding it if necessary
+											//Returns NO_ACTIVE_TEXTURE if failed
 	virtual int requestTexUnit(int handle);
 };
 
