@@ -231,14 +231,16 @@ void WindowManager::glowTest() {
 	SimpleTexManager tm;
 
 	Framebuffer lightFramebuffer = createNewFramebuffer(window_width, window_height);
-	if (!lightFramebuffer.addTexture(createTexture2D(window_width, window_height, &tm), GL_COLOR_ATTACHMENT0)
+	if (!lightFramebuffer.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { window_width, window_height }, 0,
+		GL_RGBA, GL_RGB32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0)
 		|| !lightFramebuffer.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT)) {
 		//){
 		printf("Failed to initialize lightFramebuffer\n");
 	}
 
 	Framebuffer gaussianFramebuffer = createNewFramebuffer(window_width, window_height);
-	if (!gaussianFramebuffer.addTexture(createTexture2D(window_width, window_height, &tm), GL_COLOR_ATTACHMENT0)
+	if (!gaussianFramebuffer.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { window_width, window_height }, 0,
+		GL_RGBA, GL_RGB32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0)
 		|| !gaussianFramebuffer.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT)) {
 		printf("Failed to initialize gaussianFramebuffer\n");
 	}
@@ -263,10 +265,14 @@ void WindowManager::glowTest() {
 	Drawable dragon(
 		objToElementGeometry("models/dragon.obj"),
 		new ColorMat(vec3(0.75f, 0.1f, 0.3f)));
+
+	Drawable glowDragon(
+		objToElementGeometry("models/dragon.obj"),
+		new ColorMat(vec3(0.75f, 0.1f, 0.3f)*40.f));
 	//dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
 
-	const int N = 41;
-	const float SIGMA = 0.4f*float(N + 1)*0.5f;
+	const int N = 301;
+	const float SIGMA = 0.4f*float(N + 1);
 
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	while (!glfwWindowShouldClose(window)) {
@@ -280,7 +286,7 @@ void WindowManager::glowTest() {
 
 		lightFramebuffer.use();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		flatShader.draw(cam, dragon);
+		flatShader.draw(cam, glowDragon);
 
 		gaussianFramebuffer.use();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
