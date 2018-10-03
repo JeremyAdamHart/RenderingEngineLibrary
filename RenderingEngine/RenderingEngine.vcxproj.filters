@@ -36,6 +36,9 @@
     <ClInclude Include="Physics.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\RenderingExtensions\headers\ConvexHull.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderingEngine.cpp">

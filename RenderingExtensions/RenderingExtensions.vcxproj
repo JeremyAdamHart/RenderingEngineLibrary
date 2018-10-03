@@ -323,6 +323,7 @@
     <ClInclude Include="headers\MeshInfoLoader.h" />
     <ClInclude Include="headers\ModelLoader.h" />
     <ClInclude Include="headers\MultiBuffer.h" />
+    <ClInclude Include="headers\NormalDisplayShader.h" />
     <ClInclude Include="headers\PerlinNoise.h" />
     <ClInclude Include="headers\PosNormalShader.h" />
     <ClInclude Include="headers\ProcessingShader.h" />
@@ -344,6 +345,7 @@
   <ItemGroup>
     <ClCompile Include="..\tinyply\source\tinyply.cpp" />
     <ClCompile Include="headers\ColorSetMat.cpp" />
+    <ClCompile Include="headers\NormalDisplayShader.cpp" />
     <ClCompile Include="src\AOShader.cpp" />
     <ClCompile Include="src\BlendShader.cpp" />
     <ClCompile Include="src\ColorMat.cpp" />

@@ -40,6 +40,7 @@ public:
 	void objLoadingLoop();
 	void rigidBodyTest();
 	void testLoop();
+	void convexTestLoop();
 	void particleLoop();
 	void glowTest();
 };

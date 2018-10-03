@@ -30,11 +30,15 @@ float blinnPhongLighting(vec3 normal, vec3 position, vec3 viewPosition)
 
 	vec3 h = normalize(viewer + light);
 	//Formula found here: http://www.farbrausch.de/~fg/stuff/phong.pdf
-	float normalizationFactor = (alpha+2)*(alpha+4)/(8*M_PI*(pow(sqrt(2), -alpha)+alpha));
+/*	float normalizationFactor = (alpha+2)*(alpha+4)/(8*M_PI*(pow(sqrt(2), -alpha)+alpha));
 
 	return max(dot(normal, light), 0)* (ks*normalizationFactor * pow(clamp(dot(normal, h), 0.0, 1.0), alpha)
 			+ kd*clamp(dot(normal, light), 0.0, 1.0));
+*/
+	float lambertion = clamp(dot(normal, light), 0.0, 1.0);
 
+	return ks*(alpha+2.0)*(0.5/M_PI) * clamp(pow(dot(normal, h), alpha), 0.0, 1.0)*lambertion
+			+ kd*lambertion + ka;
 }
 
 

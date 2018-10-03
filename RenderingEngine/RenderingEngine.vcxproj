@@ -302,6 +302,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\RenderingExtensions\headers\ConvexHull.h" />
     <ClInclude Include="GLWindow.h" />
     <ClInclude Include="HeatParticleGeometry.h" />
     <ClInclude Include="HeatParticleMat.h" />

@@ -41,6 +41,14 @@ using namespace std;
 
 //Glow test
 #include "GlowShader.h"
+//Convex Hull
+#include "ConvexHull.h"
+
+//Random
+#include <random>
+#include <ctime>
+
+#include <limits>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -145,6 +153,305 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 #define M_PI 3.1415926535897932384626433832795
 #define MOD_MAX 8388608
 
+float floatRand() {
+	return float(rand()) / float(RAND_MAX);
+}
+
+int intRand(int range) {
+	return rand() % range;
+}
+
+void loadGeometryWithHalfEdgeMesh(SimpleGeometry* geom, HalfEdgeMesh<vec3>& mesh) {
+	vector<vec3> points;
+
+	for (auto f : mesh.faces) {
+		vec3 center = mesh.center(f);
+		vec3 normal = mesh.normal(f);
+		auto e = f.edge;
+
+		int count = 0;
+		do {
+//			points.push_back(center + normal*0.01f);
+//			points.push_back(mesh[mesh[e].head].pos + normal*0.01f);
+			points.push_back(mesh[mesh[e].head].pos);
+			points.push_back(mesh[mesh[mesh[e].next].head].pos);
+			points.push_back(mesh[mesh[mesh[e].next].head].pos);
+			points.push_back(mesh[mesh[mesh[mesh[e].next].next].head].pos);
+			points.push_back(mesh[mesh[mesh[mesh[e].next].next].head].pos);
+			points.push_back(mesh[mesh[e].head].pos);
+
+			points.push_back(center + normal*0.01f);
+			points.push_back(center + normal*0.5f);
+			e = mesh[e].next;
+			count++;
+		} while (e != f.edge && count < 10);
+
+		if (count >= 10) printf("Face with > 10 sides detected\n");
+	}
+
+	geom->loadGeometry(points.data(), points.size());
+}
+
+template<typename T>
+bool allDistinct(T* arr, size_t size) {
+	for (int i = 0; i < size-1; i++) {
+		for (int j = i+1; j < size; j++) {
+			if (arr[i] == arr[j])
+				return false;
+		}
+	}
+
+	return true;
+}
+
+void WindowManager::convexTestLoop() {
+	srand(13);	//time(0));
+
+	SlotMap<int> testMap;
+	testMap.add(1);
+	testMap.add(2);
+	testMap.add(3);
+	testMap.add(4);
+	auto last = testMap.add(5);
+	testMap.remove(last);
+
+	MeshInfoLoader modelMinfo("models/dragon.obj");
+	shared_ptr<ElementGeometry> modelGeom = make_shared<ElementGeometry>(modelMinfo.vertices.data(), modelMinfo.normals.data(), nullptr, 
+		modelMinfo.indices.data(), modelMinfo.vertices.size(), modelMinfo.indices.size());
+
+	Drawable modelDrawable(modelGeom, make_shared<ColorMat>(vec3(0, 1, 0)));
+	modelDrawable.addMaterial(new ShadedMat(0.3f, 0.4f, 0.4f, 5.f));
+
+	for (auto it = testMap.begin(); it != testMap.end(); ++it) {
+		//auto ending = testMap.end();
+  		printf("%d\n", *it);
+	}
+
+	std::vector<int>::iterator it;
+
+	cam = TrackballCamera(
+		vec3(0, 0, -1), vec3(0, 0, 5),
+		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 20.f));
+
+	//Find starting tetrahedron for model
+	vec3 tetPoints[4];
+	do {
+		tetPoints[0] = modelMinfo.vertices[rand() % modelMinfo.vertices.size()];
+		tetPoints[1] = modelMinfo.vertices[rand() % modelMinfo.vertices.size()];
+		tetPoints[2] = modelMinfo.vertices[rand() % modelMinfo.vertices.size()];
+		tetPoints[3] = modelMinfo.vertices[rand() % modelMinfo.vertices.size()];
+	} while (!allDistinct(tetPoints, 4));
+
+	HalfEdgeMesh<glm::vec3> mesh;
+	//auto vert = generateTetrahedron(mesh, glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+	auto vert = generateTetrahedron(mesh, tetPoints[0], tetPoints[1], tetPoints[2], tetPoints[3]);
+
+	const int POINT_NUM = 1000;
+	std::vector<glm::vec3> hullPoints;
+	for (int i = 0; i < POINT_NUM; i++) {
+		hullPoints.push_back(
+			(glm::vec3(
+			floatRand(),
+			floatRand(),
+			floatRand()) + glm::vec3(-0.5, -0.5, -0.5)
+				)*4.f);
+	}
+
+	//convexHullIteration(mesh, hullPoints);
+
+	std::vector<glm::vec3> points;
+	std::vector<unsigned int> indices;
+	halfEdgeToFaceList(&points, &indices, mesh);
+	//faceListToHalfEdge(&mesh, points, indices);
+	//points.clear(); indices.clear();
+	//halfEdgeToFaceList(&points, &indices, mesh);
+	std::vector<glm::vec3> normals = calculateNormalsImp(&points, &indices);
+
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+	SimpleShader simpleShader;
+	BlinnPhongShader bpShader;
+	shared_ptr<ElementGeometry> geom = make_shared<ElementGeometry>(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
+	//enum {POSITIONS=0, NORMALS};
+	//StreamGeometry<vec3, vec3> geom({ false, false })
+
+	Drawable heObject(geom, make_shared<ColorMat>(vec3(1, 0, 0)));
+	heObject.addMaterial(new ShadedMat(0.3, 0.5, 0.4, 10.f));
+
+
+
+	glPointSize(3.f);
+
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	Drawable hullObject(make_shared<SimpleGeometry>(hullPoints.data(), hullPoints.size(), GL_POINTS), 
+		make_shared<ColorMat>(vec3(1, 1, 1)));
+
+	vector<vec3> debugPoints;
+	shared_ptr<SimpleGeometry> debugGeometry = make_shared<SimpleGeometry>(GL_POINTS);
+	Drawable debugObject(debugGeometry, make_shared<ColorMat>(vec3(0.2, 0.5, 1)));
+
+	shared_ptr<SimpleGeometry> halfEdgeDebugGeometry = make_shared<SimpleGeometry>(GL_LINES);
+	Drawable halfEdgeDebugObject(halfEdgeDebugGeometry, make_shared<ColorMat>(vec3(1.f, 0.f, 1.f)));
+
+	shared_ptr<SimpleGeometry> halfEdgeTrackingGeometry = make_shared<SimpleGeometry>(GL_LINES);
+	Drawable halfEdgeTrackingObject(halfEdgeTrackingGeometry, make_shared<ColorMat>(vec3(0, 1.f, 0.f)));
+	SlotMap<HalfEdge<vec3>>::Index trackingEdge = mesh.edges.begin().toIndex();
+
+	glClearColor(0.f, 0.f, 0.f, 0.f);
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		static int iterationStep = 1;
+		static bool iterationPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+			
+			if (!iterationPressed) {
+				iterationStep = (iterationStep + 1)%2;
+
+				using namespace glm;
+				convexHullIteration(mesh, modelMinfo.vertices);//*/		hullPoints);
+				/*
+				//Expanded function here vvvvvvvvvvvvvvvvvvvvvvv
+				{
+					static SlotMap<HalfEdge<vec3>>::Index boundaryEdge2;
+					static vec3 furthestPoint = vec3(0);
+
+					if (iterationStep == 0) {
+						debugPoints.clear();
+
+						const float MINIMUM_PROJECTED_DISTANCE = 0.2f;
+						float maxProjectedDistance = 0.f;
+						const int MIN_FACES_CHECKED = 3;
+						const int MAX_FACES_CHECKED = 10;
+						int facesChecked = 0;
+						do {
+							SlotMap<Face<vec3>>::Index extrudedFace = mesh.faces.random();
+							vec3 faceCenter = mesh.center(mesh[extrudedFace]);
+							vec3 faceNormal = mesh.normal(mesh[extrudedFace]);
+							for (vec3 point : hullPoints) {
+								float projectedDistance = dot(faceNormal, point - faceCenter);
+								if (projectedDistance > maxProjectedDistance) {
+									maxProjectedDistance = projectedDistance;
+									furthestPoint = point;
+								}
+							}
+
+							facesChecked++;
+						} while (
+							(maxProjectedDistance <= MINIMUM_PROJECTED_DISTANCE || facesChecked >= MIN_FACES_CHECKED) 
+							&& facesChecked <= MAX_FACES_CHECKED);
+						
+						//printf("Distance %f\n------------\n", faceNormal.x, faceNormal.y, faceNormal.z, maxProjectedDistance);
+
+						debugPoints.push_back(furthestPoint);
+
+						std::vector<SlotMap<Face<vec3>>::Index> faceDeleteList;
+						for (auto face = mesh.faces.begin(); face != mesh.faces.end(); ++face) {
+							if (dot(mesh.normal(*face), furthestPoint - mesh.center(*face)) > 0.f) {
+								faceDeleteList.push_back(face.toIndex());	// boundaryEdge = mesh.deleteFace(face.toIndex());
+								debugPoints.push_back(mesh.center(*face));
+							}
+						}
+						printf("");
+						//SlotMap<HalfEdge<vec3>>::Index boundaryEdge2;	// = SlotMap<HalfEdge<vec3>>::Index();
+						for (auto f : faceDeleteList) {
+							boundaryEdge2 = mesh.deleteFace(f);
+						}
+						printf("");
+					}
+					else if (iterationStep == 1) {
+						if (boundaryEdge2) {
+							fillBoundary(mesh, boundaryEdge2, furthestPoint);
+						}
+					}
+
+					trackingEdge = mesh.edges.begin().toIndex();
+					vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos, mesh[mesh[mesh.prev(trackingEdge)].head].pos };
+					halfEdgeTrackingGeometry.loadGeometry(endPoints, 2);
+				}
+				//Expanded function here ^^^^^^^
+				*/
+				points.clear(); indices.clear();
+				halfEdgeToFaceList(&points, &indices, mesh);
+				normals = calculateNormalsImp(&points, &indices);
+				vector<vec2> texCoords(normals.size());
+				geom->loadGeometry(points.data(), normals.data(), texCoords.data(), &indices[0], points.size(), indices.size());
+				debugGeometry->loadGeometry(debugPoints.data(), debugPoints.size());
+				
+			}
+			
+			iterationPressed = true;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE){
+			iterationPressed = false;
+		}
+
+		static bool pKeyPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pKeyPressed) {
+			pKeyPressed = true;
+			vec3 normal = (!mesh.isBoundary(trackingEdge)) ? mesh.normal(mesh[mesh[trackingEdge].face]) : vec3(0.f);
+			trackingEdge = mesh[trackingEdge].pair;
+			vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos + normal*0.01f, mesh[mesh[mesh.prev(trackingEdge)].head].pos + normal*0.01f };
+			halfEdgeTrackingGeometry->loadGeometry(endPoints, 2);
+
+			//Temporary testing
+			vec3 furthestPoint;
+			float maxProjectedDistance = 0.f;
+			SlotMap<Face<vec3>>::Index extrudedFace = mesh[trackingEdge].face;	//mesh.faces.random();
+			vec3 faceCenter = mesh.center(mesh[extrudedFace]);
+			vec3 faceNormal = mesh.normal(mesh[extrudedFace]);
+			for (vec3 point : hullPoints) {
+				float projectedDistance = dot(faceNormal, point - faceCenter);
+				if (projectedDistance > maxProjectedDistance) {
+					maxProjectedDistance = projectedDistance;
+					furthestPoint = point;
+				}
+			}
+
+			vec3 arr[2] = { furthestPoint, faceCenter };
+			debugGeometry->loadGeometry(arr, 2);
+		}
+		else if(glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE){
+			pKeyPressed = false;
+		}
+
+		static bool nKeyPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !nKeyPressed) {
+			nKeyPressed = true;
+			vec3 normal = (!mesh.isBoundary(trackingEdge)) ? mesh.normal(mesh[mesh[trackingEdge].face]) : vec3(0.f);
+			trackingEdge = mesh[trackingEdge].next;
+			vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos + normal*0.01f, mesh[mesh[mesh.prev(trackingEdge)].head].pos + normal*0.01f };
+			halfEdgeTrackingGeometry->loadGeometry(endPoints, 2);
+		}
+		else if(glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE){
+			nKeyPressed = false;
+		}
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		loadGeometryWithHalfEdgeMesh(halfEdgeDebugGeometry.get(), mesh);
+
+		simpleShader.draw(cam, halfEdgeTrackingObject);
+//		simpleShader.draw(cam, hullObject);
+		simpleShader.draw(cam, debugObject);
+		simpleShader.draw(cam, halfEdgeDebugObject);
+		bpShader.draw(cam, glm::vec3(10, 10, 10), heObject);
+		bpShader.draw(cam, glm::vec3(10, 10, 10), modelDrawable);
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
 
 void WindowManager::noiseLoop() {
 	vec3 points[6] = {

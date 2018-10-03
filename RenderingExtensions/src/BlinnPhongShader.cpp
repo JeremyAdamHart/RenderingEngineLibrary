@@ -140,7 +140,7 @@ void BlinnPhongShader::draw(const Camera &cam, vec3 lightPos,
 	obj.loadUniforms(ShadedMat::id, &uniformLocations[0]);
 
 	obj.getGeometry().drawGeometry();
-	glUseProgram(0);
+ 	glUseProgram(0);
 }
 
 }

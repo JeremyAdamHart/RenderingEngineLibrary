@@ -7,6 +7,7 @@ int main()
 	WindowManager wm;
 
 	wm.glowTest();
+	wm.testLoop();
 //	wm.rigidBodyTest();
 //	wm.mainLoop();
 //	wm.testLoop();
