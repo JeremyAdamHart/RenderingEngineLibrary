@@ -37,6 +37,7 @@ private:
 };
 
 void writeToPly(const char* filename, std::vector<glm::vec3>* vertices, std::vector<unsigned int>* faces);
-ElementGeometry objToElementGeometry(char *filename);
+
+ElementGeometry *objToElementGeometry(char *filename);
 vector<vec3> calculateNormalsImp(vector<vec3>* points, vector<unsigned int>* indices);
 }

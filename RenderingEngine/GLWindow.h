@@ -26,13 +26,13 @@
 class WindowManager {
 protected:
 	GLFWwindow *window;
-	
+
 	int window_width, window_height;
 
 
 public:
 	WindowManager();
-	WindowManager(int width, int height, std::string name, 
+	WindowManager(int width, int height, std::string name,
 		glm::vec4 color = glm::vec4(1.f));
 
 	void mainLoop();
@@ -40,7 +40,11 @@ public:
 	void objLoadingLoop();
 	void rigidBodyTest();
 	void testLoop();
+
 	void waveSimulationLoop(int numSegments, float dt);
+	void convexTestLoop();
+	void particleLoop();
+	void glowTest();
 };
 
 void initGLExtensions();

@@ -6,31 +6,32 @@
 
 namespace renderlib {
 
-const Texture NO_TEXTURE;
-
-Framebuffer::Framebuffer() :id(0), vp(0, 0, 0, 0){
+Framebuffer::Framebuffer() : id(GLFramebuffer::wrap(0)), vp(0, 0, 0, 0){
 
 }
 
-Framebuffer::Framebuffer(GLuint id, Texture tex, GLenum attachment) :
+Framebuffer::Framebuffer(GLFramebuffer id, Texture tex, GLenum attachment) :
 id(id), vp(std::max(tex.getWidth(), 0), std::max(tex.getHeight(), 0))
 {
 	addTexture(tex, attachment);
 }
 
-Framebuffer::Framebuffer(unsigned int width, unsigned int height, GLuint id) 
+Framebuffer::Framebuffer(unsigned int width, unsigned int height, GLFramebuffer id) 
 	:id(id), vp(width, height)
 {}
 
 bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 	tex[attachment] = newTex;
 
+
+	glBindTexture(GL_TEXTURE_2D, newTex.getID());
 	glBindFramebuffer(GL_FRAMEBUFFER, id);
 	glFramebufferTexture2D(GL_FRAMEBUFFER,
 		attachment,
 		newTex.getTarget(),
 		newTex.getID(),
 		newTex.getLevel());
+
 
 	bool status = true;
 
@@ -71,6 +72,7 @@ bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return status;
 }
@@ -79,7 +81,7 @@ const Texture &Framebuffer::getTexture(GLenum attachment) const {
 		return tex.at(attachment);
 	}
 	catch (out_of_range) {
-		return NO_TEXTURE;		//Figure out better solution
+		std::cout << "Texture does not exist" << std::endl;		//Figure out better solution
 	}
 }
 
@@ -90,7 +92,7 @@ void Framebuffer::use() const {
 	vp.use();
 }
 
-GLuint Framebuffer::getID() const { return id; }
+GLFramebuffer Framebuffer::getID() const { return id; }
 
 void Framebuffer::resize(int width, int height) {
 	for(auto it=tex.begin(); it != tex.end(); it++){
@@ -129,6 +131,7 @@ Viewport::Viewport(unsigned int width, unsigned int height,
 
 }
 
+/*
 void Framebuffer::deleteTextures() {
 	for (map<GLenum, Texture>::iterator it = tex.begin(); it != tex.end(); it++) {
 		it->second.deleteTexture();
@@ -139,7 +142,7 @@ void Framebuffer::deleteTextures() {
 void Framebuffer::deleteFramebuffer() {
 	glDeleteFramebuffers(1, &id);
 }
-
+*/
 void Viewport::use() const {
 	glViewport(x, y, width, height);
 }

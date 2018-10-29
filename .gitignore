@@ -98,3 +98,6 @@ Debug/SampleTest.ilk
 *.db-wal
 RenderingEngine.sdf
 GLFW/obj
+Release/*
+*.iobj
+*.ipdb

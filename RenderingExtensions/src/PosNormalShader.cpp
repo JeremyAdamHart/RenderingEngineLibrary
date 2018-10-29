@@ -23,11 +23,20 @@ PosNormalShader::PosNormalShader(map<GLenum, string> defines)
 	calculateUniformLocations();
 }
 
+PosNormalShader::PosNormalShader(PNShaderOutput output)
+{
+	if (output == PNShaderOutput::POSITION)
+		createProgram({ {GL_FRAGMENT_SHADER, "#define POSITION_ONLY\n"} });
+	else
+		createProgram();
+	calculateUniformLocations();
+}
+
 bool PosNormalShader::createProgram(map<GLenum, string> defines) {
 
 	programID = createGLProgram(shaders, defines);
 
-	return programID != 0;
+	return programID;
 }
 
 void PosNormalShader::calculateUniformLocations() {

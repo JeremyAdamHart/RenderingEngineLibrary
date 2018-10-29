@@ -2,13 +2,17 @@
 //
 #include "GLWindow.h"
 
-
 int main()
 {
 	WindowManager wm;
 	wm.waveSimulationLoop(1000, 0.0001f);
+
+//	wm.glowTest();
 //	wm.testLoop();
 //	wm.rigidBodyTest();
 //	wm.mainLoop();
+//	wm.testLoop();
+//	wm.noiseLoop();
+//	wm.particleLoop();
 }
 

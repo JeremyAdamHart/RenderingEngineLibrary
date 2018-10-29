@@ -27,8 +27,9 @@ public:
 
 	TextureMat(Texture tex, int subtype=COLOR);
 
-	virtual int getType() const;
-	virtual void loadUniforms(GLint *locations) const;	//Must have already called useProgram
+	virtual int getType() const override;
+	virtual void loadUniforms(GLint *locations) const override;	//Must have already called useProgram
+//	virtual int getUniformNum() const override;
 };
 
 }

@@ -12,13 +12,14 @@ HeatParticle::HeatParticle(glm::vec3 position, glm::vec3 velocity, float heat)
 
 HeatParticle::HeatParticle() {}
 
-HeatParticleGeometry::HeatParticleGeometry() :particleNum(0){
+HeatParticleGeometry::HeatParticleGeometry() :vao(createVAOID()), particleNum(0){
 	initializeVAO();
 }
 
 bool HeatParticleGeometry::initializeVAO() {
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(COUNT, vbo);
+
+	for (int i = 0; i < COUNT; i++)
+		vbo.push_back(createBufferID());
 
 	glBindVertexArray(vao);
 	glEnableVertexAttribArray(ATTRIB_LOCATION::POSITION);

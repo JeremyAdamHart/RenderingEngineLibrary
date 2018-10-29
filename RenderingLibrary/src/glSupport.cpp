@@ -128,9 +128,9 @@ GLuint createShader(const string &source, const string &defines, GLenum shaderTy
 	checkGLErrors("createShader");
 }
 
-GLuint createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessControlShader, GLuint tessEvalShader)
+GLProgram createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessControlShader, GLuint tessEvalShader)
 {
-	GLuint program = glCreateProgram();
+	GLProgram program = createProgramID();
 
 	if (vertexShader)	glAttachShader(program, vertexShader);
 	if (fragmentShader)	glAttachShader(program, fragmentShader);
@@ -151,9 +151,9 @@ GLuint createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessCo
 
 		cout << "[Linking failed]" << endl << errorMessage.c_str() << endl;
 
-		glDeleteProgram(program);
+		//glDeleteProgram(program);
 
-		return 0;
+		return GLProgram::wrap(0);
 	}
 
 	if (vertexShader) glDetachShader(program, vertexShader);
@@ -166,10 +166,10 @@ GLuint createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tessCo
 	checkGLErrors("createProgram");
 }
 
-GLuint createGLProgram(vector<pair<GLenum, string>> shaders,
+GLProgram createGLProgram(vector<pair<GLenum, string>> shaders,
 	map<GLenum, string> defines) 
 {
-	GLuint program = glCreateProgram();
+	GLProgram program = createProgramID();
 
 	vector<GLuint> shaderIDs(shaders.size());
 
@@ -187,8 +187,10 @@ GLuint createGLProgram(vector<pair<GLenum, string>> shaders,
 										shaderType);
 		}
 
-		if (shaderIDs[i]) 
+		if (shaderIDs[i])
 			glAttachShader(program, shaderIDs[i]);
+		else
+			return GLProgram::wrap(0);
 	}
 
 	glLinkProgram(program);
@@ -205,9 +207,9 @@ GLuint createGLProgram(vector<pair<GLenum, string>> shaders,
 
 		cout << "[Linking failed]" << endl << errorMessage.c_str() << endl;
 
-		glDeleteProgram(program);
+		//glDeleteProgram(program);
 
-		return 0;
+		return GLProgram::wrap(0);
 	}
 
 	//Clean up shaders

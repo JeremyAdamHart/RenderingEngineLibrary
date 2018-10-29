@@ -1,22 +1,22 @@
 #pragma once
 
 #include "GLGeometry.h"
+#include "GLObject.h"
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
+#include <vector>
 
 namespace renderlib {
 
 using namespace glm;
 
 class SimpleGeometry : public GLGeometryContainer {
-public:
-	enum{ POSITION = 0, COUNT };
-private:
-	GLuint vao;
+	GLVAO vao;
 	size_t bufferSize;
 	GLenum mode;
 
-	GLuint vbo[COUNT];
+	enum{ POSITION = 0, COUNT };
+	std::vector<GLBuffer> vbo;
 
 	bool initializeVAO();
 
@@ -36,22 +36,22 @@ public:
 	virtual int startIndex() const { return 0; }
 	virtual int numElements() const { return bufferSize; }
 	virtual GLenum getMode() const { return mode; }
-	virtual GLint getVaoID() const { return vao; }
+	virtual GLuint getVaoID() const { return vao; }
 
 	virtual bool usingDrawElements() const { return false; }
 };
 
 class SimpleTexGeometry : public GLGeometryContainer {
-public:
-	enum{POSITION=0, TEXCOORD, COUNT};
-private:
-	GLuint vao;
+
+	GLVAO vao;
 	size_t bufferSize;
 	GLenum mode;
 
 	GLenum texCoordType;
 	
-	GLuint vbo[COUNT];
+	enum{POSITION=0, TEXCOORD, COUNT};
+	std::vector<GLBuffer> vbo;
+
 	bool initializeVAO();
 
 public:
@@ -75,18 +75,18 @@ public:
 	virtual int startIndex() { return 0; }
 	virtual int numElements() { return bufferSize; }
 	virtual GLenum getMode() { return mode; }
-	virtual GLint getVaoID() { return vao; }
+	virtual GLuint getVaoID() { return vao; }
 
 	virtual bool usingDrawElements() { return false; }
 };
 
 class SimpleTexGeometryI : public GLGeometryContainer {
-	GLuint vao;
+	GLVAO vao;
 	size_t bufferSize;
 	GLenum mode;
 
 	enum { POSITION = 0, TEXCOORD, COUNT };
-	GLuint vbo[COUNT];
+	std::vector<GLBuffer> vbo;
 
 	bool initializeVAO();
 
@@ -107,7 +107,7 @@ public:
 	virtual int startIndex() { return 0; }
 	virtual int numElements() { return bufferSize; }
 	virtual GLenum getMode() { return mode; }
-	virtual GLint getVaoID() { return vao; }
+	virtual GLuint getVaoID() { return vao; }
 
 	virtual bool usingDrawElements() { return false; }
 };

@@ -17,6 +17,8 @@ public:
 	glm::mat4 getOrientationMat4() const;
 	virtual glm::mat4 getTransform() const;
 	glm::vec3 getPos() const;
+
+	virtual ~Object();
 };
 
 }

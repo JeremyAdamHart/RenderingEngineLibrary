@@ -41,7 +41,7 @@ int SimpleTexManager::requestTexUnit(int handle) {
 
 	texUnits[texUnit] = handle;
 	glActiveTexture(NO_ACTIVE_TEXTURE);
-	return texUnit + 1;	//Because we're ignoring 0
+	return texUnit + 1;	//Because we don't use 0
 }
 
 int sizeOfTexture(const Texture &tex) {

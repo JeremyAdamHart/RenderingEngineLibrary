@@ -318,6 +318,7 @@
     <ClInclude Include="headers\ColorShader.h" />
     <ClInclude Include="headers\DrawResourceHandler.h" />
     <ClInclude Include="headers\ElementGeometry.h" />
+    <ClInclude Include="headers\GlowShader.h" />
     <ClInclude Include="headers\Light.h" />
     <ClInclude Include="headers\MeshInfoLoader.h" />
     <ClInclude Include="headers\ModelLoader.h" />
@@ -333,9 +334,10 @@
     <ClInclude Include="headers\simpleTexShader.h" />
     <ClInclude Include="headers\StreamGeometry.h" />
     <ClInclude Include="headers\TemplateParameterParsing.h" />
+    <ClInclude Include="headers\TemplatedShader.h" />
     <ClInclude Include="headers\TextureCreation.h" />
     <ClInclude Include="headers\TextureMat.h" />
-    <ClInclude Include="headers\TorranceSparrowShader.h" />
+    <ClInclude Include="headers\BlinnPhongShader.h" />
     <ClInclude Include="headers\TrackballCamera.h" />
     <ClInclude Include="headers\TrackerCamera.h" />
     <ClInclude Include="headers\VertexBufferTemplates.h" />
@@ -349,6 +351,7 @@
     <ClCompile Include="src\ColorMat.cpp" />
     <ClCompile Include="src\ColorShader.cpp" />
     <ClCompile Include="src\ElementGeometry.cpp" />
+    <ClCompile Include="src\GlowShader.cpp" />
     <ClCompile Include="src\MeshInfoLoader.cpp" />
     <ClCompile Include="src\ModelLoader.cpp" />
     <ClCompile Include="src\MultiBuffer.cpp" />
@@ -363,7 +366,7 @@
     <ClCompile Include="src\StreamGeometry.cpp" />
     <ClCompile Include="src\TextureCreation.cpp" />
     <ClCompile Include="src\TextureMat.cpp" />
-    <ClCompile Include="src\TorranceSparrowShader.cpp" />
+    <ClCompile Include="src\BlinnPhongShader.cpp" />
     <ClCompile Include="src\TrackballCamera.cpp" />
     <ClCompile Include="src\TrackerCamera.cpp" />
     <ClCompile Include="src\VertexBufferTemplates.cpp" />

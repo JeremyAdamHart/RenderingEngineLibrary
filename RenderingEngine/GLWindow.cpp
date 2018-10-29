@@ -17,7 +17,7 @@ using namespace std;
 #include "TextureMat.h"
 #include "MeshInfoLoader.h"
 #include "ShadedMat.h"
-#include "TorranceSparrowShader.h"
+#include "BlinnPhongShader.h"
 #include "Framebuffer.h"
 //Ambient occlusion
 #include "AOShader.h"
@@ -39,6 +39,8 @@ using namespace std;
 //Rigid body test
 #include "Physics.h"
 
+//Glow test
+#include "GlowShader.h"
 //Convex Hull
 #include "ConvexHull.h"
 
@@ -171,8 +173,8 @@ void WindowManager::waveSimulationLoop(int numSegments, float dt) {
 		//pressuresT1[i] = pressuresT0[i] = sin(M_PI*6.f*u)*0.01f;
 	}
 
-	SimpleGeometry geometry(GL_LINE_STRIP);
-	Drawable waveDrawable(new ColorMat(vec3(1, 0, 0)), &geometry);
+	auto geometry = make_shared<SimpleGeometry>(GL_LINE_STRIP);
+	Drawable waveDrawable(geometry, make_shared<ColorMat>(vec3(1, 0, 0)));
 	SimpleShader simpleShader;
 
 	float C = 0.5f;
@@ -247,7 +249,7 @@ void WindowManager::waveSimulationLoop(int numSegments, float dt) {
 		for (int i = 0; i < numSegments; i++) {
 			points.push_back(vec3(leftEdge + float(i)*step, pressuresT2[i] * height, 0.f));
 		}
-		geometry.loadGeometry(points.data(), points.size());
+		geometry->loadGeometry(points.data(), points.size());
 
 		simpleShader.draw(cam, waveDrawable);
 
@@ -309,8 +311,9 @@ bool allDistinct(T* arr, size_t size) {
 	return true;
 }
 
-void WindowManager::testLoop() {
-	srand(time(0));	//time(0));
+
+void WindowManager::convexTestLoop() {
+	srand(13);	//time(0));
 
 	SlotMap<int> testMap;
 	testMap.add(1);
@@ -320,13 +323,11 @@ void WindowManager::testLoop() {
 	auto last = testMap.add(5);
 	testMap.remove(last);
 
-	MeshInfoLoader modelMinfo;	//	/*("untrackedmodels/GRCD2RNA.ply");*/ ("models/dragon.obj");
-	//modelMinfo.loadModelPly("untrackedmodels/Helianthus4.ply");
-	modelMinfo.loadModelPly("untrackedmodels/RiccoSurface.ply");
-	ElementGeometry modelGeom(modelMinfo.vertices.data(), modelMinfo.normals.data(), nullptr, 
+	MeshInfoLoader modelMinfo("models/dragon.obj");
+	shared_ptr<ElementGeometry> modelGeom = make_shared<ElementGeometry>(modelMinfo.vertices.data(), modelMinfo.normals.data(), nullptr, 
 		modelMinfo.indices.data(), modelMinfo.vertices.size(), modelMinfo.indices.size());
 
-	Drawable modelDrawable(new ColorMat(vec3(0, 1, 0)), &modelGeom);
+	Drawable modelDrawable(modelGeom, make_shared<ColorMat>(vec3(0, 1, 0)));
 	modelDrawable.addMaterial(new ShadedMat(0.3f, 0.4f, 0.4f, 5.f));
 
 	for (auto it = testMap.begin(); it != testMap.end(); ++it) {
@@ -379,12 +380,12 @@ void WindowManager::testLoop() {
 
 	SimpleTexManager tm;
 	SimpleShader simpleShader;
-	TorranceSparrowShader tsShader;
-	ElementGeometry geom(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
+	BlinnPhongShader bpShader;
+	shared_ptr<ElementGeometry> geom = make_shared<ElementGeometry>(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
 	//enum {POSITIONS=0, NORMALS};
 	//StreamGeometry<vec3, vec3> geom({ false, false })
 
-	Drawable heObject(new ColorMat(vec3(1, 0, 0)), &geom);
+	Drawable heObject(geom, make_shared<ColorMat>(vec3(1, 0, 0)));
 	heObject.addMaterial(new ShadedMat(0.3, 0.5, 0.4, 10.f));
 
 
@@ -393,18 +394,18 @@ void WindowManager::testLoop() {
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	Drawable hullObject(new ColorMat(vec3(1, 1, 1)),
-		new SimpleGeometry(hullPoints.data(), hullPoints.size(), GL_POINTS));
+	Drawable hullObject(make_shared<SimpleGeometry>(hullPoints.data(), hullPoints.size(), GL_POINTS), 
+		make_shared<ColorMat>(vec3(1, 1, 1)));
 
 	vector<vec3> debugPoints;
-	SimpleGeometry debugGeometry(GL_POINTS);
-	Drawable debugObject(new ColorMat(vec3(0.2, 0.5, 1)), &debugGeometry);
+	shared_ptr<SimpleGeometry> debugGeometry = make_shared<SimpleGeometry>(GL_POINTS);
+	Drawable debugObject(debugGeometry, make_shared<ColorMat>(vec3(0.2, 0.5, 1)));
 
-	SimpleGeometry halfEdgeDebugGeometry(GL_LINES);
-	Drawable halfEdgeDebugObject(new ColorMat(vec3(1.f, 0.f, 1.f)), &halfEdgeDebugGeometry);
+	shared_ptr<SimpleGeometry> halfEdgeDebugGeometry = make_shared<SimpleGeometry>(GL_LINES);
+	Drawable halfEdgeDebugObject(halfEdgeDebugGeometry, make_shared<ColorMat>(vec3(1.f, 0.f, 1.f)));
 
-	SimpleGeometry halfEdgeTrackingGeometry(GL_LINES);
-	Drawable halfEdgeTrackingObject(new ColorMat(vec3(0, 1.f, 0.f)), &halfEdgeTrackingGeometry);
+	shared_ptr<SimpleGeometry> halfEdgeTrackingGeometry = make_shared<SimpleGeometry>(GL_LINES);
+	Drawable halfEdgeTrackingObject(halfEdgeTrackingGeometry, make_shared<ColorMat>(vec3(0, 1.f, 0.f)));
 	SlotMap<HalfEdge<vec3>>::Index trackingEdge = mesh.edges.begin().toIndex();
 
 	glClearColor(0.f, 0.f, 0.f, 0.f);
@@ -487,8 +488,8 @@ void WindowManager::testLoop() {
 				halfEdgeToFaceList(&points, &indices, mesh);
 				normals = calculateNormalsImp(&points, &indices);
 				vector<vec2> texCoords(normals.size());
-				geom.loadGeometry(points.data(), normals.data(), texCoords.data(), &indices[0], points.size(), indices.size());
-				debugGeometry.loadGeometry(debugPoints.data(), debugPoints.size());
+				geom->loadGeometry(points.data(), normals.data(), texCoords.data(), &indices[0], points.size(), indices.size());
+				debugGeometry->loadGeometry(debugPoints.data(), debugPoints.size());
 				
 			}
 			
@@ -512,7 +513,7 @@ void WindowManager::testLoop() {
 			vec3 normal = (!mesh.isBoundary(trackingEdge)) ? mesh.normal(mesh[mesh[trackingEdge].face]) : vec3(0.f);
 			trackingEdge = mesh[trackingEdge].pair;
 			vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos + normal*0.01f, mesh[mesh[mesh.prev(trackingEdge)].head].pos + normal*0.01f };
-			halfEdgeTrackingGeometry.loadGeometry(endPoints, 2);
+			halfEdgeTrackingGeometry->loadGeometry(endPoints, 2);
 
 			//Temporary testing
 			vec3 furthestPoint;
@@ -529,7 +530,7 @@ void WindowManager::testLoop() {
 			}
 
 			vec3 arr[2] = { furthestPoint, faceCenter };
-			debugGeometry.loadGeometry(arr, 2);
+			debugGeometry->loadGeometry(arr, 2);
 		}
 		else if(glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE){
 			pKeyPressed = false;
@@ -541,7 +542,7 @@ void WindowManager::testLoop() {
 			vec3 normal = (!mesh.isBoundary(trackingEdge)) ? mesh.normal(mesh[mesh[trackingEdge].face]) : vec3(0.f);
 			trackingEdge = mesh[trackingEdge].next;
 			vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos + normal*0.01f, mesh[mesh[mesh.prev(trackingEdge)].head].pos + normal*0.01f };
-			halfEdgeTrackingGeometry.loadGeometry(endPoints, 2);
+			halfEdgeTrackingGeometry->loadGeometry(endPoints, 2);
 		}
 		else if(glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE){
 			nKeyPressed = false;
@@ -559,14 +560,14 @@ void WindowManager::testLoop() {
 			glViewport(0, 0, window_width, window_height);
 		}
 
-		loadGeometryWithHalfEdgeMesh(&halfEdgeDebugGeometry, mesh);
+		loadGeometryWithHalfEdgeMesh(halfEdgeDebugGeometry.get(), mesh);
 
 		simpleShader.draw(cam, halfEdgeTrackingObject);
 //		simpleShader.draw(cam, hullObject);
 		simpleShader.draw(cam, debugObject);
 		simpleShader.draw(cam, halfEdgeDebugObject);
-		tsShader.draw(cam, glm::vec3(10, 10, 10), heObject);
-		tsShader.draw(cam, glm::vec3(10, 10, 10), modelDrawable);
+		bpShader.draw(cam, glm::vec3(10, 10, 10), heObject);
+		bpShader.draw(cam, glm::vec3(10, 10, 10), modelDrawable);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
@@ -604,8 +605,8 @@ void WindowManager::noiseLoop() {
 	SimpleTexManager tm;
 	PerlinNoiseShader2D perlinShader;
 	Drawable texSquare(
-		new TextureMat(createTexture2D(1, 1, &tm)),
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
+		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
+		new TextureMat(createTexture2D(1, 1, &tm)));
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -621,6 +622,112 @@ void WindowManager::noiseLoop() {
 		}
 
 		perlinShader.draw(cam, texSquare);
+
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
+void WindowManager::glowTest() {
+	vec3 points[6] = {
+		//First triangle
+		vec3(-0.5f, 0.5f, 0.f)*2.f,
+		vec3(0.5f, 0.5f, 0.f)*2.f,
+		vec3(0.5f, -0.5f, 0.f)*2.f,
+		//Second triangle
+		vec3(0.5f, -0.5f, 0.f)*2.f,
+		vec3(-0.5f, -0.5f, 0.f)*2.f,
+		vec3(-0.5f, 0.5f, 0.f)*2.f
+	};
+
+	vec2 coords[6] = {
+		//First triangle
+		vec2(0, 1.f),
+		vec2(1.f, 1.f),
+		vec2(1.f, 0.f),
+		//Second triangle
+		vec2(1.f, 0.f),
+		vec2(0.f, 0.f),
+		vec2(0.f, 1.f)
+	};
+
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+
+	SimpleTexManager tm;
+
+	Framebuffer lightFramebuffer = createNewFramebuffer(window_width, window_height);
+	if (!lightFramebuffer.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { window_width, window_height }, 0,
+		GL_RGBA, GL_RGB32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0)
+		|| !lightFramebuffer.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT)) {
+		//){
+		printf("Failed to initialize lightFramebuffer\n");
+	}
+
+	Framebuffer gaussianFramebuffer = createNewFramebuffer(window_width, window_height);
+	if (!gaussianFramebuffer.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { window_width, window_height }, 0,
+		GL_RGBA, GL_RGB32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0)
+		|| !gaussianFramebuffer.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT)) {
+		printf("Failed to initialize gaussianFramebuffer\n");
+	}
+	
+	Framebuffer fbWindow(window_width, window_height);
+
+	FlatColorShader flatShader;
+	GaussianBlurShader gaussianShader;
+
+	Drawable texSquareHorizontal(
+		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
+		new TextureMat(lightFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
+
+	Drawable texSquareVertical(
+		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
+		new TextureMat(gaussianFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
+
+
+	BlinnPhongShader bpShader;
+
+	//Dragon
+	Drawable dragon(
+		objToElementGeometry("models/dragon.obj"),
+		new ColorMat(vec3(0.75f, 0.1f, 0.3f)));
+
+	Drawable glowDragon(
+		objToElementGeometry("models/dragon.obj"),
+		new ColorMat(vec3(0.75f, 0.1f, 0.3f)*40.f));
+	//dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
+
+	const int N = 301;
+	const float SIGMA = 0.4f*float(N + 1);
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		lightFramebuffer.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		flatShader.draw(cam, glowDragon);
+
+		gaussianFramebuffer.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		gaussianShader.draw(SIGMA, N, GaussianBlurShader::Direction::X, texSquareHorizontal);
+
+		fbWindow.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		gaussianShader.draw(SIGMA, N, GaussianBlurShader::Direction::Y, texSquareVertical);
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+		bpShader.draw(cam, vec3(10, 10, 10), dragon);
 
 
 		glfwSwapBuffers(window);
@@ -655,20 +762,20 @@ void WindowManager::rigidBodyTest() {
 
 	unsigned int planeIndices[6] = { 0, 1, 2, 0, 2, 3 };
 
-	ElementGeometry planeGeom(planePoints, planeNormals, nullptr, planeIndices, 4, 6);
-	Drawable plane(new ShadedMat(0.2, 0.4f, 0.4f, 1.f), &planeGeom);
+	Drawable plane(new ElementGeometry(planePoints, planeNormals, nullptr, planeIndices, 4, 6), 
+		new ShadedMat(0.2, 0.4f, 0.4f, 1.f));
 	plane.addMaterial(new ColorMat(vec3(1.f, 0, 0)));
 
 	SimpleTexManager tm;
 	MeshInfoLoader minfo("models/coryPrism.obj");
-	ElementGeometry rectPrismGeom(
-		minfo.vertices.data(), minfo.normals.data(), minfo.uvs.data(), minfo.indices.data(), 
-		minfo.vertices.size(), minfo.indices.size());
 
-	Drawable rectPrism(new ShadedMat(0.2f, 0.4f, 0.4f, 10.f), &rectPrismGeom);
+	Drawable rectPrism(new ElementGeometry(
+		minfo.vertices.data(), minfo.normals.data(), minfo.uvs.data(), minfo.indices.data(),
+		minfo.vertices.size(), minfo.indices.size()), 
+		new ShadedMat(0.2f, 0.4f, 0.4f, 10.f));
 	rectPrism.addMaterial(new ColorMat(vec3(1.f)));
 
-	TorranceSparrowShader tsShader;
+	BlinnPhongShader bpShader;
 
 	cam = TrackballCamera(
 		vec3(0, 0, -1), vec3(0, 0, 5),
@@ -724,8 +831,8 @@ void WindowManager::rigidBodyTest() {
 		}
 
 		const vec3 lightPos(20.f, 20.f, 20.f);
-		tsShader.draw(cam, lightPos, rectPrism);
-		tsShader.draw(cam, lightPos, plane);
+		bpShader.draw(cam, lightPos, rectPrism);
+		bpShader.draw(cam, lightPos, plane);
 
 //		static int count = 0;
 //		printf("count %d\n", count);
@@ -740,71 +847,6 @@ void WindowManager::rigidBodyTest() {
 
 //Temporary testing
 void WindowManager::mainLoop() {
-
-	/*HeatParticleShader pShader;
-	
-	HeatParticleSystem pSystem;
-	HeatParticleGeometry pGeometry;
-	HeatParticleMat pMat(0.07f);
-
-	Drawable pDrawable(&pMat, &pGeometry);
-
-#define PI 3.14159265359f
-	
-	float initialVelocity = 7.0f;
-	float lifespan = 0.2f;
-	float heat = 0.2f;
-	float divergenceAngle = PI/8.f;
-	const int particlesPerStep = 250;
-	
-	Disk particleSpawner(0.05f, vec3(0.f, 0.f, 0.f), vec3(0, 1.f, 0));
-
-	for (int i = 0; i < 500; i++) {
-		pSystem.addParticleFromDisk(particleSpawner, initialVelocity, 
-			heat, lifespan, divergenceAngle);
-	}
-
-	float timeElapsed = 0.f;
-
-	float thrust = 0.f;
-
-	glClearColor(0.f, 0.f, 0.0f, 0.f);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-	while (!glfwWindowShouldClose(window)) {
-		glDepthMask(GL_TRUE);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glDepthMask(GL_FALSE);
-
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-			thrust = std::min(thrust + 0.02f, 1.f);
-		else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-			thrust = std::max(thrust - 0.02f, 0.f);
-
-		float currentTime = glfwGetTime();
-		float timeOffset = 0.f;
-		for(int i=0; i<int((0.f+2.f*thrust)*float(particlesPerStep)/2.f); i++){
-			float newHeat = heat*(float(rand()) / float(RAND_MAX))*(0.75f + thrust/4.f);
-			pSystem.addParticleFromDisk(particleSpawner, initialVelocity*(0.5f+thrust/2.f),
-				newHeat, lifespan, divergenceAngle*(1.f - thrust)*2.f, timeOffset);
-			timeOffset += (currentTime - timeElapsed) / float(particlesPerStep);
-		}
-
-		pSystem.runSimulation((currentTime - timeElapsed)*0.5f);
-
-		pGeometry.loadParticles(pSystem.particles.data(), pSystem.particles.size());
-
-		pShader.draw(cam, pDrawable);
-
-		timeElapsed = currentTime;
-
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-	}
-
-	return;*/
-
 	//Original main loop
 
 	//Test
@@ -867,29 +909,28 @@ void WindowManager::mainLoop() {
 	}
 
 	//Dragon
-	ElementGeometry dragonGeom = objToElementGeometry("models/dragon.obj");
 	Drawable dragon(
-		new ColorMat(vec3(0.75f, 0.1f, 0.3f)),
-		&dragonGeom);
+		objToElementGeometry("models/dragon.obj"),
+		new ColorMat(vec3(0.75f, 0.1f, 0.3f)));
 	dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
 
 	Drawable texSquare(
-		new TextureMat(fbTex.getTexture(GL_COLOR_ATTACHMENT0)),
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
+		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
+		new TextureMat(fbTex.getTexture(GL_COLOR_ATTACHMENT0)));
 
 	texSquare.addMaterial(new TextureMat(pnFbo.getTexture(GL_COLOR_ATTACHMENT0), TextureMat::POSITION));
 	texSquare.addMaterial(new TextureMat(pnFbo.getTexture(GL_COLOR_ATTACHMENT1), TextureMat::NORMAL));
 
 	SimpleTexShader texShader;
 	SimpleShader shader;
-	TorranceSparrowShader tsShader;
-	TorranceSparrowShader tsTexShader(
+	BlinnPhongShader bpShader;
+	BlinnPhongShader bpTexShader(
 	{ { GL_VERTEX_SHADER, "#define USING_TEXTURE\n" },
 	{ GL_FRAGMENT_SHADER, "#define USING_TEXTURE\n"} });
 
 	fbTex.use();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	tsShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
+	bpShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
 
 	fbWindow.use();
 
@@ -941,30 +982,148 @@ void WindowManager::mainLoop() {
 /*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		for (int i = 0; i < drawables.size(); i++) {
 			if (drawables[i].getMaterial(TextureMat::id) != nullptr) {
-				tsTexShader.draw(cam, lightPos, drawables[i]);
+				bpTexShader.draw(cam, lightPos, drawables[i]);
 			}
 			else
-				tsShader.draw(cam, lightPos, drawables[i]);
+				bpShader.draw(cam, lightPos, drawables[i]);
 		}
 		//texShader.draw(cam, debugSquare);
 */
 		
 
 //		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//		tsShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
+//		bpShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
 	}
 
-	delete texSquare.getMaterial(TextureMat::id);
-	delete texSquare.getGeometryPtr();
+	glfwTerminate();
+}
 
-	delete dragon.getMaterial(ColorMat::id);
-	delete dragon.getMaterial(ShadedMat::id);
+void WindowManager::particleLoop() {
+	HeatParticleShader pShader;
 
-	fbTex.deleteFramebuffer();
-	fbTex.deleteTextures();
+	HeatParticleSystem pSystem;
+	shared_ptr<HeatParticleGeometry> pGeometry (new HeatParticleGeometry());
+	shared_ptr<HeatParticleMat> pMat(new HeatParticleMat(0.07f));
+
+	Drawable pDrawable(pGeometry, pMat);
+
+#define PI 3.14159265359f
+
+	float initialVelocity = 7.0f;
+	float lifespan = 0.2f;
+	float heat = 0.2f;
+	float divergenceAngle = PI/8.f;
+	const int particlesPerStep = 250;
+
+#undef PI
+
+	Disk particleSpawner(0.05f, vec3(0.f, 0.f, 0.f), vec3(0, 1.f, 0));
+
+	for (int i = 0; i < 500; i++) {
+	pSystem.addParticleFromDisk(particleSpawner, initialVelocity,
+	heat, lifespan, divergenceAngle);
+	}
+
+	float timeElapsed = 0.f;
+
+	float thrust = 0.f;
+
+	glClearColor(0.f, 0.f, 0.0f, 0.f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+	while (!glfwWindowShouldClose(window)) {
+		glDepthMask(GL_TRUE);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDepthMask(GL_FALSE);
+
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		thrust = std::min(thrust + 0.02f, 1.f);
+		else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		thrust = std::max(thrust - 0.02f, 0.f);
+
+		float currentTime = glfwGetTime();
+		float timeOffset = 0.f;
+		for(int i=0; i<int((0.f+2.f*thrust)*float(particlesPerStep)/2.f); i++){
+		float newHeat = heat*(float(rand()) / float(RAND_MAX))*(0.75f + thrust/4.f);
+		pSystem.addParticleFromDisk(particleSpawner, initialVelocity*(0.5f+thrust/2.f),
+		newHeat, lifespan, divergenceAngle*(1.f - thrust)*2.f, timeOffset);
+		timeOffset += (currentTime - timeElapsed) / float(particlesPerStep);
+		}
+
+		pSystem.runSimulation((currentTime - timeElapsed)*0.5f);
+
+		pGeometry->loadParticles(pSystem.particles.data(), pSystem.particles.size());
+
+		pShader.draw(cam, pDrawable);
+
+		timeElapsed = currentTime;
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+}
+
+void WindowManager::testLoop() {
+
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+	//glfwSetCursorPosCallback(window, cursorPositionCallback);
+
+	//Testing object creation
+	GLTexture tex1 = createTextureID();
+	tex1.print();
+
+	{
+		GLTexture tex4 = createTextureID();
+		tex4 = tex1;
+		tex4.print();
+		tex1.print();
+	}
+	tex1.print();
+	GLTexture tex2 = createTextureID();
+	tex2.print();
+	tex1 = tex2;
+	tex1.print();
+	tex2.print();
+	GLTexture tex3(tex1);
+	tex3.print();
+	tex1.print();
+
+	{
+		GLTexture tex5 = createTextureID();
+		tex5.print();
+	}
+
+
+
+
+	//Dragon
+	Drawable dragon(
+		objToElementGeometry("models/dragon.obj"),
+		new ColorMat(vec3(0.75f, 0.1f, 0.3f)));
+	dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
+
+	vec3 lightPos(10.f, 10.f, 10.f);
+
+	BlinnPhongShaderT bpShader;
+
+	while (!glfwWindowShouldClose(window)) {
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+		}
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		bpShader.draw(cam, lightPos, dragon);
+			
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
 
 	glfwTerminate();
 }
@@ -992,20 +1151,21 @@ void WindowManager::objLoadingLoop() {
 //
 	MeshInfoLoader minfo("models/dragon.obj");
 //	MeshInfoLoader minfo("untrackedmodels/riccoSurface/riccoSurface.obj");
-	StreamGeometry<vec3, vec3, unsigned char> streamGeometry(minfo.vertices.size(), 
-	{ false, false, true});
-	streamGeometry.loadElementArray(minfo.indices.size(), GL_STATIC_DRAW, minfo.indices.data());
+	shared_ptr<StreamGeometry<vec3, vec3, unsigned char>> streamGeometry(
+		new StreamGeometry<vec3, vec3, unsigned char>(minfo.vertices.size(), { false, false, true}));
+	streamGeometry->loadElementArray(minfo.indices.size(), GL_STATIC_DRAW, minfo.indices.data());
 
 	vector<unsigned char> colors(minfo.vertices.size(), 1);
 
-	streamGeometry.loadBuffer<POSITION>(minfo.vertices.data());
-	streamGeometry.loadBuffer<NORMAL>(minfo.normals.data());
-	streamGeometry.loadBuffer<COLOR>(colors.data());
+	streamGeometry->loadBuffer<POSITION>(minfo.vertices.data());
+	streamGeometry->loadBuffer<NORMAL>(minfo.normals.data());
+	streamGeometry->loadBuffer<COLOR>(colors.data());
 
-	drawables.push_back(Drawable(new ShadedMat(0.3, 0.4, 0.4, 10.f), &streamGeometry));
+	drawables.push_back(Drawable(streamGeometry));
+		drawables[0].addMaterial(new ShadedMat(0.3, 0.4, 0.4, 10.f));
 	drawables[0].addMaterial(new ColorSetMat({ vec3(1, 0, 0), vec3(0, 0, 1) }));
 
-	TorranceSparrowShader tsShader;
+	BlinnPhongShader bpShader;
 	ColorShader colorShader(2);
 
 	for (int i = 0; i < drawables.size(); i++) {
@@ -1038,7 +1198,7 @@ void WindowManager::objLoadingLoop() {
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		int writeIndex = streamGeometry.buffManager.getWrite();
+		int writeIndex = streamGeometry->buffManager.getWrite();
 
 		interval++;
 		if (interval >= maxInterval) {
@@ -1048,27 +1208,27 @@ void WindowManager::objLoadingLoop() {
 
 		for (int i = 0; i < drawables.size(); i++) {
 			colorShader.draw(cam, lightPos, drawables[i]);
-//			tsShader.draw(cam, lightPos, drawables[i]);
+//			bpShader.draw(cam, lightPos, drawables[i]);
 		}
 	
 //		int bufferNum = streamGeometry.buffManager.getWrite();
 		int offset = 0;
-		unsigned char *color = streamGeometry.vboPointer<COLOR>();
+		unsigned char *color = streamGeometry->vboPointer<COLOR>();
 		const int UPDATE_NUM = 10000;
 		for (int i = 0; i < UPDATE_NUM; i++) {
-			if (counter + i >= streamGeometry.getBufferSize() && offset == 0) {
-				offset = -int(streamGeometry.getBufferSize());
+			if (counter + i >= streamGeometry->getBufferSize() && offset == 0) {
+				offset = -int(streamGeometry->getBufferSize());
 				drawColor = (drawColor == 0) ? 1 : 0;
 			}
 			int index = (counter + i) + offset;
 //			color[index] = (color[index] == 0)?  1 : 0;
-			streamGeometry.modify<COLOR>(index, drawColor);
+			streamGeometry->modify<COLOR>(index, drawColor);
 		}
 
 		counter = counter+UPDATE_NUM+offset;
 		
-		streamGeometry.dump<COLOR>();
-		streamGeometry.buffManager.endWrite();
+		streamGeometry->dump<COLOR>();
+		streamGeometry->buffManager.endWrite();
 		
 		if (frameTimeSamples > 30) {
 			cout << "Time per frame = " << frameTime / double(frameTimeSamples) << endl;
@@ -1110,7 +1270,7 @@ void initGLExtensions() {
 GLFWwindow *createWindow(int width, int height, std::string name)
 {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	
 	GLFWwindow *window = glfwCreateWindow(

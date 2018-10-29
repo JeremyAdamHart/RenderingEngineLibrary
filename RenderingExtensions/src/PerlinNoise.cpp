@@ -24,7 +24,7 @@ PerlinNoiseShader2D::PerlinNoiseShader2D(map<GLenum, string> defines) {
 bool PerlinNoiseShader2D::createProgram(map<GLenum, string> defines) {
 	programID = createGLProgram(shaders, defines);
 
-	return programID != 0;
+	return programID;
 }
 
 void PerlinNoiseShader2D::calculateUniformLocations() {

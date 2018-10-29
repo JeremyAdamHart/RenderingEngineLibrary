@@ -13,4 +13,6 @@ void ColorMat::loadUniforms(GLint *locations) const {
 	glUniform4f(locations[COLOR_LOCATION], color.x, color.y, color.z, color.a);
 }
 
+//int ColorMat::getUniformNum() const { return COUNT; }
+
 }
