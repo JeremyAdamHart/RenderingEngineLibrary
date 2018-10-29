@@ -40,6 +40,7 @@ public:
 	void objLoadingLoop();
 	void rigidBodyTest();
 	void testLoop();
+	void waveSimulationLoop(int numSegments, float dt);
 };
 
 void initGLExtensions();

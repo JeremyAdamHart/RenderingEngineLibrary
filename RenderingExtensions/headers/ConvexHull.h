@@ -60,6 +60,10 @@ public:
 		}
 	}
 
+	bool valid(Index i) {
+		return (i.index >= 0) && (i.index < timestamp.size()) && (timestamp[i.index] == i.timestamp);
+	}
+
 	void remove(Index i) {
 		emptySlots.push_back(i.index);
 		timestamp[i.index]++;
@@ -359,19 +363,21 @@ public:
 				edges.remove(e_pair);
 				edges.remove(e);
 
-				e = e_next;	//Increment to next edge
+				//e = e_next;	//Increment to next edge
 			}
 			else {
 				returnedEdge = e;
 				edges[e].face = SlotMap<Face<P>>::Index();
 
-				e = edges[e].next;	//Increment to next edge
+				//e = edges[e].next;	//Increment to next edge
 			}
 
 		}	// while (e != faces[f].edge);
 
 		faces.remove(f);
 
+		if (!edges.valid(returnedEdge))
+			printf("Invalid edge returned\n");
 		return returnedEdge;
 		
 	}
@@ -701,8 +707,8 @@ void convexHullIteration(HalfEdgeMesh<P>& mesh, const std::vector<P>& points) {
 
 	const float MINIMUM_PROJECTED_DISTANCE = 0.2f;
 	float maxProjectedDistance = 0.f;
-	const int MIN_FACES_CHECKED = 3;
-	const int MAX_FACES_CHECKED = 10;
+	const int MIN_FACES_CHECKED = 20;
+	const int MAX_FACES_CHECKED = 40;
 	int facesChecked = 0;
 	do {
 		SlotMap<Face<vec3>>::Index extrudedFace = mesh.faces.random();
@@ -718,7 +724,7 @@ void convexHullIteration(HalfEdgeMesh<P>& mesh, const std::vector<P>& points) {
 
 		facesChecked++;
 	} while (
-		(maxProjectedDistance <= MINIMUM_PROJECTED_DISTANCE || facesChecked >= MIN_FACES_CHECKED)
+		(maxProjectedDistance <= MINIMUM_PROJECTED_DISTANCE || facesChecked <= MIN_FACES_CHECKED)
 		&& facesChecked <= MAX_FACES_CHECKED);
 
 	std::vector<SlotMap<Face<vec3>>::Index> faceDeleteList;
@@ -734,5 +740,10 @@ void convexHullIteration(HalfEdgeMesh<P>& mesh, const std::vector<P>& points) {
 
 	if (boundaryEdge) {
 		fillBoundary(mesh, boundaryEdge, furthestPoint);
+	}
+
+	for (auto edge = mesh.edges.begin(); edge != mesh.edges.end(); ++edge) {
+		if (mesh.isBoundary(edge.toIndex()))
+			printf("Holes left in mesh\n");
 	}
 }

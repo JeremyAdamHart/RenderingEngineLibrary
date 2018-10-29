@@ -374,4 +374,24 @@ ElementGeometry objToElementGeometry(char *filename) {
 		minfo.indices.size(), GL_TRIANGLES);
 }
 
+void writeToPly(const char* filename, std::vector<glm::vec3>* vertices, std::vector<unsigned int>* faces) {
+	std::filebuf fb;
+	fb.open(filename, std::ios::out | std::ios::binary);
+	std::ostream outstream(&fb);
+	if (outstream.fail()) throw std::runtime_error("failed to open " + string(filename));
+
+	using namespace tinyply;
+
+	PlyFile plyOutput;
+
+	plyOutput.add_properties_to_element("vertex", { "x", "y", "z" },
+		Type::FLOAT32, vertices->size(), reinterpret_cast<uint8_t*>(vertices->data()), Type::INVALID, 0);
+	plyOutput.add_properties_to_element("face", { "vertex_indices" },
+		Type::UINT32, faces->size() / 3, reinterpret_cast<uint8_t*>(faces->data()), Type::UINT8, 3);
+
+	plyOutput.write(outstream, true);
+
+	fb.close();
+}
+
 }

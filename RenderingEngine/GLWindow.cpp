@@ -54,8 +54,8 @@ using namespace std;
 using namespace renderlib;
 
 TrackballCamera cam(
-	vec3(0, 0, -1), vec3(0, 0, 1),
-	glm::perspective(90.f*3.14159f/180.f, 1.f, 0.1f, 3.f));
+	vec3(0, 0, -1), vec3(0, 0, 2),
+	glm::perspective(90.f*3.14159f/180.f, 1.f, 0.1f, 100.f));
 
 bool reloadShaders = false;
 bool windowResized = false;
@@ -100,7 +100,7 @@ GLFWwindow* glfwSetup(int window_width, int window_height, string window_name) {
 	}
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 //	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);	
 
@@ -150,6 +150,113 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 
 #define M_PI 3.1415926535897932384626433832795
 #define MOD_MAX 8388608
+
+float laplacian(float left, float center, float right) { return -2.f*center + left + right; }
+
+void WindowManager::waveSimulationLoop(int numSegments, float dt) {
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetCursorPosCallback(window, cursorPositionCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	vector<float> pressuresT0(numSegments, 0);
+	vector<float> pressuresT1(numSegments, 0);
+	vector<float> pressuresT2(numSegments, 0);
+
+	float height = 10.f;
+	float leftEdge = -1.f;
+	float width = 2.f;
+
+	for (int i = 0; i < pressuresT0.size(); i++) {
+		float u = float(i) / float(pressuresT0.size()-1);
+		//pressuresT1[i] = pressuresT0[i] = sin(M_PI*6.f*u)*0.01f;
+	}
+
+	SimpleGeometry geometry(GL_LINE_STRIP);
+	Drawable waveDrawable(new ColorMat(vec3(1, 0, 0)), &geometry);
+	SimpleShader simpleShader;
+
+	float C = 0.5f;
+	float ALPHA = 0.000001f;
+
+	//pressuresT0[pressuresT0.size()/2] = pressuresT1[pressuresT0.size()/2] = 0.1f;
+
+	float timeElapsed = 0.f;
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+			cam.projection = glm::perspective(90.f*3.14159f / 180.f, float(window_width)/float(window_height), 0.1f, 100.f);
+		}
+
+
+		float height = 10.f;
+		float leftEdge = -1.f;
+		float width = 2.f;
+		float step = width / float(numSegments - 1);
+
+		
+		float frameTime = 0.f;
+		while (frameTime < 1.f / 60.f) {
+			float leftBoundary = 0.f;
+			if (C*C*timeElapsed*timeElapsed*5.f < M_PI*10.f)
+				leftBoundary = (sin(C*C*timeElapsed*timeElapsed*5.f)) / (C*timeElapsed + 0.1f)*0.01f;
+			float rightBoundary = 0.f;	//-(pressuresT1[pressuresT1.size() - 1] - pressuresT0[pressuresT0.size() - 1])+pressuresT1[pressuresT1.size()-1]; //0.f;
+			timeElapsed += dt;
+			frameTime += dt;
+
+			for (int i = 0; i < numSegments; i++) {
+
+				//Laplacian
+				float p0 = pressuresT0[i];
+				float p1 = pressuresT1[i];
+
+				//if (p0 > 0)
+					//p0 += 0.00001f;
+
+				float l0 = laplacian(
+					(i > 0) ? pressuresT0[i - 1] : leftBoundary,
+					p0,
+					(i < numSegments - 1) ? pressuresT0[i + 1] : rightBoundary
+				)/(step*step);
+				float l1 = laplacian(
+					(i > 0) ? pressuresT1[i - 1] : leftBoundary,
+					p1,
+					(i < numSegments - 1) ? pressuresT1[i + 1] : rightBoundary
+				)/(step*step);
+
+				pressuresT2[i] =
+					2.f*p1 + (C*C*dt*dt + C*ALPHA*dt)*l1
+					- p0 - C*ALPHA*dt*l0;
+					
+			}
+
+			pressuresT0 = pressuresT1;
+			pressuresT1 = pressuresT2;
+		}
+		//Update past pressures
+		//pressuresT2[0] += sin(timeElapsed)*0.1f;
+		//pressuresT0[pressuresT0.size() / 2] = pressuresT1[pressuresT0.size() / 2] = 0.1f;
+
+		vector<vec3> points;
+		for (int i = 0; i < numSegments; i++) {
+			points.push_back(vec3(leftEdge + float(i)*step, pressuresT2[i] * height, 0.f));
+		}
+		geometry.loadGeometry(points.data(), points.size());
+
+		simpleShader.draw(cam, waveDrawable);
+
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+	}
+
+	glfwTerminate();
+}
 
 float floatRand() {
 	return float(rand()) / float(RAND_MAX);
@@ -203,7 +310,7 @@ bool allDistinct(T* arr, size_t size) {
 }
 
 void WindowManager::testLoop() {
-	srand(13);	//time(0));
+	srand(time(0));	//time(0));
 
 	SlotMap<int> testMap;
 	testMap.add(1);
@@ -213,7 +320,9 @@ void WindowManager::testLoop() {
 	auto last = testMap.add(5);
 	testMap.remove(last);
 
-	MeshInfoLoader modelMinfo("models/dragon.obj");
+	MeshInfoLoader modelMinfo;	//	/*("untrackedmodels/GRCD2RNA.ply");*/ ("models/dragon.obj");
+	//modelMinfo.loadModelPly("untrackedmodels/Helianthus4.ply");
+	modelMinfo.loadModelPly("untrackedmodels/RiccoSurface.ply");
 	ElementGeometry modelGeom(modelMinfo.vertices.data(), modelMinfo.normals.data(), nullptr, 
 		modelMinfo.indices.data(), modelMinfo.vertices.size(), modelMinfo.indices.size());
 
@@ -229,7 +338,7 @@ void WindowManager::testLoop() {
 
 	cam = TrackballCamera(
 		vec3(0, 0, -1), vec3(0, 0, 5),
-		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 20.f));
+		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 150.f));
 
 	//Find starting tetrahedron for model
 	vec3 tetPoints[4];
@@ -373,6 +482,7 @@ void WindowManager::testLoop() {
 				}
 				//Expanded function here ^^^^^^^
 				*/
+
 				points.clear(); indices.clear();
 				halfEdgeToFaceList(&points, &indices, mesh);
 				normals = calculateNormalsImp(&points, &indices);
@@ -387,6 +497,14 @@ void WindowManager::testLoop() {
 		else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE){
 			iterationPressed = false;
 		}
+
+		static bool saveButtonPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && !saveButtonPressed) {
+			saveButtonPressed = true;
+			writeToPly("convexhull.ply", &points, &indices);
+		}
+		else if (glfwGetKey(window, GLFW_KEY_S) != GLFW_PRESS && saveButtonPressed)
+			saveButtonPressed = false;
 
 		static bool pKeyPressed = false;
 		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pKeyPressed) {
@@ -427,6 +545,12 @@ void WindowManager::testLoop() {
 		}
 		else if(glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE){
 			nKeyPressed = false;
+		}
+
+		static bool sKeyPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && !sKeyPressed) {
+
+
 		}
 
 		if (windowResized) {
