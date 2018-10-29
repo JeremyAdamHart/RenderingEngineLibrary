@@ -1,5 +1,5 @@
 #version 410
-#define M_PI 3.1415926535897932384626433832795
+#define M_PI 3.1415926535897932
 
 // first output is mapped to the framebuffer's colour index by default
 out vec4 FragmentColour;
