@@ -6,7 +6,7 @@ layout(location = 1) in vec3 VertexNormal;
 out vec3 TesCNormal;
 
 void main(){
-	gl_Position = VertexPosition;
+	gl_Position = vec4(VertexPosition, 1);
 	TesCNormal = VertexNormal;
 
 }

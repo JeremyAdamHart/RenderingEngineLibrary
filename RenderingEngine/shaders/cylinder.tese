@@ -14,9 +14,16 @@ out vec3 WorldNormal;
 
 #define M_PI 3.1415926535897932
 
+vec3 slerp(vec3 a, vec3 b, float u){
+	float angle = acos(dot(a, b));
+	return (sin((1-u)*angle)*a + sin(u*angle)*b)/sin(angle);
+}
+
 void main(){
-	vec3 p0 = gl_in[0].gl_Position;
-	vec3 p1 = gl_in[1].gl_Position;
+	vec3 p0 = gl_in[0].gl_Position.xyz;
+	vec3 p1 = gl_in[1].gl_Position.xyz;
+
+	vec3 dir = normalize(p1 - p0);
 
 	vec3 n0 = TesENormal[0];
 	vec3 n1 = TesENormal[1];
@@ -28,10 +35,10 @@ void main(){
 	float v = gl_TessCoord.y;
 
 	vec3 center = (1-u)*p0 + u*p1;
-	float radius = (1=u)*Radius + u*Radius;
+	float radius = (1-u)*Radius[0] + u*Radius[1];
 
-	vec3 n = normalize((1-u)*n0 + u*n1);
-	vec3 b = normalize((1-u)*b0 + u*b1);
+	vec3 n = slerp(n0, n1, u);	//normalize((1-u)*n0 + u*n1);
+	vec3 b = slerp(b0, b1, u);	//normalize((1-u)*b0 + u*b1);
 
 	vec3 normal = cos(v*2.f*M_PI)*b + sin(v*2.f*M_PI)*n;
 	vec3 position = center + normal*radius;

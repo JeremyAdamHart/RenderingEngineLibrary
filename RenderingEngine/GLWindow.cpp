@@ -1067,37 +1067,78 @@ void WindowManager::particleLoop() {
 	}
 }
 
+vector<pair<GLenum, string>> shaders{
+	{GL_VERTEX_SHADER, "shaders/cylinder.vert"},
+	{GL_FRAGMENT_SHADER, "shaders/cylinder.frag"},
+	{GL_TESS_CONTROL_SHADER, "shaders/cylinder.tesc"},
+	{GL_TESS_EVALUATION_SHADER, "shaders/cylinder.tese"}
+};
+
+constexpr int cMax(int a, int b) {
+	return (a > b) ? a : b;
+}
+
 void WindowManager::testLoop() {
 
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
-	//glfwSetCursorPosCallback(window, cursorPositionCallback);
+	//glfwSetCursorPosCallback(window, cursorPositionCallback)
 
-	//Testing object creation
-	GLTexture tex1 = createTextureID();
-	tex1.print();
+	enum {
+		VP_MATRIX_LOCATION = ShadedMat::COUNT
+		+ cMax(int(TextureMat::COUNT), int(ColorMat::COUNT)),
+		M_MATRIX_LOCATION,
+		CAMERA_POS_LOCATION,
+		LIGHT_POS_LOCATION,
+		COUNT
+	};
 
-	{
-		GLTexture tex4 = createTextureID();
-		tex4 = tex1;
-		tex4.print();
-		tex1.print();
-	}
-	tex1.print();
-	GLTexture tex2 = createTextureID();
-	tex2.print();
-	tex1 = tex2;
-	tex1.print();
-	tex2.print();
-	GLTexture tex3(tex1);
-	tex3.print();
-	tex1.print();
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	{
-		GLTexture tex5 = createTextureID();
-		tex5.print();
-	}
+	class CylinderShader : public ShaderT<ColorMat, ShadedMat> {
+	public:
+		CylinderShader() : 
+			ShaderT<ColorMat, ShadedMat>(shaders, {},
+			{ "color", "ka", "kd", "ks", "alpha",
+				"view_projection_matrix", "model_matrix",
+				"camera_position", "lightPos" }) 
+		{}
 
+		void draw(const Camera &cam, vec3 lightPos, Drawable& obj) {
+			glUseProgram(programID);
+			mat4 vp_matrix = cam.getProjectionMatrix()*cam.getCameraMatrix();
+			mat4 m_matrix = obj.getTransform();
+			vec3 camera_pos = cam.getPosition();
+
+			loadMaterialUniforms(obj);
+			glUniformMatrix4fv(uniformLocations[VP_MATRIX_LOCATION], 1, false, &vp_matrix[0][0]);
+			glUniformMatrix4fv(uniformLocations[M_MATRIX_LOCATION], 1, false, &m_matrix[0][0]);
+			glUniform3f(uniformLocations[CAMERA_POS_LOCATION], 
+				camera_pos.x, camera_pos.y, camera_pos.z);
+			glUniform3f(uniformLocations[LIGHT_POS_LOCATION],
+				lightPos.x, lightPos.y, lightPos.z);
+			obj.getGeometry().drawGeometry();
+			glUseProgram(0);
+		}
+	};
+
+	vector<vec3> points{
+		vec3(0.f, 0.f, 0.f),
+		vec3(0.f, 3.f, 0.f),
+		vec3(0.f, 4.f, 1.f)
+	};
+	vector<vec3> normals{
+		vec3(2.f, 0.f, 0.f),
+		normalize(normalize(points[1] - points[0]) + normalize(points[1] - points[2])),
+		normalize(vec3(0, 1, -1))*0.5f
+	};
+	vector<unsigned int> indices{ 0, 1, 1, 2 };
+
+	CylinderShader cShader;
+	auto geometry = make_shared<ElementGeometry>(points.data(), normals.data(), nullptr, indices.data(), 3, 4, GL_PATCHES);
+
+	Drawable cylinderDrawable(geometry, make_shared<ShadedMat>(0.3, 0.5, 0.4, 10.f));
+	cylinderDrawable.addMaterial(new ColorMat(vec3(1, 1, 1)));
 
 
 
@@ -1109,7 +1150,10 @@ void WindowManager::testLoop() {
 
 	vec3 lightPos(10.f, 10.f, 10.f);
 
+
 	BlinnPhongShaderT bpShader;
+
+	glPatchParameteri(GL_PATCH_VERTICES, 2);
 
 	while (!glfwWindowShouldClose(window)) {
 		if (windowResized) {
@@ -1119,8 +1163,9 @@ void WindowManager::testLoop() {
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		bpShader.draw(cam, lightPos, dragon);
-			
+		//bpShader.draw(cam, lightPos, dragon);
+		cShader.draw(cam, lightPos, cylinderDrawable);
+
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
 	}

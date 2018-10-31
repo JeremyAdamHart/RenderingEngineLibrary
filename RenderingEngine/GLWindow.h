@@ -29,7 +29,6 @@ protected:
 
 	int window_width, window_height;
 
-
 public:
 	WindowManager();
 	WindowManager(int width, int height, std::string name,
