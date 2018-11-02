@@ -1124,20 +1124,40 @@ void WindowManager::testLoop() {
 		}
 	};
 
+	
+
 	vector<vec3> points{
 		vec3(0.f, 0.f, 0.f),
 		vec3(0.f, 3.f, 0.f),
-		vec3(0.f, 4.f, 1.f)
+		vec3(0.f, 4.f, 1.f),
+		vec3(1.f, 4.f, 2.f),
+		vec3(2.f, 4.f, 2.f)
 	};
-	vector<vec3> normals{
+
+	/*vector<vec3> normals{
 		vec3(2.f, 0.f, 0.f),
 		normalize(normalize(points[1] - points[0]) + normalize(points[1] - points[2])),
 		normalize(vec3(0, 1, -1))*0.5f
-	};
-	vector<unsigned int> indices{ 0, 1, 1, 2 };
+	};*/
+
+	vector<vec3> normals;
+
+	normals.push_back(vec3(1, 0, 0));
+
+	for (int i = 1; i < points.size()-1; i++) {
+		normals.push_back(normalize(
+			normalize(points[i] - points[i - 1]) 
+			+ normalize(points[i] - points[i + 1]))
+		);
+
+	}
+
+	normals.push_back(normalize(cross(normals.back(), points.back() - points[points.size() - 2])));
+
+	vector<unsigned int> indices{ 0, 1, 1, 2, 2, 3, 3, 4 };
 
 	CylinderShader cShader;
-	auto geometry = make_shared<ElementGeometry>(points.data(), normals.data(), nullptr, indices.data(), 3, 4, GL_PATCHES);
+	auto geometry = make_shared<ElementGeometry>(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size(), GL_PATCHES);
 
 	Drawable cylinderDrawable(geometry, make_shared<ShadedMat>(0.3, 0.5, 0.4, 10.f));
 	cylinderDrawable.addMaterial(new ColorMat(vec3(1, 1, 1)));

@@ -52,18 +52,21 @@ void main(){
 	vec3 position = center + normal*radius;
 
 	//Normal
-	float x = Radius[1] - Radius[0];
+	/*float x = Radius[1] - Radius[0];
 	float y = length(p1-p0);
 	float xyLength = sqrt(x*x+y*y);
 	x /= xyLength;
 	y /= xyLength;
 
+	
 	vec3 cNormal = y*normalize(cos(v*2.f*M_PI)*b + sin(v*2.f*M_PI)*n)
 		+ x*normalize(p0-p1);
+	*/
 
+	vec3 cNormal =normalize(cos(v*2.f*M_PI)*b + sin(v*2.f*M_PI)*n);
 
 	WorldPosition = (model_matrix*vec4(position, 1)).xyz;
-	WorldNormal = (model_matrix*vec4(normal, 0)).xyz;
+	WorldNormal = (model_matrix*vec4(cNormal, 0)).xyz;
 
 	gl_Position = view_projection_matrix*vec4(WorldPosition, 1);
 
