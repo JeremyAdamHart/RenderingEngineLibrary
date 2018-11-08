@@ -1067,6 +1067,132 @@ void WindowManager::particleLoop() {
 	}
 }
 
+vector<vec3> generateSpacePoints(int numPoints) {
+	vector<vec3> spacePoints;
+	srand(time(0));
+	//mat3 rotateMatrix(cos(M_PI / 4.f), -sin(M_PI / 4.f), 0.f, sin(M_PI / 4.f), cos(M_PI / 4.f), 0.f, 0.f, 0.f, 1.f);
+	for (int i = 0; i < numPoints; i++) {
+		spacePoints.push_back(vec3(
+			2.f*floatRand() - 1.f,
+			2.f*floatRand() - 1.f,
+			2.f*floatRand() - 1.f));
+	}
+
+	return spacePoints;
+}
+
+vector<vec3> removeNearbyPoints(const vector<vec3>& removedVector, const vector<vec3>& points, float radius) {
+	vector<vec3> returnVector;
+	for (vec3 vectorPoint : removedVector) {
+		for (vec3 point : points) {
+			if (dot(point - vectorPoint, point - vectorPoint) > radius*radius) {
+				returnVector.push_back(vectorPoint);
+				break;
+			}
+		}
+	}
+
+	return returnVector;
+}
+
+vector<vec3> getDirectionVectors(const vector<vec3>& points, vec3 origin, float radius, float falloff) {
+	vector<vec3> directionVectors;
+
+	for (vec3 point : points) {
+		vec3 vec = point - origin;
+		float vec_length_squared = dot(vec, vec);
+		if (vec_length_squared < radius*radius) {
+			float vec_length = sqrt(vec_length_squared);
+			vec = vec / vec_length * (radius - vec_length) / radius;
+			directionVectors.push_back(vec);
+		}
+	}
+
+	return directionVectors;
+}
+
+vec3 powerIteration(mat3 matrix, vec3 startVector, vector<vec3> eigenvectors, int iterations) {
+	vec3 previousEigenvector = vec3(0);
+	vec3 currentEigenvector = startVector;;
+
+	for (vec3& eigenvector : eigenvectors) {
+		eigenvector = normalize(eigenvector);
+	}
+
+	for (int i = 0; i < iterations; i++) {
+		vec3 newEigenvector = matrix*normalize(currentEigenvector);
+		previousEigenvector = normalize(currentEigenvector);
+
+		//Remove other eigenvectors
+		for (vec3 eigenvector : eigenvectors) {
+			newEigenvector -= dot(eigenvector, newEigenvector)*eigenvector;
+		}
+		currentEigenvector = newEigenvector;
+	}
+
+	return normalize(currentEigenvector)*length(currentEigenvector) / length(previousEigenvector);
+}
+
+mat3 calculateCovariance(const vector<vec3>& data) {
+	mat3 covariance (0);
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = i; j < 3; j++) {
+			for (vec3 point : data) {
+				covariance[i][j] += point[i] * point[j];
+				covariance[j][i] += point[i] * point[j];
+			}
+		}
+	}
+
+	return covariance / float(data.size() - 1);
+}
+
+mat3 getEigenvectors(const vector<vec3>& data, vec3 point, float radius) {
+	vector<vec3> directionVectors = getDirectionVectors(data, point, radius, 0.f);
+	if (directionVectors.size() < 10)
+		return mat3(0);
+	mat3 covariance = calculateCovariance(directionVectors);
+	vec3 axis0 = powerIteration(covariance, vec3(1, 0, 0), {}, 30);
+	vec3 axis1 = powerIteration(covariance, vec3(0, 1, 0), { axis0 }, 30);
+	vec3 axis2 = powerIteration(covariance, vec3(0, 0, 1), { axis0, axis1 }, 30);
+
+	return mat3(axis0, axis1, axis2);
+}
+
+vector<vec3> traceParticle(const vector<vec3>& points, vec3 particle, vec3 heading, float radius, float speed, bool canSplit) {
+	mat3 eigenvectors = getEigenvectors(points, particle+heading*speed, radius);
+	vec3 eigenvalues(length(eigenvectors[0]), length(eigenvectors[1]), length(eigenvectors[2]));
+
+	vector<vec3> newParticle; 
+
+	if (eigenvalues[0] < 0.00001f)
+		return{};
+
+	vec3 tropism = vec3(0, 0.2f, 0)*eigenvalues[0];
+
+	if (canSplit && eigenvalues[0] < 1.2f*eigenvalues[1]) {
+		newParticle.push_back(particle + speed*normalize(
+			heading*length(eigenvectors[0]) + eigenvectors[0] + 2.f*eigenvectors[1] + tropism));
+		newParticle.push_back(particle + speed*normalize(
+			heading + eigenvectors[0] * length(eigenvectors[0]) - 2.f*eigenvectors[1] + tropism));
+	}
+	else {
+		newParticle.push_back(particle + speed*normalize(
+			heading*length(eigenvectors[0]) + eigenvectors[0] + tropism));
+	}
+
+	return newParticle;
+}
+
+vector<vec3> reallyBasicSpaceColonization() {
+	vector<vec3> spacePoints = generateSpacePoints(1000);
+
+
+	return{};
+
+}
+
 vector<pair<GLenum, string>> shaders{
 	{GL_VERTEX_SHADER, "shaders/cylinder.vert"},
 	{GL_FRAGMENT_SHADER, "shaders/cylinder.frag"},
@@ -1099,11 +1225,11 @@ void WindowManager::testLoop() {
 
 	class CylinderShader : public ShaderT<ColorMat, ShadedMat> {
 	public:
-		CylinderShader() : 
+		CylinderShader() :
 			ShaderT<ColorMat, ShadedMat>(shaders, {},
 			{ "color", "ka", "kd", "ks", "alpha",
 				"view_projection_matrix", "model_matrix",
-				"camera_position", "lightPos" }) 
+				"camera_position", "lightPos" })
 		{}
 
 		void draw(const Camera &cam, vec3 lightPos, Drawable& obj) {
@@ -1115,7 +1241,7 @@ void WindowManager::testLoop() {
 			loadMaterialUniforms(obj);
 			glUniformMatrix4fv(uniformLocations[VP_MATRIX_LOCATION], 1, false, &vp_matrix[0][0]);
 			glUniformMatrix4fv(uniformLocations[M_MATRIX_LOCATION], 1, false, &m_matrix[0][0]);
-			glUniform3f(uniformLocations[CAMERA_POS_LOCATION], 
+			glUniform3f(uniformLocations[CAMERA_POS_LOCATION],
 				camera_pos.x, camera_pos.y, camera_pos.z);
 			glUniform3f(uniformLocations[LIGHT_POS_LOCATION],
 				lightPos.x, lightPos.y, lightPos.z);
@@ -1124,7 +1250,7 @@ void WindowManager::testLoop() {
 		}
 	};
 
-	
+
 
 	vector<vec3> points{
 		vec3(0.f, 0.f, 0.f),
@@ -1144,9 +1270,9 @@ void WindowManager::testLoop() {
 
 	normals.push_back(vec3(1, 0, 0));
 
-	for (int i = 1; i < points.size()-1; i++) {
+	for (int i = 1; i < points.size() - 1; i++) {
 		normals.push_back(normalize(
-			normalize(points[i] - points[i - 1]) 
+			normalize(points[i] - points[i - 1])
 			+ normalize(points[i] - points[i + 1]))
 		);
 
@@ -1162,7 +1288,35 @@ void WindowManager::testLoop() {
 	Drawable cylinderDrawable(geometry, make_shared<ShadedMat>(0.3, 0.5, 0.4, 10.f));
 	cylinderDrawable.addMaterial(new ColorMat(vec3(1, 1, 1)));
 
+	//Space colonization visualization
+	vector<vec3> spacePoints = generateSpacePoints(10000);
+	/*vec3 meanPoint(0);
+	for (vec3 point : spacePoints) {
+		meanPoint += point;
+	}
+	meanPoint /= float(spacePoints.size());
 
+	vector<vec3> nearbyPoints = getDirectionVectors(spacePoints, meanPoint, 2.f, 0.f);
+	mat3 covariance = calculateCovariance(nearbyPoints);
+	vec3 axis0 = powerIteration(covariance, vec3(1, 0, 0), {}, 30);
+	vec3 axis1 = powerIteration(covariance, vec3(0, 1, 0), { axis0 }, 30);
+	vec3 axis2 = powerIteration(covariance, vec3(0, 0, 1), { axis0, axis1 }, 30);
+
+	vector<vec3> lines = { meanPoint, axis0, meanPoint, axis1, meanPoint, axis2 };*/
+
+	vector<vec3> treePoints = { vec3(0, -1, 0), vec3(0, -0.96, 0) };
+	vector<vec3> treeEndpoints = { treePoints.back() };
+	vector<vec3> treeHeadings = { vec3(0, 1, 0) };
+	vector<float> branchingCountdown = { 4.f };
+
+	auto spacePointGeometry = make_shared<SimpleGeometry>(spacePoints.data(), spacePoints.size(), GL_POINTS);
+	Drawable spacePointDrawable(spacePointGeometry, make_shared<ColorMat>(vec3(1.f, 0.f, 0.f)));
+	//Drawable eigenvectorDrawable(new SimpleGeometry(lines.data(), lines.size(), GL_LINES), new ColorMat(vec3(0.f, 1.f, 0.f)));
+
+	auto treeGeometry = make_shared<SimpleGeometry>(treePoints.data(), treePoints.size(), GL_LINES);
+	Drawable treeDrawable(treeGeometry, make_shared<ColorMat>(vec3(0, 1, 0)));
+
+	SimpleShader simpleShader;
 
 	//Dragon
 	Drawable dragon(
@@ -1185,8 +1339,40 @@ void WindowManager::testLoop() {
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		static bool spacePressed = false;
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !spacePressed) {
+			spacePressed = true;
+		}
+		else if (spacePressed && glfwGetKey(window, GLFW_KEY_SPACE) != GLFW_PRESS) {
+			//Space colonization
+			float radius = 0.4f;
+			float speed = 0.2f;
+			vector<vec3> treeNewEndpoints;
+			vector<vec3> treeNewHeadings;
+			for (int i = 0; i < treeEndpoints.size(); i++) {
+				vector<vec3> newParticles = traceParticle(spacePoints, treeEndpoints[i], treeHeadings[i], radius, speed, true);
+				for (vec3 particle : newParticles) {
+					treeNewEndpoints.push_back(particle);
+					treeNewHeadings.push_back(normalize(particle - treeEndpoints[i]));
+					treePoints.push_back(treeEndpoints[i]);
+					treePoints.push_back(particle);
+				}
+			}
+
+			treeEndpoints.swap(treeNewEndpoints);
+			treeHeadings.swap(treeNewHeadings);
+			treeGeometry->loadGeometry(treePoints.data(), treePoints.size());
+
+			spacePoints = removeNearbyPoints(spacePoints, treeEndpoints, speed*2.f);
+			spacePointGeometry->loadGeometry(spacePoints.data(), spacePoints.size());
+			spacePressed = false;
+		}
+
 		//bpShader.draw(cam, lightPos, dragon);
-		cShader.draw(cam, lightPos, cylinderDrawable);
+		//cShader.draw(cam, lightPos, cylinderDrawable);
+		simpleShader.draw(cam, spacePointDrawable);
+		//simpleShader.draw(cam, eigenvectorDrawable);
+		simpleShader.draw(cam, treeDrawable);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
