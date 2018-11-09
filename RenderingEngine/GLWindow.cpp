@@ -1103,7 +1103,7 @@ vector<vec3> getDirectionVectors(const vector<vec3>& points, vec3 origin, float 
 		float vec_length_squared = dot(vec, vec);
 		if (vec_length_squared < radius*radius) {
 			float vec_length = sqrt(vec_length_squared);
-			vec = vec / vec_length * (radius - vec_length) / radius;
+			vec = vec * pow((radius - vec_length) / radius, falloff)/ vec_length;
 			directionVectors.push_back(vec);
 		}
 	}
@@ -1149,13 +1149,25 @@ mat3 calculateCovariance(const vector<vec3>& data) {
 }
 
 mat3 getEigenvectors(const vector<vec3>& data, vec3 point, float radius) {
-	vector<vec3> directionVectors = getDirectionVectors(data, point, radius, 0.f);
+	vector<vec3> directionVectors = getDirectionVectors(data, point, radius, 2.f);
 	if (directionVectors.size() < 10)
 		return mat3(0);
 	mat3 covariance = calculateCovariance(directionVectors);
 	vec3 axis0 = powerIteration(covariance, vec3(1, 0, 0), {}, 30);
 	vec3 axis1 = powerIteration(covariance, vec3(0, 1, 0), { axis0 }, 30);
 	vec3 axis2 = powerIteration(covariance, vec3(0, 0, 1), { axis0, axis1 }, 30);
+
+	vec3 average(0);
+	for (vec3 vec : directionVectors) {
+		average += vec;
+	}
+	average /= float(directionVectors.size());
+	if (dot(axis0, average) < 0)
+		axis0 *= -1.f;
+	if (dot(axis1, average) < 0)
+		axis1 *= -1.f;
+	if (dot(axis2, average) < 0)
+		axis2 *= -1.f;
 
 	return mat3(axis0, axis1, axis2);
 }
@@ -1169,7 +1181,7 @@ vector<vec3> traceParticle(const vector<vec3>& points, vec3 particle, vec3 headi
 	if (eigenvalues[0] < 0.00001f)
 		return{};
 
-	vec3 tropism = vec3(0, 0.2f, 0)*eigenvalues[0];
+	vec3 tropism = vec3(0, 1, 0)*eigenvalues[0];
 
 	if (canSplit && eigenvalues[0] < 1.2f*eigenvalues[1]) {
 		newParticle.push_back(particle + speed*normalize(
@@ -1345,20 +1357,23 @@ void WindowManager::testLoop() {
 		}
 		else if (spacePressed && glfwGetKey(window, GLFW_KEY_SPACE) != GLFW_PRESS) {
 			//Space colonization
-			float radius = 0.4f;
-			float speed = 0.2f;
+			float radius = 0.3f;
+			float speed = 0.05f;
 			vector<vec3> treeNewEndpoints;
 			vector<vec3> treeNewHeadings;
+			vector<float> newBranchingCountdown;
 			for (int i = 0; i < treeEndpoints.size(); i++) {
-				vector<vec3> newParticles = traceParticle(spacePoints, treeEndpoints[i], treeHeadings[i], radius, speed, true);
+				vector<vec3> newParticles = traceParticle(spacePoints, treeEndpoints[i], treeHeadings[i], radius, speed, branchingCountdown[i] <= 0.f);
 				for (vec3 particle : newParticles) {
 					treeNewEndpoints.push_back(particle);
 					treeNewHeadings.push_back(normalize(particle - treeEndpoints[i]));
 					treePoints.push_back(treeEndpoints[i]);
 					treePoints.push_back(particle);
+					newBranchingCountdown.push_back((newParticles.size() == 1) ? branchingCountdown[i] - 1.f : 4.f);
 				}
 			}
 
+			branchingCountdown.swap(newBranchingCountdown);
 			treeEndpoints.swap(treeNewEndpoints);
 			treeHeadings.swap(treeNewHeadings);
 			treeGeometry->loadGeometry(treePoints.data(), treePoints.size());
