@@ -1067,15 +1067,46 @@ void WindowManager::particleLoop() {
 	}
 }
 
+struct TreeNode {
+	vec3 pos;
+	vec3 normal;
+	float radius;
+	shared_ptr<TreeNode> prev;
+
+	TreeNode(vec3 _pos, float _radius, shared_ptr<TreeNode> _prev) :pos(_pos), normal(vec3(0)), radius(_radius), prev(_prev) {}
+};
+
+vec3 getCylinderJoint(TreeNode current) {
+	if (length(current.prev->normal) > 0)
+		return current.prev->normal;
+
+	vec3 v2 = normalize(current.pos - current.prev->pos);
+	vec3 v1 = normalize(current.prev->prev->pos - current.prev->pos);
+
+	return normalize(-v1 - v2)*current.prev->radius;
+}
+
+vec3 getCapVector(TreeNode current, vec3 prevVector) {
+	vec3 cylinderDirection = normalize(current.pos - current.prev->pos);
+	vec3 projVector = dot(prevVector, cylinderDirection)*cylinderDirection;
+	vec3 capVector = normalize(prevVector - projVector)*current.radius;
+
+	return capVector;
+}
+
+vec3 getCylinderDirection(TreeNode current) {
+	return normalize(current.pos - current.prev->pos);
+}
+
 vector<vec3> generateSpacePoints(int numPoints) {
 	vector<vec3> spacePoints;
 	srand(time(0));
 	//mat3 rotateMatrix(cos(M_PI / 4.f), -sin(M_PI / 4.f), 0.f, sin(M_PI / 4.f), cos(M_PI / 4.f), 0.f, 0.f, 0.f, 1.f);
 	for (int i = 0; i < numPoints; i++) {
 		spacePoints.push_back(vec3(
-			2.f*floatRand() - 1.f,
-			2.f*floatRand() - 1.f,
-			2.f*floatRand() - 1.f));
+			1.f*(floatRand() - 0.5f),
+			2.f*(floatRand() - 0.5f),
+			1.f*(floatRand() - 0.5f)));
 	}
 
 	return spacePoints;
@@ -1084,12 +1115,16 @@ vector<vec3> generateSpacePoints(int numPoints) {
 vector<vec3> removeNearbyPoints(const vector<vec3>& removedVector, const vector<vec3>& points, float radius) {
 	vector<vec3> returnVector;
 	for (vec3 vectorPoint : removedVector) {
+		bool remove = false;
 		for (vec3 point : points) {
-			if (dot(point - vectorPoint, point - vectorPoint) > radius*radius) {
-				returnVector.push_back(vectorPoint);
+			if (dot(point - vectorPoint, point - vectorPoint) < radius*radius) {
+				remove = true;
 				break;
 			}
 		}
+
+		if (!remove)
+			returnVector.push_back(vectorPoint);
 	}
 
 	return returnVector;
@@ -1113,7 +1148,7 @@ vector<vec3> getDirectionVectors(const vector<vec3>& points, vec3 origin, float 
 
 vec3 powerIteration(mat3 matrix, vec3 startVector, vector<vec3> eigenvectors, int iterations) {
 	vec3 previousEigenvector = vec3(0);
-	vec3 currentEigenvector = startVector;;
+	vec3 currentEigenvector = startVector;
 
 	for (vec3& eigenvector : eigenvectors) {
 		eigenvector = normalize(eigenvector);
@@ -1149,7 +1184,7 @@ mat3 calculateCovariance(const vector<vec3>& data) {
 }
 
 mat3 getEigenvectors(const vector<vec3>& data, vec3 point, float radius) {
-	vector<vec3> directionVectors = getDirectionVectors(data, point, radius, 2.f);
+	vector<vec3> directionVectors = getDirectionVectors(data, point, radius, 1.f);
 	if (directionVectors.size() < 10)
 		return mat3(0);
 	mat3 covariance = calculateCovariance(directionVectors);
@@ -1169,6 +1204,22 @@ mat3 getEigenvectors(const vector<vec3>& data, vec3 point, float radius) {
 	if (dot(axis2, average) < 0)
 		axis2 *= -1.f;
 
+	if (length(axis0) < length(axis1)) {
+		vec3 temp = axis1;
+		axis1 = axis0;
+		axis0 = temp;
+	}
+	if (length(axis0) < length(axis2)) {
+		vec3 temp = axis2;
+		axis2 = axis0;
+		axis0 = temp;
+	}
+	if (length(axis1) < length(axis2)) {
+		vec3 temp = axis2;
+		axis2 = axis1;
+		axis1 = temp;
+	}
+
 	return mat3(axis0, axis1, axis2);
 }
 
@@ -1181,17 +1232,17 @@ vector<vec3> traceParticle(const vector<vec3>& points, vec3 particle, vec3 headi
 	if (eigenvalues[0] < 0.00001f)
 		return{};
 
-	vec3 tropism = vec3(0, 1, 0)*eigenvalues[0];
+	vec3 tropism = vec3(0, 0.4, 0)*eigenvalues[0];
 
-	if (canSplit && eigenvalues[0] < 1.2f*eigenvalues[1]) {
+	if (canSplit && eigenvalues[0] > eigenvalues[1]) {
 		newParticle.push_back(particle + speed*normalize(
-			heading*length(eigenvectors[0]) + eigenvectors[0] + 2.f*eigenvectors[1] + tropism));
+			1.f*heading*length(eigenvectors[0]) + eigenvectors[0] + 4.f*eigenvectors[1] + tropism));
 		newParticle.push_back(particle + speed*normalize(
-			heading + eigenvectors[0] * length(eigenvectors[0]) - 2.f*eigenvectors[1] + tropism));
+			1.f*heading*length(eigenvectors[0]) + eigenvectors[0] - 4.f*eigenvectors[1] + tropism));
 	}
 	else {
 		newParticle.push_back(particle + speed*normalize(
-			heading*length(eigenvectors[0]) + eigenvectors[0] + tropism));
+			1.f*heading*length(eigenvectors[0]) + eigenvectors[0] + tropism));
 	}
 
 	return newParticle;
@@ -1300,6 +1351,9 @@ void WindowManager::testLoop() {
 	Drawable cylinderDrawable(geometry, make_shared<ShadedMat>(0.3, 0.5, 0.4, 10.f));
 	cylinderDrawable.addMaterial(new ColorMat(vec3(1, 1, 1)));
 
+	//Terrible code to solve temporary problem
+	indices.clear();
+
 	//Space colonization visualization
 	vector<vec3> spacePoints = generateSpacePoints(10000);
 	/*vec3 meanPoint(0);
@@ -1316,10 +1370,16 @@ void WindowManager::testLoop() {
 
 	vector<vec3> lines = { meanPoint, axis0, meanPoint, axis1, meanPoint, axis2 };*/
 
-	vector<vec3> treePoints = { vec3(0, -1, 0), vec3(0, -0.96, 0) };
-	vector<vec3> treeEndpoints = { treePoints.back() };
-	vector<vec3> treeHeadings = { vec3(0, 1, 0) };
-	vector<float> branchingCountdown = { 4.f };
+	float START_RADIUS = 0.05f;
+	float SPLIT_TIME = 7.f;
+	vector<vec3> treePoints = { vec3(0, -1.2, 0), vec3(0, -1, 0) };
+	vector<vec3> treeNormals = { vec3(1, 0, 0), vec3(1, 0, 0) };
+	auto treeRoot = make_shared<TreeNode>(vec3(0, -1.2, 0), START_RADIUS, nullptr);
+	auto firstNode = make_shared<TreeNode>(treePoints[0], START_RADIUS, treeRoot);
+	indices = { 0, 1 };
+	vector<shared_ptr<TreeNode>> treeEndpoints = { make_shared<TreeNode>(vec3(0, -0.96, 0),  START_RADIUS, firstNode)};
+	//vector<vec3> treeHeadings = { vec3(0, 1, 0) };
+	vector<float> branchingCountdown = { SPLIT_TIME };
 
 	auto spacePointGeometry = make_shared<SimpleGeometry>(spacePoints.data(), spacePoints.size(), GL_POINTS);
 	Drawable spacePointDrawable(spacePointGeometry, make_shared<ColorMat>(vec3(1.f, 0.f, 0.f)));
@@ -1357,37 +1417,53 @@ void WindowManager::testLoop() {
 		}
 		else if (spacePressed && glfwGetKey(window, GLFW_KEY_SPACE) != GLFW_PRESS) {
 			//Space colonization
-			float radius = 0.3f;
+			float radius = 0.2f;
 			float speed = 0.05f;
-			vector<vec3> treeNewEndpoints;
-			vector<vec3> treeNewHeadings;
+			vector<shared_ptr<TreeNode>> treeNewEndpoints;
+			//vector<vec3> treeNewHeadings;
 			vector<float> newBranchingCountdown;
 			for (int i = 0; i < treeEndpoints.size(); i++) {
-				vector<vec3> newParticles = traceParticle(spacePoints, treeEndpoints[i], treeHeadings[i], radius, speed, branchingCountdown[i] <= 0.f);
+				vector<vec3> newParticles = traceParticle(spacePoints, treeEndpoints[i]->pos, getCylinderDirection(*treeEndpoints[i]), 
+					radius, speed, branchingCountdown[i] <= 0.f);
 				for (vec3 particle : newParticles) {
-					treeNewEndpoints.push_back(particle);
-					treeNewHeadings.push_back(normalize(particle - treeEndpoints[i]));
-					treePoints.push_back(treeEndpoints[i]);
-					treePoints.push_back(particle);
-					newBranchingCountdown.push_back((newParticles.size() == 1) ? branchingCountdown[i] - 1.f : 4.f);
+					float newRadius = (newParticles.size() == 2) ? treeEndpoints[i]->radius*0.5f : treeEndpoints[i]->radius;
+					treeNewEndpoints.push_back(make_shared<TreeNode>(particle, newRadius, treeEndpoints[i]));
+					//treeNewHeadings.push_back(normalize(particle - treeEndpoints[i]));
+					treePoints.push_back(treeEndpoints[i]->prev->pos);
+					treeNormals.push_back(getCylinderJoint(*treeEndpoints[i]));
+					treePoints.push_back(treeEndpoints[i]->pos);
+					if (newParticles.size() > 2)
+						treeEndpoints[i]->normal = treeNormals.back();
+					treeNormals.push_back(getCylinderJoint(*treeNewEndpoints.back()));
+					indices.push_back(indices.size());
+					indices.push_back(indices.size());
+					//treePoints.push_back(particle);
+					newBranchingCountdown.push_back((newParticles.size() == 1) ? branchingCountdown[i] - floatRand()*2.f : SPLIT_TIME);
 				}
 			}
 
 			branchingCountdown.swap(newBranchingCountdown);
 			treeEndpoints.swap(treeNewEndpoints);
-			treeHeadings.swap(treeNewHeadings);
-			treeGeometry->loadGeometry(treePoints.data(), treePoints.size());
+			//treeHeadings.swap(treeNewHeadings);
+			//treeGeometry->loadGeometry(treePoints.data(), treePoints.size());
+ 			geometry->loadGeometry(treePoints.data(), treeNormals.data(), nullptr, indices.data(), treePoints.size(), indices.size());
 
-			spacePoints = removeNearbyPoints(spacePoints, treeEndpoints, speed*2.f);
+			vector<vec3> treeEndpointsVec3;
+			for (shared_ptr<TreeNode> node : treeEndpoints) {
+				treeEndpointsVec3.push_back(node->pos);
+			}
+
+			spacePoints = removeNearbyPoints(spacePoints, treeEndpointsVec3, speed*3.f);
 			spacePointGeometry->loadGeometry(spacePoints.data(), spacePoints.size());
+			printf("spacePoints.size() = %d\n", spacePoints.size());
 			spacePressed = false;
 		}
 
 		//bpShader.draw(cam, lightPos, dragon);
-		//cShader.draw(cam, lightPos, cylinderDrawable);
+		cShader.draw(cam, lightPos, cylinderDrawable);
 		simpleShader.draw(cam, spacePointDrawable);
 		//simpleShader.draw(cam, eigenvectorDrawable);
-		simpleShader.draw(cam, treeDrawable);
+		//simpleShader.draw(cam, treeDrawable);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

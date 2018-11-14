@@ -4,7 +4,7 @@
 
 int main()
 {
-	WindowManager wm;
+	WindowManager wm(800, 800, "Happy now Cory?");
 
 	wm.testLoop();
 //	wm.waveSimulationLoop(1000, 0.0001f);
