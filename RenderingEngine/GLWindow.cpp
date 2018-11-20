@@ -1067,6 +1067,15 @@ void WindowManager::particleLoop() {
 	}
 }
 
+const float TROPISM = 0.0f;
+const float SEARCH_RADIUS = 0.2f;
+const float SEARCH_FALLOFF = 0.f;
+const float GROWTH_SPEED = 0.02f;
+const float HEADING_WEIGHT = 1.f;
+const float BRANCHING_WEIGHT = 4.f;
+const float SECOND_BRANCH_WEIGHT = 0.5f;
+const float BRANCHING_DELAY = 4.f;
+
 struct TreeNode {
 	vec3 pos;
 	vec3 normal;
@@ -1112,12 +1121,12 @@ vector<vec3> generateSpacePoints(int numPoints) {
 	return spacePoints;
 }
 
-vector<vec3> removeNearbyPoints(const vector<vec3>& removedVector, const vector<vec3>& points, float radius) {
+vector<vec3> removeNearbyPoints(const vector<vec3>& removedVector, const vector<shared_ptr<TreeNode>>& points, float radius) {
 	vector<vec3> returnVector;
 	for (vec3 vectorPoint : removedVector) {
 		bool remove = false;
-		for (vec3 point : points) {
-			if (dot(point - vectorPoint, point - vectorPoint) < radius*radius) {
+		for (shared_ptr<TreeNode> point : points) {
+			if (dot(point->pos - vectorPoint, point->pos - vectorPoint) < 4.f*point->radius*point->radius){//radius*radius*) {
 				remove = true;
 				break;
 			}
@@ -1184,7 +1193,7 @@ mat3 calculateCovariance(const vector<vec3>& data) {
 }
 
 mat3 getEigenvectors(const vector<vec3>& data, vec3 point, float radius) {
-	vector<vec3> directionVectors = getDirectionVectors(data, point, radius, 1.f);
+	vector<vec3> directionVectors = getDirectionVectors(data, point, radius, SEARCH_FALLOFF);
 	if (directionVectors.size() < 10)
 		return mat3(0);
 	mat3 covariance = calculateCovariance(directionVectors);
@@ -1221,7 +1230,8 @@ mat3 getEigenvectors(const vector<vec3>& data, vec3 point, float radius) {
 	}
 
 	return mat3(axis0, axis1, axis2);
-}
+}	
+
 
 vector<vec3> traceParticle(const vector<vec3>& points, vec3 particle, vec3 heading, float radius, float speed, bool canSplit) {
 	mat3 eigenvectors = getEigenvectors(points, particle+heading*speed, radius);
@@ -1232,17 +1242,17 @@ vector<vec3> traceParticle(const vector<vec3>& points, vec3 particle, vec3 headi
 	if (eigenvalues[0] < 0.00001f)
 		return{};
 
-	vec3 tropism = vec3(0, 0.4, 0)*eigenvalues[0];
+	vec3 tropism = vec3(0, 1.f, 0)*eigenvalues[0]*TROPISM;
 
 	if (canSplit && eigenvalues[0] > eigenvalues[1]) {
 		newParticle.push_back(particle + speed*normalize(
-			1.f*heading*length(eigenvectors[0]) + eigenvectors[0] + 4.f*eigenvectors[1] + tropism));
+			HEADING_WEIGHT*heading*length(eigenvectors[0]) + eigenvectors[0] + BRANCHING_WEIGHT*eigenvectors[1] + tropism));
 		newParticle.push_back(particle + speed*normalize(
-			1.f*heading*length(eigenvectors[0]) + eigenvectors[0] - 4.f*eigenvectors[1] + tropism));
+			HEADING_WEIGHT*heading*length(eigenvectors[0]) + eigenvectors[0] - SECOND_BRANCH_WEIGHT*BRANCHING_WEIGHT*eigenvectors[1] + tropism));
 	}
 	else {
 		newParticle.push_back(particle + speed*normalize(
-			1.f*heading*length(eigenvectors[0]) + eigenvectors[0] + tropism));
+			HEADING_WEIGHT*heading*length(eigenvectors[0]) + eigenvectors[0] + tropism));
 	}
 
 	return newParticle;
@@ -1355,7 +1365,7 @@ void WindowManager::testLoop() {
 	indices.clear();
 
 	//Space colonization visualization
-	vector<vec3> spacePoints = generateSpacePoints(10000);
+	vector<vec3> spacePoints = generateSpacePoints(50000);
 	/*vec3 meanPoint(0);
 	for (vec3 point : spacePoints) {
 		meanPoint += point;
@@ -1371,7 +1381,6 @@ void WindowManager::testLoop() {
 	vector<vec3> lines = { meanPoint, axis0, meanPoint, axis1, meanPoint, axis2 };*/
 
 	float START_RADIUS = 0.05f;
-	float SPLIT_TIME = 7.f;
 	vector<vec3> treePoints = { vec3(0, -1.2, 0), vec3(0, -1, 0) };
 	vector<vec3> treeNormals = { vec3(1, 0, 0), vec3(1, 0, 0) };
 	auto treeRoot = make_shared<TreeNode>(vec3(0, -1.2, 0), START_RADIUS, nullptr);
@@ -1379,7 +1388,7 @@ void WindowManager::testLoop() {
 	indices = { 0, 1 };
 	vector<shared_ptr<TreeNode>> treeEndpoints = { make_shared<TreeNode>(vec3(0, -0.96, 0),  START_RADIUS, firstNode)};
 	//vector<vec3> treeHeadings = { vec3(0, 1, 0) };
-	vector<float> branchingCountdown = { SPLIT_TIME };
+	vector<float> branchingCountdown = { BRANCHING_DELAY };
 
 	auto spacePointGeometry = make_shared<SimpleGeometry>(spacePoints.data(), spacePoints.size(), GL_POINTS);
 	Drawable spacePointDrawable(spacePointGeometry, make_shared<ColorMat>(vec3(1.f, 0.f, 0.f)));
@@ -1417,16 +1426,18 @@ void WindowManager::testLoop() {
 		}
 		else if (spacePressed && glfwGetKey(window, GLFW_KEY_SPACE) != GLFW_PRESS) {
 			//Space colonization
-			float radius = 0.2f;
-			float speed = 0.05f;
+			float radius = SEARCH_RADIUS;
+			float speed = GROWTH_SPEED;
 			vector<shared_ptr<TreeNode>> treeNewEndpoints;
 			//vector<vec3> treeNewHeadings;
 			vector<float> newBranchingCountdown;
 			for (int i = 0; i < treeEndpoints.size(); i++) {
 				vector<vec3> newParticles = traceParticle(spacePoints, treeEndpoints[i]->pos, getCylinderDirection(*treeEndpoints[i]), 
 					radius, speed, branchingCountdown[i] <= 0.f);
-				for (vec3 particle : newParticles) {
-					float newRadius = (newParticles.size() == 2) ? treeEndpoints[i]->radius*0.5f : treeEndpoints[i]->radius;
+				for (int j = 0; j < newParticles.size(); j++) {
+					vec3 particle = newParticles[j];
+					float newRadius = (newParticles.size() == 2 && (j == 0 || SECOND_BRANCH_WEIGHT > 0.f)) 
+						? treeEndpoints[i]->radius*0.5f : treeEndpoints[i]->radius*0.97f;
 					treeNewEndpoints.push_back(make_shared<TreeNode>(particle, newRadius, treeEndpoints[i]));
 					//treeNewHeadings.push_back(normalize(particle - treeEndpoints[i]));
 					treePoints.push_back(treeEndpoints[i]->prev->pos);
@@ -1438,7 +1449,7 @@ void WindowManager::testLoop() {
 					indices.push_back(indices.size());
 					indices.push_back(indices.size());
 					//treePoints.push_back(particle);
-					newBranchingCountdown.push_back((newParticles.size() == 1) ? branchingCountdown[i] - floatRand()*2.f : SPLIT_TIME);
+					newBranchingCountdown.push_back((newParticles.size() == 1) ? branchingCountdown[i] - floatRand()*2.f : BRANCHING_DELAY);
 				}
 			}
 
@@ -1452,8 +1463,8 @@ void WindowManager::testLoop() {
 			for (shared_ptr<TreeNode> node : treeEndpoints) {
 				treeEndpointsVec3.push_back(node->pos);
 			}
-
-			spacePoints = removeNearbyPoints(spacePoints, treeEndpointsVec3, speed*3.f);
+			
+			spacePoints = removeNearbyPoints(spacePoints, treeEndpoints, speed*3.f);
 			spacePointGeometry->loadGeometry(spacePoints.data(), spacePoints.size());
 			printf("spacePoints.size() = %d\n", spacePoints.size());
 			spacePressed = false;
