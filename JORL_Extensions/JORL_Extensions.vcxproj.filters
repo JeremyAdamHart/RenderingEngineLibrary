@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\tinyply\source\tinyply.cpp" />
+    <ClCompile Include="ColorSetMat.cpp" />
+    <ClCompile Include="AOShader.cpp" />
+    <ClCompile Include="BlendShader.cpp" />
+    <ClCompile Include="ColorMat.cpp" />
+    <ClCompile Include="ColorShader.cpp" />
+    <ClCompile Include="ElementGeometry.cpp" />
+    <ClCompile Include="MeshInfoLoader.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="MultiBuffer.cpp" />
+    <ClCompile Include="PerlinNoise.cpp" />
+    <ClCompile Include="PosNormalShader.cpp" />
+    <ClCompile Include="ProcessingShader.cpp" />
+    <ClCompile Include="ShadedMat.cpp" />
+    <ClCompile Include="SimpleGeometry.cpp" />
+    <ClCompile Include="SimpleShader.cpp" />
+    <ClCompile Include="SimpleTexManager.cpp" />
+    <ClCompile Include="simpleTexShader.cpp" />
+    <ClCompile Include="StreamGeometry.cpp" />
+    <ClCompile Include="TextureCreation.cpp" />
+    <ClCompile Include="TextureMat.cpp" />
+    <ClCompile Include="BlinnPhongShader.cpp" />
+    <ClCompile Include="TrackballCamera.cpp" />
+    <ClCompile Include="TrackerCamera.cpp" />
+    <ClCompile Include="VertexBufferTemplates.cpp" />
+    <ClCompile Include="GlowShader.cpp" />
+    <ClCompile Include="NormalDisplayShader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\tinyply\source\tinyply.h" />
+    <ClInclude Include="AOShader.h" />
+    <ClInclude Include="BlendShader.h" />
+    <ClInclude Include="BufferQueue.h" />
+    <ClInclude Include="ColorMat.h" />
+    <ClInclude Include="ColorSetMat.h" />
+    <ClInclude Include="ColorShader.h" />
+    <ClInclude Include="DrawResourceHandler.h" />
+    <ClInclude Include="ElementGeometry.h" />
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="MeshInfoLoader.h" />
+    <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="MultiBuffer.h" />
+    <ClInclude Include="PerlinNoise.h" />
+    <ClInclude Include="PosNormalShader.h" />
+    <ClInclude Include="ProcessingShader.h" />
+    <ClInclude Include="ShadedMat.h" />
+    <ClInclude Include="SimpleGeometry.h" />
+    <ClInclude Include="SimpleShader.h" />
+    <ClInclude Include="SimpleTexManager.h" />
+    <ClInclude Include="simpleTexShader.h" />
+    <ClInclude Include="StreamGeometry.h" />
+    <ClInclude Include="TemplateParameterParsing.h" />
+    <ClInclude Include="TemplatedShader.h" />
+    <ClInclude Include="TextureCreation.h" />
+    <ClInclude Include="TextureMat.h" />
+    <ClInclude Include="BlinnPhongShader.h" />
+    <ClInclude Include="TrackballCamera.h" />
+    <ClInclude Include="TrackerCamera.h" />
+    <ClInclude Include="VertexBufferTemplates.h" />
+    <ClInclude Include="GlowShader.h" />
+    <ClInclude Include="NormalDisplayShader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+</Project>
