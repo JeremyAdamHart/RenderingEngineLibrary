@@ -1,0 +1,8 @@
+# Blender v2.79 (sub 0) OBJ File: 'WindowsMixedRealityControllerPoints.blend'
+# www.blender.org
+o TrackpadFrame_Circle.001
+v -0.000011 0.000198 0.051989
+v 0.013502 0.000198 0.051989
+v -0.000011 -0.006530 0.040269
+s off
+f 3 2 1
