@@ -26,11 +26,10 @@ public:
 	VRCamera leftEye;
 	VRCamera rightEye;
 
-	VRCameraController(vr::TrackedDevicePose_t *headsetPose, 
-		vr::IVRSystem *vrDisplay);
+	VRCameraController(vr::IVRSystem *vrDisplay);
 
 	void setEyeTransforms(vr::IVRSystem *vrDisplay);
 	void setProjection(vr::IVRSystem *vrDisplay, 
 		float near=0.01f, float far=10.f);
-	void update();		//Updates camera orientations
+	void updatePose(const vr::TrackedDevicePose_t& headsetPose);		//Updates camera orientations
 };

@@ -25,9 +25,8 @@ vec3 VRCamera::getDirection() const {
 	return vec3(direction);
 }
 
-VRCameraController::VRCameraController(vr::TrackedDevicePose_t *headsetPose, 
-	vr::IVRSystem *vrDisplay) :
-headsetPose(headsetPose), leftEyeTransform(1.f), rightEyeTransform(1.f)
+VRCameraController::VRCameraController(vr::IVRSystem *vrDisplay) :
+leftEyeTransform(1.f), rightEyeTransform(1.f)
 {
 	setEyeTransforms(vrDisplay);
 	setProjection(vrDisplay);
@@ -65,8 +64,8 @@ void VRCameraController::setEyeTransforms(vr::IVRSystem *vrDisplay) {
 	rightEyeTransform = inverse(toMat4(vrDisplay->GetEyeToHeadTransform(vr::Eye_Right)));
 }
 
-void VRCameraController::update() {
-	mat4 headTransform = inverse(toMat4(headsetPose->mDeviceToAbsoluteTracking));
+void VRCameraController::updatePose(const vr::TrackedDevicePose_t& pose) {
+	mat4 headTransform = inverse(toMat4(pose.mDeviceToAbsoluteTracking));
 
 	leftEye.setCameraMatrix(leftEyeTransform*headTransform);
 	rightEye.setCameraMatrix(rightEyeTransform*headTransform);

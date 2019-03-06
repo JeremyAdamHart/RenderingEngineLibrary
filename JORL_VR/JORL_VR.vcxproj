@@ -312,12 +312,15 @@
     <ClInclude Include="UndoStack.h" />
     <ClInclude Include="VRCamera.h" />
     <ClInclude Include="VRColorShader.h" />
+    <ClInclude Include="VRContext.h" />
     <ClInclude Include="VRController.h" />
+    <ClInclude Include="VRDeviceManager.h" />
     <ClInclude Include="VRTools.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VRCamera.cpp" />
     <ClCompile Include="VRColorShader.cpp" />
+    <ClCompile Include="VRContext.cpp" />
     <ClCompile Include="VRController.cpp" />
     <ClCompile Include="VRTools.cpp" />
   </ItemGroup>

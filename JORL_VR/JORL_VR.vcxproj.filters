@@ -30,6 +30,9 @@
     <ClCompile Include="VRTools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VRContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VRCamera.h">
@@ -45,6 +48,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UndoStack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VRContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VRDeviceManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

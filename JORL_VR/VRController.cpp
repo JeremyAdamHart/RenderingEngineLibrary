@@ -170,17 +170,7 @@ void VRController::updatePose(const vr::TrackedDevicePose_t &pose) {
 
 void VRController::updateState(const vr::VRControllerState_t &state) {
 
-	//Mild hack to get index of trigger. Better approach would be to use https://github.com/ValveSoftware/openvr/issues/56
-	int triggerIndex = vr::k_EButton_SteamVR_Trigger - vr::k_EButton_Axis0;
-	int trackpadIndex = vr::k_EButton_SteamVR_Touchpad - vr::k_EButton_Axis0;
-	axes[TRIGGER_AXIS] = vec2(state.rAxis[triggerIndex].x, 0.f);
-	axes[TRACKPAD_AXIS] = vec2(state.rAxis[trackpadIndex].x, state.rAxis[trackpadIndex].y);
-	buttons[TRACKPAD_BUTTON] = vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Touchpad) & state.ulButtonPressed;
-	buttons[GRIP_BUTTON] = vr::ButtonMaskFromId(vr::k_EButton_Grip) & state.ulButtonPressed;
-	buttons[TRIGGER_BUTTON] = vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Trigger) & state.ulButtonPressed;
-	buttons[TRACKPAD_BUTTON] = vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Touchpad) & state.ulButtonPressed;
-	buttons[MENU_BUTTON] = vr::ButtonMaskFromId(vr::k_EButton_ApplicationMenu) & state.ulButtonPressed;
-	trackpadTouched = vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Touchpad) & state.ulButtonTouched;
+	input.updateState(state);
 }
 
 void VRController::loadModelMatrixOldOpenGL() const {
@@ -195,12 +185,14 @@ void VRController::loadModelMatrixOldOpenGL() const {
 VRSceneTransform::VRSceneTransform() :
 	Object(vec3(0.f), quat()), scale(1.f),
 	velocity(0.f), angularVelocity(), controllers(nullptr), 
-	rotationMode(HANDLEBAR), rotationOrigin(ORIGIN_CONTROLLER) {}
+	rotationMode(HANDLEBAR), rotationOrigin(ORIGIN_CONTROLLER),
+	lastPosition(2, vec3(0.f)), lastOrientation(2, quat()) {}
 
 
 VRSceneTransform::VRSceneTransform(vector<VRController> *controllers) :
 	Object(vec3(0.f), quat()), scale(1.f),
-	velocity(0.f), angularVelocity(), controllers(controllers), rotationMode(HANDLEBAR), rotationOrigin(ORIGIN_CONTROLLER) {
+	velocity(0.f), angularVelocity(), controllers(controllers), rotationMode(HANDLEBAR), rotationOrigin(ORIGIN_CONTROLLER)
+	{
 	linkControllers(controllers);
 }
 
@@ -266,8 +258,8 @@ quat quaternionDiff(quat a, quat b) {
 }
 
 //Not currently incorporating time - FIX
-void VRSceneTransform::updateTransform(float deltaTime, vec3 grabPositionModelspace) {
-
+void VRSceneTransform::updateTransform(float deltaTime, const VRController& controllerA, const VRController& controllerB, vec3 grabPositionModelspace) {
+	vector<VRController> controllers = {controllerA, controllerB};
 	static RingStack<vec3> lastVelocities(5);
 	static vec3 rotationCenter = vec3(0.f, 0.f, 0.f);
 	float scaleChange = 1.f;
@@ -277,11 +269,11 @@ void VRSceneTransform::updateTransform(float deltaTime, vec3 grabPositionModelsp
 
 	//Get indices of controllers which have the grip pressed
 	std::vector<int> gripsPressed;
-	for (int i = 0; i < controllers->size(); i++) {
-		vec3 grabPosition = vec3(controllers->at(i).getTransform()*vec4(grabPositionModelspace, 1.f));
+	for (int i = 0; i < controllers.size(); i++) {
+		vec3 grabPosition = vec3(controllers[i].getTransform()*vec4(grabPositionModelspace, 1.f));
 		grabPositions.push_back(grabPosition);
 
-		if(controllers->at(i).input.getActivation(TRANSFORM_CONTROL))
+		if(controllers[i].input.getActivation(TRANSFORM_CONTROL))
 //		if (controllers->at(i).buttons[VRController::GRIP_BUTTON])
 			gripsPressed.push_back(i);
 	}
@@ -312,8 +304,8 @@ void VRSceneTransform::updateTransform(float deltaTime, vec3 grabPositionModelsp
 
 		quat lastOrntnA = lastOrientation[indexA];
 		quat lastOrntnB = lastOrientation[indexB];
-		quat currOrntnA = controllers->at(indexA).getOrientationQuat();
-		quat currOrntnB = controllers->at(indexB).getOrientationQuat();
+		quat currOrntnA = controllers[indexA].getOrientationQuat();
+		quat currOrntnB = controllers[indexB].getOrientationQuat();
 
 		if (rotationMode == HANDLEBAR) {
 			axisA = axisA / lengthA;
@@ -378,7 +370,7 @@ void VRSceneTransform::updateTransform(float deltaTime, vec3 grabPositionModelsp
 	//Save positions
 	for (int i = 0; i < lastPosition.size(); i++) {
 		lastPosition[i] = grabPositions[i];		//controllers->at(i).getPos();
-		lastOrientation[i] = controllers->at(i).getOrientationQuat();
+		lastOrientation[i] = controllers[i].getOrientationQuat();
 	}
 
 	lastGripsPressed = gripsPressed.size();
@@ -387,7 +379,7 @@ void VRSceneTransform::updateTransform(float deltaTime, vec3 grabPositionModelsp
 bool VRSceneTransform::multMatrixPreviewTransform(float modelScale) {
 	std::vector<int> gripsPressed;
 	for (int i = 0; i < controllers->size(); i++) {
-		if (controllers->at(i).buttons[VRController::GRIP_BUTTON])
+		if (controllers->at(i).input.getActivation(TRANSFORM_CONTROL))	//buttons[VRController::GRIP_BUTTON])
 			gripsPressed.push_back(i);
 	}
 	if (gripsPressed.size() < 2)

@@ -39,37 +39,6 @@ const float PI = 3.14159265358979323846;
 
 using namespace renderlib;
 
-int gWindowWidth, gWindowHeight;
-
-bool reloadShaders = false;
-
-TrackballCamera cam(
-	vec3(0, 0, -1), vec3(0, 0, 1),
-	//	glm::perspective(90.f*3.14159f/180.f, 1.f, 0.1f, 3.f));
-	mat4(1.f));
-
-void cursorPositionCallback(GLFWwindow *window, double xpos, double ypos) {
-	static vec2 lastPos = vec2(0.f, 0.f);
-
-	int vp[4];
-	glGetIntegerv(GL_VIEWPORT, vp);
-	vec2 mousePos = vec2(float(xpos) / float(vp[2]),
-		float(-ypos) / float(vp[3]))*2.f
-		- vec2(1.f, 1.f);
-
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-		vec2 diff = mousePos - lastPos;
-		cam.trackballRight(-diff.x*3.14159f);
-		cam.trackballUp(-diff.y*3.14159f);
-	}
-
-	lastPos = mousePos;
-}
-
-void windowResizeCallback(GLFWwindow *window, int wWidth, int wHeight) {
-	gWindowWidth = wWidth;
-	gWindowHeight = wHeight;
-}
 
 WindowManager::WindowManager() :
 	window_width(800), window_height(800)
@@ -78,8 +47,6 @@ WindowManager::WindowManager() :
 	window = createWindow(window_width, window_height,
 		"You really should rename this");
 	initGlad();
-	vrDisplay = initVR();
-
 	glfwSwapInterval(0);
 
 	initGL();
@@ -91,60 +58,16 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 	glfwInit();
 	window = createWindow(window_width, window_height, name);
 	initGlad();
-	vrDisplay = initVR();
 
 	glfwSwapInterval(0);
 
 	initGL();
 }
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
-		reloadShaders = true;
-}
-
 #include <assert.h>
 
-void setControllerBindingsOculusTouch(VRControllerInterface *input, VRControllerHand hand) {
-	input->assignButton(VRSceneTransform::TRANSFORM_CONTROL, vr::k_EButton_Grip);
-}
-
-void setControllerBindingsVive(VRControllerInterface *input, VRControllerHand hand) {
-	input->assignButton(VRSceneTransform::TRANSFORM_CONTROL, vr::k_EButton_Grip);
-}
-
-void setControllerBindingsWindows(VRControllerInterface *input, VRControllerHand hand) {
-	input->assignButton(VRSceneTransform::TRANSFORM_CONTROL, vr::k_EButton_Grip);
-}
-
-struct ControllerReferenceFilepaths {
-	char* trackpadFrame;
-	char* drawPosition;
-	char* grabPosition;
-
-	ControllerReferenceFilepaths(VRControllerType type):trackpadFrame(nullptr), drawPosition(nullptr), grabPosition(nullptr) {
-		switch (type) {
-		case VRControllerType::VIVE:
-		case VRControllerType::UNKNOWN:
-			trackpadFrame = "models/controllerTrackpadFrame.obj";
-			drawPosition = "models/ViveDrawPosition.obj";
-			grabPosition = "models/ViveGrabPosition.obj";
-			break;
-		case VRControllerType::WINDOWS:
-			trackpadFrame = "models/WMRTrackpadFrame.obj";
-			drawPosition = "models/WMRDrawPosition.obj";
-			grabPosition = "models/WMRGrabPosition.obj";
-			break;
-		case VRControllerType::OCULUS_TOUCH:
-			trackpadFrame = "models/OculusTouchTrackpadFrameLeft.obj";
-			drawPosition = "models/OculusTouchDrawPosition.obj";
-			grabPosition = "models/OculusTouchGrabPosition.obj";
-			break;
-		}
-	}
-};
-
 void WindowManager::paintingLoop(const char* loadedFile, const char* savedFile, int sampleNumber) {
+	/*
 	glfwSetCursorPosCallback(window, cursorPositionCallback);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 
@@ -187,38 +110,12 @@ void WindowManager::paintingLoop(const char* loadedFile, const char* savedFile, 
 	unsigned int TEX_HEIGHT = 800;
 	vrDisplay->GetRecommendedRenderTargetSize(&TEX_WIDTH, &TEX_HEIGHT);
 
-	Framebuffer fbLeftEyeDraw = createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
-	Framebuffer fbRightEyeDraw = createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
-	Framebuffer fbLeftEyeRead = createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
-	Framebuffer fbRightEyeRead = createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
-
 	int NUM_SAMPLES = sampleNumber;
 
-	if (!fbLeftEyeDraw.addTexture(
-		createTexture2DMulti(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES),
-		GL_COLOR_ATTACHMENT0) ||
-		!fbLeftEyeDraw.addTexture(
-			createDepthTextureMulti(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES), GL_DEPTH_ATTACHMENT))
-	{
-		std::cout << "FBO creation failed" << endl;
-	}
-	if (!fbRightEyeDraw.addTexture(
-		createTexture2DMulti(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES),
-		GL_COLOR_ATTACHMENT0) ||
-		!fbRightEyeDraw.addTexture(
-			createDepthTextureMulti(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES), GL_DEPTH_ATTACHMENT))
-	{
-		std::cout << "FBO creation failed" << endl;
-	}
-
-	if (!fbLeftEyeRead.addTexture(
-		createTexture2D(TEX_WIDTH, TEX_HEIGHT, &tm), GL_COLOR_ATTACHMENT0)) {
-		std::cout << "FBO creation failed" << endl;
-	}
-	else if (!fbRightEyeRead.addTexture(
-		createTexture2D(TEX_WIDTH, TEX_HEIGHT, &tm), GL_COLOR_ATTACHMENT0)) {
-		std::cout << "FBO creation failed" << endl;
-	}
+	Framebuffer fbLeftEyeDraw = createFramebufferWithColorAndDepth(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES);	//createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
+	Framebuffer fbRightEyeDraw = createFramebufferWithColorAndDepth(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES);
+//	Framebuffer fbLeftEyeRead = createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
+//	Framebuffer fbRightEyeRead = createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
 
 	Viewport leftEyeView(window_width, window_height);
 	Viewport rightEyeView(window_width / 2, window_height, window_width / 2);
@@ -434,17 +331,14 @@ void WindowManager::paintingLoop(const char* loadedFile, const char* savedFile, 
 
 	glfwTerminate();
 	vr::VR_Shutdown();
+	*/
 }
 
 
 //Temporary testing
 void WindowManager::mainLoop() {
 
-	//Test quaterions
-	/*	quat rot = angleAxis(3.14159f, vec3(0, 1, 0));
-	vec4 point(1, 0, 0, 1);
-	vec4 res1 = rot*point*rot.
-	*/
+	/*
 	glfwSetCursorPosCallback(window, cursorPositionCallback);
 
 	vec3 points[6] = {
@@ -458,17 +352,6 @@ void WindowManager::mainLoop() {
 		vec3(-0.5f, 0.5f, 0.f)*2.f
 	};
 
-	/*	vec2 coords[6] = {
-	//First triangle
-	vec2(1, 0.f),
-	vec2(0.f, 0.f),
-	vec2(0.f, 1.f),
-	//Second triangle
-	vec2(0.f, 1.f),
-	vec2(1.f, 1.f),
-	vec2(1.f, 0.f)
-	};
-	*/
 	vec2 coords[6] = {
 		//First triangle
 		vec2(0, 1.f),
@@ -514,24 +397,6 @@ void WindowManager::mainLoop() {
 
 
 	const int NUM_SAMPLES = 1;
-	/*
-	if (!fbLeftEyeDraw.addTexture(
-	createTexture2DMulti(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES),
-	GL_COLOR_ATTACHMENT0) ||
-	!fbLeftEyeDraw.addTexture(
-	createDepthTextureMulti(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES), GL_DEPTH_ATTACHMENT))
-	{
-	std::cout << "FBO creation failed" << endl;
-	}
-	if (!fbRightEyeDraw.addTexture(
-	createTexture2DMulti(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES),
-	GL_COLOR_ATTACHMENT0) ||
-	!fbRightEyeDraw.addTexture(
-	createDepthTextureMulti(TEX_WIDTH, TEX_HEIGHT, &tm, NUM_SAMPLES), GL_DEPTH_ATTACHMENT))
-	{
-	std::cout << "FBO creation failed" << endl;
-	}
-	*/
 
 	//TEST vv
 
@@ -629,15 +494,6 @@ void WindowManager::mainLoop() {
 
 	sphere.setPosition(vec3(1.f, 0, 0));
 
-	//Squares for left and right views
-	/*	Drawable leftSquare(
-	new TextureMat(fbLeftEyeRead.getTexture(GL_COLOR_ATTACHMENT0)),
-	new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
-
-	Drawable rightSquare(
-	new TextureMat(fbRightEyeRead.getTexture(GL_COLOR_ATTACHMENT0)),
-	new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
-	*/
 	//TEST vv
 	Drawable leftSquare(
 		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
@@ -806,36 +662,6 @@ void WindowManager::mainLoop() {
 			+ 0.5f*vrCam.rightEye.getPosition()
 			+ vec3(0, 2, 0));
 
-		/*		//Draw left eye
-		fbLeftEyeDraw.use();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		for (int i = 0; i < controllers.size(); i++)
-		bpTexShader.draw(vrCam.leftEye, lightPos, controllers[i]);
-
-		for (int i = 0; i < drawables.size(); i++) {
-		if (drawables[i].getMaterial(TextureMat::id) != nullptr) {
-		bpTexShader.draw(vrCam.leftEye, lightPos, drawables[i]);
-		}
-		else
-		bpShader.draw(vrCam.leftEye, lightPos, drawables[i]);
-		}
-
-		//Draw right eye
-		fbRightEyeDraw.use();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		for (int i = 0; i < controllers.size(); i++)
-		bpTexShader.draw(vrCam.rightEye, lightPos, controllers[i]);
-		for (int i = 0; i < drawables.size(); i++) {
-		if (drawables[i].getMaterial(TextureMat::id) != nullptr) {
-		bpTexShader.draw(vrCam.rightEye, lightPos, drawables[i]);
-		}
-		else
-		bpShader.draw(vrCam.rightEye, lightPos, drawables[i]);
-		}
-
-		blit(fbLeftEyeDraw, fbLeftEyeRead);
-		blit(fbRightEyeDraw, fbRightEyeRead);
-		*/
 
 		//TEST vv AMBIENT OCCLUSION
 		//Draw left eye
@@ -904,6 +730,7 @@ void WindowManager::mainLoop() {
 
 	glfwTerminate();
 	vr::VR_Shutdown();
+	*/
 }
 
 void initGlad() {
@@ -912,6 +739,7 @@ void initGlad() {
 	}
 }
 
+/*
 vr::IVRSystem *initVR() {
 
 	vr::EVRInitError error = vr::VRInitError_None;
@@ -933,7 +761,7 @@ vr::IVRSystem *initVR() {
 
 	return vrDisplay;
 }
-
+*/
 void WindowManager::initGL() {
 	glClearColor(1.f, 1.f, 1.f, 1.f);
 	glEnable(GL_DEPTH_TEST);

@@ -323,7 +323,8 @@ void WindowManager::convexTestLoop() {
 	auto last = testMap.add(5);
 	testMap.remove(last);
 
-	MeshInfoLoader modelMinfo("models/dragon.obj");
+	//MeshInfoLoader modelMinfo("models/dragon.obj");
+	MeshInfoLoader modelMinfo("untrackedmodels/181203_kale_01_use.obj");
 	shared_ptr<ElementGeometry> modelGeom = make_shared<ElementGeometry>(modelMinfo.vertices.data(), modelMinfo.normals.data(), nullptr, 
 		modelMinfo.indices.data(), modelMinfo.vertices.size(), modelMinfo.indices.size());
 
@@ -339,7 +340,7 @@ void WindowManager::convexTestLoop() {
 
 	cam = TrackballCamera(
 		vec3(0, 0, -1), vec3(0, 0, 5),
-		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 150.f));
+		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 1000.f));
 
 	//Find starting tetrahedron for model
 	vec3 tetPoints[4];

@@ -22,6 +22,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JORL_VR", "JORL_VR\JORL_VR.vcxproj", "{8A259F64-DE8C-44DE-8B71-14EDE0E59B8A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JORL_VR_Examples", "JORL_VR_Examples\JORL_VR_Examples.vcxproj", "{4F7CA4E0-420D-4A53-8CE5-324300200A26}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8A259F64-DE8C-44DE-8B71-14EDE0E59B8A} = {8A259F64-DE8C-44DE-8B71-14EDE0E59B8A}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

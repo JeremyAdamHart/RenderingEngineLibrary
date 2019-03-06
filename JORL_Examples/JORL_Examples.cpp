@@ -6,13 +6,14 @@ int main()
 {
 	WindowManager wm(800, 800, "Happy now Cory?");
 
-	wm.testLoop();
+//	wm.testLoop();
 //	wm.waveSimulationLoop(1000, 0.0001f);
 //	wm.glowTest();
-//	wm.testLoop();
+	wm.testLoop();
 //	wm.rigidBodyTest();
 //	wm.mainLoop();
 //	wm.noiseLoop();
 //	wm.particleLoop();
+//	wm.convexTestLoop();
 }
 

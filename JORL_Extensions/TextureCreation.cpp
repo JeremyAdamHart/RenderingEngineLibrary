@@ -94,4 +94,32 @@ Texture createTexture2DMulti(TexInfo info, TextureManager *manager, size_t num_s
 	return Texture(texID, info, manager);
 }
 
+Framebuffer createFramebufferWithColorAndDepth(int width, int height, TextureManager *manager, size_t num_samples) {
+	Framebuffer fb = createNewFramebuffer(width, height);
+	if (!fb.addTexture(
+		createTexture2DMulti(width, height, manager, num_samples),
+		GL_COLOR_ATTACHMENT0) ||
+		!fb.addTexture(
+			createDepthTextureMulti(width, height, manager, num_samples), GL_DEPTH_ATTACHMENT))
+	{
+		std::cout << "FBO creation failed" << endl;
+	}
+
+	return fb;
+}
+
+Framebuffer createFramebufferWithColorAndDepth(int width, int height, TextureManager *manager) {
+	Framebuffer fb = createNewFramebuffer(width, height);
+	if (!fb.addTexture(
+		createTexture2D(width, height, manager),
+		GL_COLOR_ATTACHMENT0) ||
+		!fb.addTexture(
+			createDepthTexture(width, height, manager), GL_DEPTH_ATTACHMENT))
+	{
+		std::cout << "FBO creation failed" << endl;
+	}
+
+	return fb;
+}
+
 }

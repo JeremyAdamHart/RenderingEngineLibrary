@@ -25,14 +25,14 @@
 
 class WindowManager {
 protected:
-	GLFWwindow *window;
-	vr::IVRSystem *vrDisplay;
 	void initGL();
 	
-	int window_width, window_height;
 
 
 public:
+	int window_width, window_height;
+	GLFWwindow *window;
+
 	WindowManager();
 	WindowManager(int width, int height, std::string name, 
 		glm::vec4 color = glm::vec4(1.f));

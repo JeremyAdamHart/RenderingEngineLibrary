@@ -109,12 +109,6 @@ public:
 	VRControllerType type;
 	VRControllerHand hand;
 
-	glm::vec2 axes[AXIS_COUNT];
-	bool buttons[BUTTON_COUNT];
-	bool trackpadTouched;
-
-
-
 	void updatePose(const vr::TrackedDevicePose_t &pose);
 	void updateState(const vr::VRControllerState_t &state);
 	void loadModelMatrixOldOpenGL() const;
@@ -148,7 +142,7 @@ public:
 	void setPosition(glm::vec3 position);
 
 	glm::mat4 getTransform() const override;
-	void updateTransform(float deltaTime, glm::vec3 grabPositionModelspace);
+	void updateTransform(float deltaTime, const VRController& controllerA, const VRController& controllerB, glm::vec3 grabPositionModelspace);
 	bool multMatrixPreviewTransform(float modelScale);
 	void multMatrixOldOpenGL();
 	void linkControllers(std::vector<VRController> *newControllers);

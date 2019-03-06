@@ -72,7 +72,7 @@ public:
 
 	T& operator[](Index i) {
 		if (i.index == -1 || i.index >= timestamp.size())
-			throw std::invalid_argument("Out of bounds");
+ 			throw std::invalid_argument("Out of bounds");
 		if (timestamp[i.index] != i.timestamp)
 			throw std::invalid_argument("Timestamp expired");
 		return data[i.index];
