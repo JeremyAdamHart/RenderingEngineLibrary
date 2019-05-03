@@ -313,7 +313,7 @@ bool allDistinct(T* arr, size_t size) {
 
 
 void WindowManager::convexTestLoop() {
-	srand(13);	//time(0));
+	srand(time(0));
 
 	SlotMap<int> testMap;
 	testMap.add(1);
@@ -323,8 +323,8 @@ void WindowManager::convexTestLoop() {
 	auto last = testMap.add(5);
 	testMap.remove(last);
 
-	//MeshInfoLoader modelMinfo("models/dragon.obj");
-	MeshInfoLoader modelMinfo("untrackedmodels/181203_kale_01_use.obj");
+	MeshInfoLoader modelMinfo("models/dragon.obj");
+	//MeshInfoLoader modelMinfo("untrackedmodels/181203_kale_01_use.obj");
 	shared_ptr<ElementGeometry> modelGeom = make_shared<ElementGeometry>(modelMinfo.vertices.data(), modelMinfo.normals.data(), nullptr, 
 		modelMinfo.indices.data(), modelMinfo.vertices.size(), modelMinfo.indices.size());
 

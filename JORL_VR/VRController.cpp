@@ -121,15 +121,12 @@ void VRControllerInterface::updateState(const vr::VRControllerState_t &state) {
 		touch.second.update(state);
 }
 
-VRController::VRController() :renderModel(nullptr), index(-1) {
+VRController::VRController() :renderModel(nullptr) {
 
 }
 
-VRController::VRController(vr::TrackedDeviceIndex_t index, vr::IVRSystem *vrSystem,
-	vr::TrackedDevicePose_t pose, TextureManager *texManager) :
-	index(index)
+VRController::VRController(vr::TrackedDeviceIndex_t index, vr::IVRSystem *vrSystem, TextureManager *texManager)
 {
-	updatePose(pose);
 
 	char nameBuffer[1024];
 	vrSystem->GetStringTrackedDeviceProperty(index,

@@ -31,11 +31,12 @@ public:
 				VRControllerHand hand = (ovrHand == vr::ETrackedControllerRole::TrackedControllerRole_LeftHand) ?
 					VRControllerHand::LEFT : VRControllerHand::RIGHT;
 
-				Controller controller(i, vrSystem, poses[i], tm);
+				Controller controller(i, vrSystem, tm);
 				if (handDeviceMap.find(hand) != handDeviceMap.end())
 					hand = (hand == VRControllerHand::LEFT) ? VRControllerHand::RIGHT : VRControllerHand::LEFT;
 				handDeviceMap[hand] = i;
 				controllers[hand] = controller;
+				
 				break;
 			}
 		}

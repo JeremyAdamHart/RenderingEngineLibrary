@@ -84,10 +84,8 @@ enum VRControllerHand : int {
 class VRController : public renderlib::Drawable {
 public:
 	VRController();
-	VRController(vr::TrackedDeviceIndex_t index, vr::IVRSystem *vrSystem,
-		vr::TrackedDevicePose_t pose, renderlib::TextureManager *texManager);
+	VRController(vr::TrackedDeviceIndex_t index, vr::IVRSystem *vrSystem, renderlib::TextureManager *texManager);
 
-	vr::TrackedDeviceIndex_t index;
 	vr::RenderModel_t* renderModel;
 
 	enum {
