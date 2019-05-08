@@ -303,12 +303,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\JORL_Extensions\ConvexHull.h" />
+    <ClInclude Include="AdaptiveNoise.h" />
     <ClInclude Include="GLWindow.h" />
     <ClInclude Include="HeatParticleGeometry.h" />
     <ClInclude Include="HeatParticleMat.h" />
     <ClInclude Include="HeatParticleShader.h" />
     <ClInclude Include="HeatParticleSystem.h" />
     <ClInclude Include="Physics.h" />
+    <ClInclude Include="Quadtree.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLWindow.cpp" />
