@@ -3,6 +3,7 @@
 #include "GLWindow.h"
 #include <tuple>
 #include <vector>
+#include "AdaptiveNoise.h"
 
 /*template<typename T>
 optional{
@@ -20,6 +21,9 @@ class PartialF{
 int main()
 {
 	WindowManager wm(800, 800, "Happy now Cory?");
+
+	FaceQ<Quadrant::TL, float> face;
+	face.edge<Side::Left>() = EdgeS<Side::Left, float>();
 
 //	wm.testLoop();
 //	wm.waveSimulationLoop(1000, 0.0001f);

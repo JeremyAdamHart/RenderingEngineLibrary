@@ -1,14 +1,34 @@
 #pragma once
 
-#include "Quadtree.h"
+#include <memory>
 #include <glm/glm.hpp>
 #include <vector>
+#include <assert.h>
+
+//Taken from answer:
+// https://stackoverflow.com/questions/25958259/how-do-i-find-out-if-a-tuple-contains-a-type
+//vv from Piotr Skotnicki
+template <typename T, typename Tuple>
+struct has_type;
+
+template <typename T>
+struct has_type<T, std::tuple<>> : std::false_type {};
+
+template <typename T, typename U, typename... Ts>
+struct has_type<T, std::tuple<U, Ts...>> : has_type<T, std::tuple<Ts...>> {};
+
+template <typename T, typename... Ts>
+struct has_type<T, std::tuple<T, Ts...>> : std::true_type {};
+
+template <typename T, typename Tuple>
+using tuple_contains_type = typename has_type<T, Tuple>::type;
+//^^ Piotr Skotnicki
 
 template<typename Data>
 struct Vertex {
 	Data d;
 };
-
+/*
 template<typename Data>
 struct Edge {
 	std::unique_ptr<Edge<Data>> children[2];
@@ -27,7 +47,7 @@ struct Edge {
 	}
 
 	bool hasChild() { return children[0] != nullptr && children[0] != nullptr; }
-};
+};*/
 
 /*
 *     0
@@ -42,7 +62,7 @@ enum Side : size_t {
 	Top,
 	Left
 };
-
+/*
 template<typename Data>
 struct TopFace {
 	std::unique_ptr<Edge<Data>> edges[4];
@@ -52,7 +72,7 @@ struct TopFace {
 	Face() :edges({ nullptr, nullptr, nullptr, nullptr }), next(nullptr), children({ nullptr, nullptr, nullptr, nullptr }) {}
 	bool hasChild() { return children[0] != nullptr && children[1] == nullptr && children[2] == nullptr && children[3] == nullptr; }
 
-	Edge& edge(size_t side) {
+	Edge<Data>& edge(size_t side) {
 		return edges[side];
 	}
 };
@@ -91,43 +111,91 @@ struct Face {
 		return outsideEdges[index];
 	}
 };
+*/
+template<size_t Side, typename Data>
+struct EdgeS{
+//	static_assert(Side >= 0 && Side < 4);
 
-template<typename Data, size_t Q>
+	std::shared_ptr<Vertex<Data>> vertex;
+	std::unique_ptr<EdgeS<Side, Data>> children[2];
+
+	EdgeS<(Side + 2) % 4, Data>* pair;		//Pair is on the opposite side
+};
+
+/*template<size_t X, size_t Side, typename Data, typename ...Args>
+std::unique_ptr<EdgeS<X, Data>> getSide(std::tuple < std::unique_ptr<EdgeS<Side, Data>, Args...>& list) {
+	static_assert(std::is_same<X, Side>::value);
+	return get_tuple
+}*/
+
+
+enum Quadrant : size_t {
+	TL = 0,
+	TR,
+	BR,
+	BL
+};
+
+template<size_t Q, size_t Side>
+static constexpr size_t sToI() { return (Side + Q) % 4; }			//Side to index
+template<size_t Q, size_t Index>
+static constexpr size_t iToS() { return (Index + 4 - Q) % 4; }		//Index to side
+
+template<size_t Q, typename Data>
 struct FaceQ{
-	static_assert(Q >= 0 && Q < 4);
-	constexpr size_t sToI(size_t side) { return (side + Q) % 4; }			//Side to index
-	constexpr size_t iToS(size_t index) { return (index + 4 - Q) % 4; }		//Index to side
+//	static_assert(Q >= 0 && Q < 4);
 
-	template<typename Ptr, size_t Side>
+	/*template<typename Ptr, size_t Side>
 	struct EdgeSide {
 		Ptr edgePtr;
 
 		Edge& get() { return *edgePtr; }
 		//Set function?
-	};
+	};*/
 
-	std::tuple<
-		EdgeSide<std::unique_ptr, iToS(0)>,
-		std::unique_ptr<FaceQ<Data, iToS(1)>>,
+	/*std::tuple<
+		EdgeSide<std::unique_ptr<Edge<Data>>, iToS(0)>,
+		EdgeSide<std::unique_ptr<Edge<Data>> iToS(1)>>,
 		Face<Data, iToS(2)>*,
-		Face<Data, iToS(3)>*> faces;
+		Face<Data, iToS(3)>*> faces;*/
 
-	std::unique_ptr<Edge<Data>> insideEdges[2];		//0, 1
-	Edge<Data>* outsideEdges[2];					//2, 3
-	std::unique_ptr<FaceQ<Data>> children[4];
+	using Edges = std::tuple<
+		std::unique_ptr<EdgeS<iToS<Q, 0>(), Data>>,
+		std::unique_ptr<EdgeS<iToS<Q, 1>(), Data>>,
+		EdgeS<iToS<Q, 2>(), Data>*,
+		EdgeS<iToS<Q, 3>(), Data>*>;
+	Edges edges;
 
-	FaceQ(size_t quadrant) :quadrant(quadrant), edges({ nullptr, nullptr, nullptr, nullptr }), next(nullptr), children({ nullptr, nullptr, nullptr, nullptr }) {}
+
+
+	//std::unique_ptr<Edge<Data>> insideEdges[2];		//0, 1
+	//Edge<Data>* outsideEdges[2];					//2, 3
+	//std::unique_ptr<FaceQ<Data>> children[4];
+
+	FaceQ() :edges({ nullptr, nullptr, nullptr, nullptr }) {}
 	bool hasChild() { return children[0] != nullptr && children[1] != nullptr && children[2] != nullptr && children[3] != nullptr; }
 
-
-	Edge& edge(size_t side) {
-		size_t index = sideToIndex(side);
-		if (index < 2)
-			return *insideEdges[index];
-		else
-			return outsideEdges[index - 2];
+	template<size_t Side>
+	std::unique_ptr<EdgeS<Side, Data>>& edgeUPtr() {
+		return get<std::unique_ptr<EdgeS<Side, Data>>&(edges);
 	}
 
+	template<size_t Side>
+	EdgeS<Side, Data>* edgePtr() {
+		return get<EdgeS<Side, Data>*(edges);
+	}
+
+	template<size_t Side>
+	EdgeS<Side, Data>& edge() {
+		if constexpr (tuple_contains_type<std::unique_ptr<EdgeS<Side, Data>>, Edges>::value) {
+			//return *edgeUPtr<Side>();
+		} if constexpr (tuple_contains_type<EdgeS<Side, Data>*, Edges>::value) {
+			//static_assert(false, "EdgeS<Side, Data>& edge(): Edge not available on face");
+			//return *edgePtr<Side>();
+		}
+	}
+
+	/*
 	std::unique_ptr<Edge<Data>>& insideEdgePtr(size_t side) {
 		size_t index = sideToIndex(side);
 		assert(index < 2);
@@ -139,8 +207,9 @@ struct FaceQ{
 		assert(index > 1 && index < 4);
 		return outsideEdges[index];
 	}
+	*/
 };
-
+/*
 template<typename Data>
 void subdivideEdge(Edge<Data>& edge) {
 	if (!edge.hasChild())
@@ -175,7 +244,9 @@ void subdivideFace(Face<Data>& face) {
 
 	
 }
+*/
 
+/*
 class Octave {
 	float amplitude;
 
@@ -194,3 +265,4 @@ public:
 
 
 };
+*/
