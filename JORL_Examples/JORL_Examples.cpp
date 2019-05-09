@@ -22,8 +22,19 @@ int main()
 {
 	WindowManager wm(800, 800, "Happy now Cory?");
 
+	std::tuple<float, int, char> tp;
+
 	FaceQ<Quadrant::TL, float> face;
 	face.edge<Side::Left>() = EdgeS<Side::Left, float>();
+	subdivideFace(face);
+
+	VariableSizeGrid<float> grid(20, 20);
+	
+	//initializeTopFaceGrid<float>(5, 5);
+
+	TopFace<float> otherFace;
+
+	std::vector<TopFace<float>> topFaces(4);
 
 //	wm.testLoop();
 //	wm.waveSimulationLoop(1000, 0.0001f);
