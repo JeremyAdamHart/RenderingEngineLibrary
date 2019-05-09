@@ -5,6 +5,8 @@
 #include <vector>
 #include <assert.h>
 #include <utility>
+#include <random>
+#include <ctime>
 
 //Taken from answer:
 // https://stackoverflow.com/questions/25958259/how-do-i-find-out-if-a-tuple-contains-a-type
@@ -51,11 +53,11 @@ struct Edge {
 };*/
 
 /*
-*     0
+*     2
 *    ___
 * 3 |   | 1
 *   |___|
-*     2
+*     0
 */
 enum Side : size_t {
 	Bottom=0,
@@ -129,7 +131,7 @@ struct EdgeS{
 	//EdgeS() :children({ nullptr, nullptr }), pair(nullptr), vertex(nullptr) {}
 
 	EdgeS(std::shared_ptr<Vertex<Data>> vertex=nullptr, EdgeS<flip<S>(), Data>* pair = nullptr)
-		: pair(pair), vertex(vertex)
+		: pair(pair), vertex(vertex), children{nullptr, nullptr }
 	{
 		if (pair)
 			pair->pair = this;
@@ -138,7 +140,7 @@ struct EdgeS{
 		pair->pair = this;
 	}
 
-	bool hasChild() { return children[0] != nullptr && children[1] != nullptr; }
+	bool hasChild() { return children[0] && children[1]; }
 };
 
 /*template<size_t X, size_t Side, typename Data, typename ...Args>
@@ -160,7 +162,12 @@ template<size_t Q, size_t Side>
 static constexpr size_t sToI() { return (Side + Q) % 4; }			//Side to index
 template<size_t Q, size_t Index>
 static constexpr size_t iToS() { return (Index + 4 - Q) % 4; }		//Index to side
+template<size_t S>
+constexpr size_t sToV() { return (6 - S) % 4; }					//Side to quadrant
+template<size_t V>
+constexpr size_t vToS() { return (6 - V) % 4; }
 
+//Consider subclassing off of Face<Data>
 template<size_t Q, typename Data>
 struct FaceQ{
 	static_assert(Q >= 0 && Q < 4);
@@ -179,13 +186,12 @@ struct FaceQ{
 		EdgeS<iToS<Q, 3>(), Data>*>;
 	Edges edges;
 
+	FaceQ() :edges({
+		std::make_unique<EdgeS<iToS<Q, 0>(), Data>>(), 
+		std::make_unique<EdgeS<iToS<Q, 1>(), Data>>(), 
+		nullptr, nullptr }) 
+	{}
 
-
-	//std::unique_ptr<Edge<Data>> insideEdges[2];		//0, 1
-	//Edge<Data>* outsideEdges[2];					//2, 3
-	//std::unique_ptr<FaceQ<Data>> children[4];
-
-	FaceQ() :edges({nullptr, nullptr, nullptr, nullptr }) {}
 	bool hasChild() { return children[0] != nullptr && children[1] != nullptr && children[2] != nullptr && children[3] != nullptr; }
 
 	template<size_t C>
@@ -234,6 +240,11 @@ struct FaceQ{
 			static_assert(false, "edge(): Edge not available on face");
 		}
 	}
+
+	template<size_t Q>
+	Vertex<Data>& vertex() {
+		return edge<qToS<Q>>.vertex;
+	}
 };
 
 template<typename Data>
@@ -279,6 +290,11 @@ struct TopFace {
 	EdgeS<Side, Data>& edge() {
 		return *edgeUPtr<Side>();
 	}
+
+	template<size_t Q>
+	Vertex<Data>& vertex() {
+		return edge<qToS<Q>>().vertex;
+	}
 };
 
 template<size_t S, typename Data>
@@ -295,14 +311,16 @@ void subdivideEdge(EdgeS<S, Data>& edge,
 
 		edge.children[0] = std::make_unique<EdgeS<S, Data>>(v1);
 		edge.children[1] = std::make_unique<EdgeS<S, Data>>(v2);
-		edge.pair->children[0] = std::make_unique < EdgeS <flip<S>(), Data >> (v1, edge.children[1].get());
-		edge.pair->children[1] = std::make_unique<EdgeS<flip<S>(), Data>>(v0, edge.children[0].get());
+		if (edge.pair) {
+			edge.pair->children[0] = std::make_unique < EdgeS <flip<S>(), Data >> (v1, edge.children[1].get());
+			edge.pair->children[1] = std::make_unique<EdgeS<flip<S>(), Data>>(v0, edge.children[0].get());
+		}
 
 	}
 }
 
 
-template<size_t Q, typename Data>
+template<size_t Q, typename Data, typename Face_t>
 void subdivideFace(FaceQ<Q, Data>& face) {
 	using VertexPtr = std::shared_ptr<Vertex<Data>>;
 
@@ -315,7 +333,11 @@ void subdivideFace(FaceQ<Q, Data>& face) {
 	auto v_center = std::make_shared<Vertex<Data>>();
 
 	// 00 top left, 33 bottom right
-	VertexPtr vertices[3][3];
+	VertexPtr vertices[3][3] = {
+		{std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>()},
+		{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() },
+		{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() }
+	};
 
 	/***********
 	* Edges
@@ -373,7 +395,11 @@ void subdivideFace(TopFace<Data>& face) {
 	auto v_center = std::make_shared<Vertex<Data>>();
 
 	// 00 top left, 33 bottom right
-	VertexPtr vertices[3][3];
+	VertexPtr vertices[3][3] = {
+		{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() },
+	{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() },
+	{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() }
+	};
 
 	/***********
 	*    1__0
@@ -426,7 +452,15 @@ class VariableSizeGrid {
 public:
 	VariableSizeGrid() :m_minX(0), m_minY(0) {}
 	template<typename ...Args>
-	VariableSizeGrid(size_t dim_x, size_t dim_y, Args... args) : m_minX(0), m_minY(0), m_data(dim_y, std::vector<T>(dim_x, args...)) {}
+	VariableSizeGrid(size_t dim_x, size_t dim_y, Args... args) : m_minX(0), m_minY(0) //, m_data(dim_y, std::vector<T>(dim_x, args...)) 
+	{
+		for (size_t i = 0; i < dim_y; i++) {
+			m_data.push_back(std::vector<T> ());
+			for (size_t j = 0; j < dim_x; j++) {
+				m_data[i].emplace_back(std::forward<T>(args)...);
+			}
+		}
+	}
 
 	size_t xSize() { return m_data[0].size(); }
 	size_t ySize() { return m_data.size(); }
@@ -444,7 +478,7 @@ public:
 };
 
 template<typename Data>
-std::vector<TopFace<Data>> initializeTopFaceGrid(size_t xFaces, size_t yFaces) {
+VariableSizeGrid<TopFace<Data>> initializeTopFaceGrid(size_t xFaces, size_t yFaces) {
 	VariableSizeGrid<TopFace<Data>> faceGrid (xFaces, yFaces);
 	VariableSizeGrid<std::shared_ptr<Vertex<Data>>> vertexGrid(xFaces + 1, yFaces + 1);
 
@@ -466,62 +500,55 @@ std::vector<TopFace<Data>> initializeTopFaceGrid(size_t xFaces, size_t yFaces) {
 		}
 	}
 
+	return faceGrid;
 }
 
-/*
-template<typename Data>
-void subdivideEdge(Edge<Data>& edge) {
-	if (!edge.hasChild())
-	{
-		auto v0 = std::make_shared<Vertex<Data>>();
-		auto v1 = std::make_shared<Vertex<Data>>();
-		auto v2 = std::make_shared<Vertex<Data>>();
+float randNorm();
 
-		edge.children[0] = std::make_unique<Edge<Data>>(v1);
-		edge.children[1] = std::make_unique<Edge<Data>>(v2);
-		edge.pair.children[0] = std::make_unique<Edge<Data>>(v1, edge.children[1].get());
-		edge.pair.children[0] = std::make_unique<Edge<Data>>(v0, edge.children[0].get());
-		
-	}
-}
-
-template<typename Data>
-void subdivideFace(TopFace<Data>& face) {
-
-}
-
-template<typename Data>
-void subdivideFace(Face<Data>& face) {
-	for(size_t i=0; i<3; i++)
-		face[i] = std::make_unique<Face<Data>>(i);
-
-	auto v_center = std::make_shared<Vertex<Data>>();
-	
-	//Subdivide existing edges
-	for (int i = 0; i < 4; i++) 
-		subdivideEdge(face.edge(i));
-
-	
-}
-*/
-
-/*
-class Octave {
-	float amplitude;
-
-};
-
-class Noise2D {
-	int width, height;
-	glm::vec2 topLeftCorner;
-	float topLevelWidth;
-
-	std::vector<float> amplitudes;
-	std::vector<std::unique_ptr<Quadtree<glm::vec2>>> noise;
+class Noise {
 public:
-	Noise2D(int width, int height, glm::vec2 topLeftCorner, float topLevelWidth);
-	
+	float value;
 
-
+	Noise() :value(randNorm()) {}
 };
-*/
+
+template<typename Face>
+float evaluate(Face& face, glm::vec2 p) {
+	float v0 = (1 - p.x)*face.vertex<Quadrant::BL>().d.value + p.x*face.vertex<Quadrant::BR>.d.value;
+	float v1 = (1 - p.x)*face.vertex<Quadrant::TL>().d.value + p.x*face.vertex<Quadrant::TR>.d.value;
+
+	return (1 - p.y)*v0 + p.y*v1;
+}
+
+class SimpleNoiseField{
+	VariableSizeGrid<TopFace<Noise>> noise;
+	SimpleNoiseField(int width, int height);
+	/*
+	template<typename Face>
+	float evaluateAt(Face& face, glm::vec2 point, glm::vec2 bottomLeft, glm::vec2 dim) {
+		glm::vec2 normalizedPoint = (point - bottomLeft) / dim;
+		float result = evaluate(face, normalizedPoint);
+
+		if (face.hasChild()) {
+			if (point.x - bottomLeft.x > dim.x*0.5f) {
+				bottomLeft.x += dim.x*0.5f;
+				if (point.y - bottomLeft.y > dim.y*0.5f) {
+					bottomLeft.y += dim.y*0.5f;
+					return result + evaluateAt(face.child<Quadrant::TR>, point, bottomLeft, dim*0.5f);
+				}
+				else
+					return result + evaluateAt(face.child<Quadrant::BR>, point, bottomLeft, dim*0.5f);
+			} 
+			else {
+				if (point.y - bottomLeft.y > dim.y*0.5f) {
+					bottomLeft.y += dim.y*0.5f;
+					return result + evaluateAt(face.child<Quadrant::TL>, point, bottomLeft, dim*0.5f);
+				}
+				else
+					return result + evaluateAt(face.child<Quadrant::BL>, point, bottomLeft, dim*0.5f);
+			}
+		}
+	}
+
+	float evaluateAt(glm::vec2 point);*/
+};
