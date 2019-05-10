@@ -22,7 +22,7 @@ float SimpleNoiseField::evaluateAt(glm::vec2 point) {
 	return evaluateAtImp(noise(indexY, indexX), point, 
 		glm::vec2(	float(indexX)*cellWidth, 
 					float(indexY)*cellHeight), 
-		glm::vec2(cellWidth, cellHeight), 1.f);
+		glm::vec2(cellWidth, cellHeight), 0.5f);
 }
 
 void SimpleNoiseField::subdivideSquare(glm::vec2 point) {
@@ -37,5 +37,7 @@ void SimpleNoiseField::subdivideSquare(glm::vec2 point) {
 			float(indexY)*cellHeight),
 		glm::vec2(cellWidth, cellHeight));
 }
+
+
 
 }

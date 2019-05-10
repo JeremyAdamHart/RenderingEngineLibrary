@@ -249,6 +249,11 @@ struct TopFace {
 	Vertex<Data>& vertex() {
 		return *edge<vToS<Q>()>().vertex;
 	}
+
+	template<size_t Q>
+	std::shared_ptr<Vertex<Data>>& vertexPtr() {
+		return edge<vToS<Q>()>().vertex;
+	}
 };
 
 template<size_t S, typename Data>
@@ -273,71 +278,8 @@ void subdivideEdge(EdgeS<S, Data>& edge,
 	}
 }
 
-
-template<size_t Q, typename Data>
-void subdivideFace(FaceQ<Q, Data>& face) {
-	using VertexPtr = std::shared_ptr<Vertex<Data>>;
-
-	//Create child faces
-	face.childPtr<Quadrant::TL>() = std::make_unique<FaceQ<Quadrant::TL, Data>>();
-	face.childPtr<Quadrant::TR>() = std::make_unique<FaceQ<Quadrant::TR, Data>>();
-	face.childPtr<Quadrant::BL>() = std::make_unique<FaceQ<Quadrant::BL, Data>>();
-	face.childPtr<Quadrant::BR>() = std::make_unique<FaceQ<Quadrant::BR, Data>>();
-
-	auto v_center = std::make_shared<Vertex<Data>>();
-
-	// 00 top left, 33 bottom right
-	VertexPtr vertices[3][3] = {
-		{std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>()},
-		{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() },
-		{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() }
-	};
-
-	/***********
-	* Edges
-	*    1__0
-	*  0|    |1
-	*  1|____|0 
-	*    0  1
-	*/
-
-	//Subdivide outside edges
-	subdivideEdge(face.edge<Side::Right>(), vertices[2][2], vertices[2][1], vertices[2][0]);
-	subdivideEdge(face.edge<Side::Top>(), vertices[2][0], vertices[1][0], vertices[0][0]);
-	subdivideEdge(face.edge<Side::Left>(), vertices[0][0], vertices[0][1], vertices[0][2]);
-	subdivideEdge(face.edge<Side::Bottom>(), vertices[0][2], vertices[1][2], vertices[2][2]);
-
-	face.child<Quadrant::TL>().edgePtr<Side::Top>() = face.edge<Side::Top>().children[1].get();
-	face.child<Quadrant::TL>().edgePtr<Side::Left>() = face.edge<Side::Left>().children[0].get();
-	face.child<Quadrant::TL>().edgeUPtr<Side::Bottom>() = std::make_unique<EdgeS<Side::Bottom, Data>>(vertices[1][1]);
-	face.child<Quadrant::TL>().edgeUPtr<Side::Right>() = std::make_unique<EdgeS<Side::Right, Data>>(vertices[1][0]);
-
-	face.child<Quadrant::TR>().edgePtr<Side::Top>() = face.edge<Side::Top>().children[0].get();
-	face.child<Quadrant::TR>().edgePtr<Side::Right>() = face.edge<Side::Right>().children[1].get();
-	face.child<Quadrant::TR>().edgeUPtr<Side::Bottom>() = std::make_unique<EdgeS<Side::Bottom, Data>>(vertices[2][1]);
-	face.child<Quadrant::TR>().edgeUPtr<Side::Left>() = std::make_unique<EdgeS<Side::Left, Data>>(
-															vertices[1][1],
-															&face.child<Quadrant::TL>().edge<Side::Right>());
-
-	face.child<Quadrant::BL>().edgePtr<Side::Bottom>() = face.edge<Side::Bottom>().children[0].get();
-	face.child<Quadrant::BL>().edgePtr<Side::Left>() = face.edge<Side::Left>().children[1].get();
-	face.child<Quadrant::BL>().edgeUPtr<Side::Top>() = std::make_unique<EdgeS<Side::Top, Data>>(
-															vertices[0][1], 
-															&face.child<Quadrant::TL>().edge<Side::Bottom>());
-	face.child<Quadrant::BL>().edgeUPtr<Side::Right>() = std::make_unique<EdgeS<Side::Right, Data>>(vertices[1][1]);
-
-	face.child<Quadrant::BR>().edgePtr<Side::Bottom>() = face.edge<Side::Bottom>().children[1].get();
-	face.child<Quadrant::BR>().edgePtr<Side::Right>() = face.edge<Side::Right>().children[0].get();
-	face.child<Quadrant::BR>().edgeUPtr<Side::Top>() = std::make_unique<EdgeS<Side::Top, Data>>(
-															vertices[1][1],
-															&face.child<Quadrant::TR>().edge<Side::Bottom>());
-	face.child<Quadrant::BR>().edgeUPtr<Side::Left>() = std::make_unique<EdgeS<Side::Left, Data>>(
-															vertices[1][2],
-															&face.child<Quadrant::BL>().edge<Side::Right>());
-}
-
-template<typename Data>
-void subdivideFace(TopFace<Data>& face) {
+template<typename Face_t, typename Data>
+void subdivideFaceImp(Face_t& face) {
 	using VertexPtr = std::shared_ptr<Vertex<Data>>;
 
 	//Create child faces
@@ -398,6 +340,16 @@ void subdivideFace(TopFace<Data>& face) {
 		&face.child<Quadrant::BL>().edge<Side::Right>());
 }
 
+template<size_t Q, typename Data>
+void subdivideFace(FaceQ<Q, Data>& face) {
+	subdivideFaceImp<FaceQ<Q, Data>, Data>(face);
+}
+
+template<typename Data>
+void subdivideFace(TopFace<Data>& face) {
+	subdivideFaceImp<TopFace<Data>, Data>(face);
+}
+
 template<typename T>
 class VariableSizeGrid {
 	int m_minX;
@@ -454,8 +406,8 @@ VariableSizeGrid<TopFace<Data>> initializeTopFaceGrid(size_t xFaces, size_t yFac
 				faceGrid(y, x-1).edge<Side::Right>().pair = &faceGrid(y, x).edge<Side::Left>();
 			}
 			if (y > 0) {
-				faceGrid(y, x).edge<Side::Top>().pair = &faceGrid(y-1, x).edge<Side::Bottom>();
-				faceGrid(y-1, x).edge<Side::Bottom>().pair = &faceGrid(y, x).edge<Side::Top>();
+				faceGrid(y, x).edge<Side::Bottom>().pair = &faceGrid(y-1, x).edge<Side::Top>();
+				faceGrid(y-1, x).edge<Side::Top>().pair = &faceGrid(y, x).edge<Side::Bottom>();
 			}
 		}
 	}

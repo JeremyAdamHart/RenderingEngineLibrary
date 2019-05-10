@@ -317,6 +317,7 @@
     <ClInclude Include="HeatParticleMat.h" />
     <ClInclude Include="HeatParticleShader.h" />
     <ClInclude Include="HeatParticleSystem.h" />
+    <ClInclude Include="noiseTest.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Quadtree.h" />
   </ItemGroup>
@@ -327,6 +328,7 @@
     <ClCompile Include="HeatParticleMat.cpp" />
     <ClCompile Include="HeatParticleShader.cpp" />
     <ClCompile Include="HeatParticleSystem.cpp" />
+    <ClCompile Include="noiseTest.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="JORL_Examples.cpp" />
   </ItemGroup>

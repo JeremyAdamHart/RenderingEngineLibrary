@@ -45,6 +45,7 @@ using namespace std;
 #include "ConvexHull.h"
 
 #include "AdaptiveNoise.h"
+#include "noiseTest.h"
 
 //Random
 #include <random>
@@ -885,6 +886,8 @@ void WindowManager::adaptiveNoiseLoop() {
 	Camera cam;
 
 	adaptive::SimpleNoiseField simpNoise(2, 2);
+
+	validateTopFaces(simpNoise.noise);
 
 	const size_t DIMENSION = 100;
 	float* image = new float[DIMENSION*DIMENSION];

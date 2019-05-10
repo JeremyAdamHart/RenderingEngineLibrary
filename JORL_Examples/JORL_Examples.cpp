@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "AdaptiveNoise.h"
+#include "noiseTest.h"
 
 /*template<typename T>
 optional{
@@ -30,13 +31,6 @@ class B {
 	B(int x, int y) : grid(x, y) {}
 };
 
-static int count = 0;
-
-struct Counter {
-	int val;
-	Counter() :val(count++) {}
-};
-
 int main()
 {
 	srand(time(0));
@@ -49,7 +43,7 @@ int main()
 
 	using namespace adaptive;
 
-	TopFace<Counter> tf;
+	/*TopFace<Counter> tf;
 	tf.edge<Side::Left>().vertex = std::make_shared<Vertex<Counter>>();
 	tf.edge<Side::Bottom>().vertex = std::make_shared<Vertex<Counter>>();
 	tf.edge<Side::Right>().vertex = std::make_shared<Vertex<Counter>>();
@@ -62,6 +56,9 @@ int main()
 		tf.vertex<Quadrant::TL>().d.val);
 
 	VariableSizeGrid<TopFace<Counter>> g = initializeTopFaceGrid<Counter>(3, 3);
+	*/
+
+	runAdaptiveNoiseTests();
 
 
 	/*
