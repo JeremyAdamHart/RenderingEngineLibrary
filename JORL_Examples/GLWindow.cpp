@@ -44,6 +44,8 @@ using namespace std;
 //Convex Hull
 #include "ConvexHull.h"
 
+#include "AdaptiveNoise.h"
+
 //Random
 #include <random>
 #include <ctime>
@@ -846,7 +848,101 @@ void WindowManager::rigidBodyTest() {
 	glfwTerminate();
 }
 
+bool leftButtonPressed = false;
+bool inputHandled = false;
+glm::vec2 lastClickPosition;
+
 //Temporary testing
+void WindowManager::adaptiveNoiseLoop() {
+	//Original main loop
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+	//glfwSetCursorPosCallback(window, adaptiveCursorPosCallback);
+
+	vec3 points [6] = {
+		//First triangle
+		vec3(-0.5f, 0.5f, 0.f)*2.f,
+		vec3(0.5f, 0.5f, 0.f)*2.f,
+		vec3(0.5f, -0.5f, 0.f)*2.f,
+		//Second triangle
+		vec3(0.5f, -0.5f, 0.f)*2.f,
+		vec3(-0.5f, -0.5f, 0.f)*2.f,
+		vec3(-0.5f, 0.5f, 0.f)*2.f
+	};
+
+	vec2 coords[6] = {
+		//First triangle
+		vec2(0, 1.f),
+		vec2(1.f, 1.f),
+		vec2(1.f, 0.f),
+		//Second triangle
+		vec2(1.f, 0.f),
+		vec2(0.f, 0.f),
+		vec2(0.f, 1.f)
+	};
+	SimpleTexManager tm;
+
+	Camera cam;
+
+	adaptive::SimpleNoiseField simpNoise(2, 2);
+
+	const size_t DIMENSION = 100;
+	float* image = new float[DIMENSION*DIMENSION];
+	for (int y = 0; y < DIMENSION; y++) {
+		for (int x = 0; x < DIMENSION; x++) {
+			image[y*DIMENSION + x] = simpNoise.evaluateAt(glm::vec2(float(x) / float(DIMENSION - 1), float(y) / float(DIMENSION - 1)));
+		}
+	}
+
+	SimpleTexShader texShader;	
+	auto texGeometry = std::make_shared<SimpleTexGeometry>(points, coords, 6, GL_TRIANGLES);
+	Texture noiseTex = createTexture2DFromData(TexInfo(GL_TEXTURE_2D, { int(DIMENSION), int(DIMENSION) }, 0, GL_RED, GL_R32F, GL_FLOAT), &tm, image);
+	Drawable texDrawable(texGeometry, std::make_shared<TextureMat>(noiseTex));
+	
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && !leftButtonPressed) {
+			leftButtonPressed = true;
+
+			double xpos, ypos;
+			glfwGetCursorPos(window, &xpos, &ypos);
+			int vp[4];
+			glGetIntegerv(GL_VIEWPORT, vp);
+			vec2 mousePos = vec2(float(xpos) / float(vp[2]),
+				float(-ypos) / float(vp[3]) + 1.f);
+			lastClickPosition = mousePos;
+
+			simpNoise.subdivideSquare(lastClickPosition);
+			for (int y = 0; y < DIMENSION; y++) {
+				for (int x = 0; x < DIMENSION; x++) {
+					image[y*DIMENSION + x] = simpNoise.evaluateAt(glm::vec2(float(x) / float(DIMENSION - 1), float(y) / float(DIMENSION - 1)));
+				}
+			}
+
+			glActiveTexture(NO_ACTIVE_TEXTURE);
+			glBindTexture(GL_TEXTURE_2D, noiseTex.getID());
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, DIMENSION, DIMENSION, 0, GL_RED, GL_FLOAT, image);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+		else if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS && leftButtonPressed){
+			leftButtonPressed = false;
+		}
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+		}
+
+		texShader.draw(cam, texDrawable);
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
 void WindowManager::mainLoop() {
 	//Original main loop
 
@@ -863,7 +959,7 @@ void WindowManager::mainLoop() {
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 	//glfwSetCursorPosCallback(window, cursorPositionCallback);
 
-	vec3 points [6] = {
+	vec3 points[6] = {
 		//First triangle
 		vec3(-0.5f, 0.5f, 0.f)*2.f,
 		vec3(0.5f, 0.5f, 0.f)*2.f,
@@ -889,19 +985,19 @@ void WindowManager::mainLoop() {
 	//AO framebuffer
 	Framebuffer pnFbo = createNewFramebuffer(window_width, window_height);
 	pnFbo.addTexture(createTexture2D(
-		TexInfo(GL_TEXTURE_2D, {window_width, window_height}, 0, GL_RGB, GL_RGB32F, GL_FLOAT), &tm), 
+		TexInfo(GL_TEXTURE_2D, { window_width, window_height }, 0, GL_RGB, GL_RGB32F, GL_FLOAT), &tm),
 		GL_COLOR_ATTACHMENT0);
 
 	pnFbo.addTexture(createTexture2D(
-		TexInfo(GL_TEXTURE_2D, {window_width, window_height}, 0, GL_RGB, GL_RGB32F, GL_FLOAT), &tm), 
+		TexInfo(GL_TEXTURE_2D, { window_width, window_height }, 0, GL_RGB, GL_RGB32F, GL_FLOAT), &tm),
 		GL_COLOR_ATTACHMENT1);
 	pnFbo.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT);
 
-	Framebuffer fbWindow (window_width, window_height);
+	Framebuffer fbWindow(window_width, window_height);
 	const int TEX_WIDTH = 160;
 	const int TEX_HEIGHT = 160;
 	Framebuffer fbTex = createNewFramebuffer(TEX_WIDTH, TEX_HEIGHT);
-	
+
 	if (!fbTex.addTexture(createTexture2D(TEX_WIDTH, TEX_HEIGHT, &tm),
 		GL_COLOR_ATTACHMENT0) ||
 		!fbTex.addTexture(createDepthTexture(TEX_WIDTH, TEX_HEIGHT, &tm),
@@ -926,8 +1022,8 @@ void WindowManager::mainLoop() {
 	SimpleShader shader;
 	BlinnPhongShader bpShader;
 	BlinnPhongShader bpTexShader(
-	{ { GL_VERTEX_SHADER, "#define USING_TEXTURE\n" },
-	{ GL_FRAGMENT_SHADER, "#define USING_TEXTURE\n"} });
+		{ { GL_VERTEX_SHADER, "#define USING_TEXTURE\n" },
+		{ GL_FRAGMENT_SHADER, "#define USING_TEXTURE\n"} });
 
 	fbTex.use();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -940,13 +1036,13 @@ void WindowManager::mainLoop() {
 
 
 	vector<Drawable> drawables;
-//	loadWavefront("untrackedmodels/SciFiCenter/CenterCity/", "Center_City_Sci-Fi", &drawables, &tm);
-//	loadWavefront("untrackedmodels/OrganodronCity2/", "OrganodronCity", &drawables, &tm);
+	//	loadWavefront("untrackedmodels/SciFiCenter/CenterCity/", "Center_City_Sci-Fi", &drawables, &tm);
+	//	loadWavefront("untrackedmodels/OrganodronCity2/", "OrganodronCity", &drawables, &tm);
 
-/*	Drawable debugSquare(
-		new TextureMat(dynamic_cast<TextureMat*>(drawables[2].getMaterial(TextureMat::id))->tex),
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
-*/
+	/*	Drawable debugSquare(
+			new TextureMat(dynamic_cast<TextureMat*>(drawables[2].getMaterial(TextureMat::id))->tex),
+			new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES));
+	*/
 	vec3 lightPos(10.f, 10.f, 10.f);
 
 	for (int i = 0; i < drawables.size(); i++) {
@@ -980,20 +1076,20 @@ void WindowManager::mainLoop() {
 
 		texShader.draw(cam, texSquare);
 
-/*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		for (int i = 0; i < drawables.size(); i++) {
-			if (drawables[i].getMaterial(TextureMat::id) != nullptr) {
-				bpTexShader.draw(cam, lightPos, drawables[i]);
-			}
-			else
-				bpShader.draw(cam, lightPos, drawables[i]);
-		}
-		//texShader.draw(cam, debugSquare);
-*/
-		
+		/*		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				for (int i = 0; i < drawables.size(); i++) {
+					if (drawables[i].getMaterial(TextureMat::id) != nullptr) {
+						bpTexShader.draw(cam, lightPos, drawables[i]);
+					}
+					else
+						bpShader.draw(cam, lightPos, drawables[i]);
+				}
+				//texShader.draw(cam, debugSquare);
+		*/
 
-//		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//		bpShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
+
+		//		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//		bpShader.draw(cam, vec3(10.f, 10.f, 10.f), dragon);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

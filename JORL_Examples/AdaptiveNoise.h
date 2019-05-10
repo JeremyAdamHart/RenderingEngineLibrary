@@ -8,6 +8,9 @@
 #include <random>
 #include <ctime>
 
+namespace adaptive {
+
+
 //Taken from answer:
 // https://stackoverflow.com/questions/25958259/how-do-i-find-out-if-a-tuple-contains-a-type
 //vv from Piotr Skotnicki
@@ -65,56 +68,7 @@ enum Side : size_t {
 	Top,
 	Left
 };
-/*
-template<typename Data>
-struct TopFace {
-	std::unique_ptr<Edge<Data>> edges[4];
-	std::unique_ptr<Face<Data>> next;
-	std::unique_ptr<Face<Data>> children [4];
 
-	Face() :edges({ nullptr, nullptr, nullptr, nullptr }), next(nullptr), children({ nullptr, nullptr, nullptr, nullptr }) {}
-	bool hasChild() { return children[0] != nullptr && children[1] == nullptr && children[2] == nullptr && children[3] == nullptr; }
-
-	Edge<Data>& edge(size_t side) {
-		return edges[side];
-	}
-};
-
-//Add additional template for quadrant to avoid assert statements?
-template<typename Data>
-struct Face {
-	size_t quadrant;
-	std::unique_ptr<Edge<Data>> insideEdges[2];		//0, 1
-	Edge<Data>* outsideEdges[2];					//2, 3
-	std::unique_ptr<Face<Data>> children [4];
-
-	Face(size_t quadrant) :quadrant(quadrant), edges({ nullptr, nullptr, nullptr, nullptr }), next(nullptr), children({ nullptr, nullptr, nullptr, nullptr }) {}
-	bool hasChild() { return children[0] != nullptr && children[1] != nullptr && children[2] != nullptr && children[3] != nullptr; }
-
-	size_t sideToIndex(size_t side) { return (side + quadrant) % 4; }
-	size_t indexToSide(size_t index) { return (side + 4 - quadrant) % 4; }
-
-	Edge& edge(size_t side) {
-		size_t index = sideToIndex(side);
-		if (index < 2)
-			return *insideEdges[index];
-		else
-			return outsideEdges[index - 2];
-	}
-
-	std::unique_ptr<Edge<Data>>& insideEdgePtr(size_t side) {
-		size_t index = sideToIndex(side);
-		assert(index < 2);
-		return insideEdges[index];
-	}
-
-	Edge<Data>* outsideEdgePtr(size_t side) {
-		size_t index = sideToIndex(side);
-		assert(index > 1 && index < 4);
-		return outsideEdges[index];
-	}
-};
-*/
 
 template<size_t S>
 constexpr size_t flip() { return (S + 2) % 4; }
@@ -163,9 +117,9 @@ static constexpr size_t sToI() { return (Side + Q) % 4; }			//Side to index
 template<size_t Q, size_t Index>
 static constexpr size_t iToS() { return (Index + 4 - Q) % 4; }		//Index to side
 template<size_t S>
-constexpr size_t sToV() { return (6 - S) % 4; }					//Side to quadrant
+static constexpr size_t sToV() { return (6 - S) % 4; }					//Side to vertex
 template<size_t V>
-constexpr size_t vToS() { return (6 - V) % 4; }
+static constexpr size_t vToS() { return (6 - V) % 4; }
 
 //Consider subclassing off of Face<Data>
 template<size_t Q, typename Data>
@@ -192,7 +146,7 @@ struct FaceQ{
 		nullptr, nullptr }) 
 	{}
 
-	bool hasChild() { return children[0] != nullptr && children[1] != nullptr && children[2] != nullptr && children[3] != nullptr; }
+	bool hasChild() { return std::get<std::unique_ptr<FaceQ<Quadrant::TL, Data>>>(children) != nullptr; }
 
 	template<size_t C>
 	FaceQ<C, Data>& child() {
@@ -243,7 +197,7 @@ struct FaceQ{
 
 	template<size_t Q>
 	Vertex<Data>& vertex() {
-		return edge<qToS<Q>>.vertex;
+		return *edge<vToS<Q>()>().vertex;
 	}
 };
 
@@ -257,19 +211,19 @@ struct TopFace {
 	Faces children;
 
 	using Edges = std::tuple <
-		std::unique_ptr<EdgeS<Side::Top, Data>>,
-		std::unique_ptr<EdgeS<Side::Left, Data>>,
+		std::unique_ptr<EdgeS<Side::Bottom, Data>>,
 		std::unique_ptr<EdgeS<Side::Right, Data>>,
-		std::unique_ptr<EdgeS<Side::Bottom, Data>>>;
+		std::unique_ptr<EdgeS<Side::Top, Data>>,
+		std::unique_ptr<EdgeS<Side::Left, Data>>>;
 	Edges edges;
 
 	TopFace() :edges({
-		std::make_unique<EdgeS<Side::Top, Data>>(), 
-		std::make_unique<EdgeS<Side::Left, Data>>(),
+		std::make_unique<EdgeS<Side::Bottom, Data>>(), 
 		std::make_unique<EdgeS<Side::Right, Data>>(),
-		std::make_unique<EdgeS<Side::Bottom, Data>>()}) {}
+		std::make_unique<EdgeS<Side::Top, Data>>(),
+		std::make_unique<EdgeS<Side::Left, Data>>()}) {}
 
-	bool hasChild() { return children[0] != nullptr && children[1] != nullptr && children[2] != nullptr && children[3] != nullptr; }
+	bool hasChild() { return std::get<0>(children) && std::get<1>(children) && std::get<2>(children) && std::get<3>(children); }
 
 	template<size_t C>
 	FaceQ<C, Data>& child() {
@@ -293,7 +247,7 @@ struct TopFace {
 
 	template<size_t Q>
 	Vertex<Data>& vertex() {
-		return edge<qToS<Q>>().vertex;
+		return *edge<vToS<Q>()>().vertex;
 	}
 };
 
@@ -320,7 +274,7 @@ void subdivideEdge(EdgeS<S, Data>& edge,
 }
 
 
-template<size_t Q, typename Data, typename Face_t>
+template<size_t Q, typename Data>
 void subdivideFace(FaceQ<Q, Data>& face) {
 	using VertexPtr = std::shared_ptr<Vertex<Data>>;
 
@@ -349,7 +303,7 @@ void subdivideFace(FaceQ<Q, Data>& face) {
 
 	//Subdivide outside edges
 	subdivideEdge(face.edge<Side::Right>(), vertices[2][2], vertices[2][1], vertices[2][0]);
-	subdivideEdge(face.edge<Side::Top>(), vertices[2][0], vertices[1][0], vertices[2][0]);
+	subdivideEdge(face.edge<Side::Top>(), vertices[2][0], vertices[1][0], vertices[0][0]);
 	subdivideEdge(face.edge<Side::Left>(), vertices[0][0], vertices[0][1], vertices[0][2]);
 	subdivideEdge(face.edge<Side::Bottom>(), vertices[0][2], vertices[1][2], vertices[2][2]);
 
@@ -362,7 +316,7 @@ void subdivideFace(FaceQ<Q, Data>& face) {
 	face.child<Quadrant::TR>().edgePtr<Side::Right>() = face.edge<Side::Right>().children[1].get();
 	face.child<Quadrant::TR>().edgeUPtr<Side::Bottom>() = std::make_unique<EdgeS<Side::Bottom, Data>>(vertices[2][1]);
 	face.child<Quadrant::TR>().edgeUPtr<Side::Left>() = std::make_unique<EdgeS<Side::Left, Data>>(
-															vertices[2][0],
+															vertices[1][1],
 															&face.child<Quadrant::TL>().edge<Side::Right>());
 
 	face.child<Quadrant::BL>().edgePtr<Side::Bottom>() = face.edge<Side::Bottom>().children[0].get();
@@ -396,21 +350,22 @@ void subdivideFace(TopFace<Data>& face) {
 
 	// 00 top left, 33 bottom right
 	VertexPtr vertices[3][3] = {
+		{std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>()},
 		{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() },
-	{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() },
-	{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() }
+		{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() }
 	};
 
 	/***********
+	* Edges
 	*    1__0
 	*  0|    |1
 	*  1|____|0
 	*    0  1
-	************/
+	*/
 
 	//Subdivide outside edges
 	subdivideEdge(face.edge<Side::Right>(), vertices[2][2], vertices[2][1], vertices[2][0]);
-	subdivideEdge(face.edge<Side::Top>(), vertices[2][0], vertices[1][0], vertices[2][0]);
+	subdivideEdge(face.edge<Side::Top>(), vertices[2][0], vertices[1][0], vertices[0][0]);
 	subdivideEdge(face.edge<Side::Left>(), vertices[0][0], vertices[0][1], vertices[0][2]);
 	subdivideEdge(face.edge<Side::Bottom>(), vertices[0][2], vertices[1][2], vertices[2][2]);
 
@@ -423,7 +378,7 @@ void subdivideFace(TopFace<Data>& face) {
 	face.child<Quadrant::TR>().edgePtr<Side::Right>() = face.edge<Side::Right>().children[1].get();
 	face.child<Quadrant::TR>().edgeUPtr<Side::Bottom>() = std::make_unique<EdgeS<Side::Bottom, Data>>(vertices[2][1]);
 	face.child<Quadrant::TR>().edgeUPtr<Side::Left>() = std::make_unique<EdgeS<Side::Left, Data>>(
-		vertices[2][0],
+		vertices[1][1],
 		&face.child<Quadrant::TL>().edge<Side::Right>());
 
 	face.child<Quadrant::BL>().edgePtr<Side::Bottom>() = face.edge<Side::Bottom>().children[0].get();
@@ -481,19 +436,24 @@ template<typename Data>
 VariableSizeGrid<TopFace<Data>> initializeTopFaceGrid(size_t xFaces, size_t yFaces) {
 	VariableSizeGrid<TopFace<Data>> faceGrid (xFaces, yFaces);
 	VariableSizeGrid<std::shared_ptr<Vertex<Data>>> vertexGrid(xFaces + 1, yFaces + 1);
+	for (int y = 0; y < vertexGrid.ySize(); y++) {
+		for (int x = 0; x < vertexGrid.xSize(); x++) {
+			vertexGrid(y, x) = std::make_shared<Vertex<Data>>();
+		}
+	}
 
 	for (int y = 0; y < yFaces; y++) {
 		for (int x = 0; x < xFaces; x++) {
-			faceGrid(y, x).edge<Side::Top>().vertex = vertexGrid(y, x);
-			faceGrid(y, x).edge<Side::Left>().vertex = vertexGrid(y+1, x);
-			faceGrid(y, x).edge<Side::Bottom>().vertex = vertexGrid(y+1, x+1);
-			faceGrid(y, x).edge<Side::Right>().vertex = vertexGrid(y, x+1);
+			faceGrid(y, x).edge<Side::Left>().vertex = vertexGrid(y, x);
+			faceGrid(y, x).edge<Side::Top>().vertex = vertexGrid(y+1, x);
+			faceGrid(y, x).edge<Side::Right>().vertex = vertexGrid(y+1, x+1);
+			faceGrid(y, x).edge<Side::Bottom>().vertex = vertexGrid(y, x+1);
 
 			if (x > 0) {
 				faceGrid(y, x).edge<Side::Left>().pair = &faceGrid(y, x-1).edge<Side::Right>();
 				faceGrid(y, x-1).edge<Side::Right>().pair = &faceGrid(y, x).edge<Side::Left>();
 			}
-			if (y < 0) {
+			if (y > 0) {
 				faceGrid(y, x).edge<Side::Top>().pair = &faceGrid(y-1, x).edge<Side::Bottom>();
 				faceGrid(y-1, x).edge<Side::Bottom>().pair = &faceGrid(y, x).edge<Side::Top>();
 			}
@@ -514,41 +474,88 @@ public:
 
 template<typename Face>
 float evaluate(Face& face, glm::vec2 p) {
-	float v0 = (1 - p.x)*face.vertex<Quadrant::BL>().d.value + p.x*face.vertex<Quadrant::BR>.d.value;
-	float v1 = (1 - p.x)*face.vertex<Quadrant::TL>().d.value + p.x*face.vertex<Quadrant::TR>.d.value;
+	float v0 = (1 - p.x)*face.vertex<Quadrant::BL>().d.value + p.x*face.vertex<Quadrant::BR>().d.value;
+	float v1 = (1 - p.x)*face.vertex<Quadrant::TL>().d.value + p.x*face.vertex<Quadrant::TR>().d.value;
 
 	return (1 - p.y)*v0 + p.y*v1;
 }
 
+template<typename Face>
+float evaluateClosest(Face& face, glm::vec2 p) {
+	if (p.x > 0.5f) {
+		if (p.y > 0.5f)
+			return face.vertex<Quadrant::TR>().d.value;
+		else
+			return face.vertex<Quadrant::BR>().d.value;
+	}
+	else {
+		if (p.y > 0.5f)
+			return face.vertex<Quadrant::TL>().d.value;
+		else
+			return face.vertex<Quadrant::BL>().d.value;
+	}
+}
+
 class SimpleNoiseField{
+public:
 	VariableSizeGrid<TopFace<Noise>> noise;
 	SimpleNoiseField(int width, int height);
-	/*
+	
 	template<typename Face>
-	float evaluateAt(Face& face, glm::vec2 point, glm::vec2 bottomLeft, glm::vec2 dim) {
+	float evaluateAtImp(Face& face, glm::vec2 point, glm::vec2 bottomLeft, glm::vec2 dim, float factor) {
 		glm::vec2 normalizedPoint = (point - bottomLeft) / dim;
-		float result = evaluate(face, normalizedPoint);
+		float result = evaluate(face, normalizedPoint)*factor;
 
 		if (face.hasChild()) {
 			if (point.x - bottomLeft.x > dim.x*0.5f) {
 				bottomLeft.x += dim.x*0.5f;
 				if (point.y - bottomLeft.y > dim.y*0.5f) {
 					bottomLeft.y += dim.y*0.5f;
-					return result + evaluateAt(face.child<Quadrant::TR>, point, bottomLeft, dim*0.5f);
+					return result + evaluateAtImp<FaceQ<Quadrant::TR, Noise>>(face.child<Quadrant::TR>(), point, bottomLeft, dim*0.5f, factor*0.5f);
 				}
 				else
-					return result + evaluateAt(face.child<Quadrant::BR>, point, bottomLeft, dim*0.5f);
+					return result + evaluateAtImp(face.child<Quadrant::BR>(), point, bottomLeft, dim*0.5f, factor*0.5f);
 			} 
 			else {
 				if (point.y - bottomLeft.y > dim.y*0.5f) {
 					bottomLeft.y += dim.y*0.5f;
-					return result + evaluateAt(face.child<Quadrant::TL>, point, bottomLeft, dim*0.5f);
+					return result + evaluateAtImp(face.child<Quadrant::TL>(), point, bottomLeft, dim*0.5f, factor*0.5f);
 				}
 				else
-					return result + evaluateAt(face.child<Quadrant::BL>, point, bottomLeft, dim*0.5f);
+					return result + evaluateAtImp(face.child<Quadrant::BL>(), point, bottomLeft, dim*0.5f, factor*0.5f);
 			}
 		}
 	}
 
-	float evaluateAt(glm::vec2 point);*/
+	float evaluateAt(glm::vec2 point);
+
+	void subdivideSquare(glm::vec2 point);
+
+	template<typename Face>
+	void subdivideSquareImp(Face& face, glm::vec2 point, glm::vec2 bottomLeft, glm::vec2 dim) {
+		if (face.hasChild()) {
+			if (point.x - bottomLeft.x > dim.x*0.5f) {
+				bottomLeft.x += dim.x*0.5f;
+				if (point.y - bottomLeft.y > dim.y*0.5f) {
+					bottomLeft.y += dim.y*0.5f;
+					subdivideSquareImp(face.child <Quadrant::TR>(), point, bottomLeft, dim*0.5f);
+				}
+				else
+					subdivideSquareImp(face.child<Quadrant::BR>(), point, bottomLeft, dim*0.5f);
+			}
+			else {
+				if (point.y - bottomLeft.y > dim.y*0.5f) {
+					bottomLeft.y += dim.y*0.5f;
+					return subdivideSquareImp(face.child<Quadrant::TL>(), point, bottomLeft, dim*0.5f);
+				}
+				else
+					return subdivideSquareImp(face.child<Quadrant::BL>(), point, bottomLeft, dim*0.5f);
+			}
+		}
+		else {
+			subdivideFace(face);
+		}
+	}
 };
+
+}

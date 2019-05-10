@@ -36,6 +36,7 @@ public:
 
 	void mainLoop();
 	void noiseLoop();
+	void adaptiveNoiseLoop();
 	void objLoadingLoop();
 	void rigidBodyTest();
 	void testLoop();

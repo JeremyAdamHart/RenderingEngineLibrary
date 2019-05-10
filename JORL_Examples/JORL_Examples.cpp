@@ -26,8 +26,15 @@ struct A {
 };
 
 class B {
-	VariableSizeGrid<TopFace<Noise>> grid;
+	adaptive::VariableSizeGrid<adaptive::TopFace<adaptive::Noise>> grid;
 	B(int x, int y) : grid(x, y) {}
+};
+
+static int count = 0;
+
+struct Counter {
+	int val;
+	Counter() :val(count++) {}
 };
 
 int main()
@@ -40,6 +47,24 @@ int main()
 
 	A<float, int> obj1;
 
+	using namespace adaptive;
+
+	TopFace<Counter> tf;
+	tf.edge<Side::Left>().vertex = std::make_shared<Vertex<Counter>>();
+	tf.edge<Side::Bottom>().vertex = std::make_shared<Vertex<Counter>>();
+	tf.edge<Side::Right>().vertex = std::make_shared<Vertex<Counter>>();
+	tf.edge<Side::Top>().vertex = std::make_shared<Vertex<Counter>>();
+
+	printf("vertices = %d, %d, %d, %d\n", 
+		tf.vertex<Quadrant::BL>().d.val,
+		tf.vertex<Quadrant::BR>().d.val,
+		tf.vertex<Quadrant::TR>().d.val,
+		tf.vertex<Quadrant::TL>().d.val);
+
+	VariableSizeGrid<TopFace<Counter>> g = initializeTopFaceGrid<Counter>(3, 3);
+
+
+	/*
 	FaceQ<Quadrant::TL, float> face;
 	//face.edge<Side::Left>() = EdgeS<Side::Left, float>();
 	//subdivideFace(face);
@@ -49,7 +74,7 @@ int main()
 	VariableSizeGrid<TopFace<Noise>> grid(20, 20);
 	
 	initializeTopFaceGrid<float>(5, 5);
-
+	*/
 	//std::vector<TopFace<float>> topFaces(4);
 
 //	wm.testLoop();
@@ -60,6 +85,7 @@ int main()
 //	wm.mainLoop();
 //	wm.noiseLoop();
 //	wm.particleLoop();
-	wm.convexTestLoop();
+//	wm.convexTestLoop();
+	wm.adaptiveNoiseLoop();
 }
 
