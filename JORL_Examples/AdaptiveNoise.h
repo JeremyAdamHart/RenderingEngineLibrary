@@ -409,7 +409,7 @@ class Noise {
 public:
 	float value;
 
-	Noise() :value(randNorm()) {}
+	Noise() :value(randNorm()*2.f - 1.f) {}
 };
 
 template<typename Face>

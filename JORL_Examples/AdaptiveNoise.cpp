@@ -19,7 +19,7 @@ float SimpleNoiseField::evaluateAt(glm::vec2 point) {
 	int indexX = glm::clamp(int(point.x / cellWidth), 0, int(noise.xSize()-1));
 	int indexY = glm::clamp(int(point.y / cellHeight), 0, int(noise.ySize()-1));
 
-	return evaluateAtImp(noise(indexY, indexX), point, 
+	return 0.5f + 0.5f*evaluateAtImp(noise(indexY, indexX), point, 
 		glm::vec2(	float(indexX)*cellWidth, 
 					float(indexY)*cellHeight), 
 		glm::vec2(cellWidth, cellHeight), 0.75f);
