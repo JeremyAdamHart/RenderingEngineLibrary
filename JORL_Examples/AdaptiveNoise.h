@@ -36,26 +36,6 @@ struct Vertex {
 	std::shared_ptr<Vertex<Data>> child;
 	Vertex() :child(nullptr) {}
 };
-/*
-template<typename Data>
-struct Edge {
-	std::unique_ptr<Edge<Data>> children[2];
-	Edge<Data>* next;
-	Edge<Data>* pair;
-	std::shared_ptr<Vertex<Data>> vertex;
-
-	Edge(std::shared_ptr<Vertex<Data>> vertex, Edge<Data>* pair = nullptr) 
-		:child(nullptr), next(nullptr), pair(pair), vertex(vertex) 
-	{
-		if (pair)
-			pair->pair = this;
-	}
-	Edge(Edge<Data>* pair) {
-		pair->pair = this;
-	}
-
-	bool hasChild() { return children[0] != nullptr && children[0] != nullptr; }
-};*/
 
 /*
 *     2
@@ -84,8 +64,6 @@ struct EdgeS{
 
 	EdgeS<flip<S>(), Data>* pair;		//Pair is on the opposite side
 
-	//EdgeS() :children({ nullptr, nullptr }), pair(nullptr), vertex(nullptr) {}
-
 	EdgeS(std::shared_ptr<Vertex<Data>> vertex=nullptr, EdgeS<flip<S>(), Data>* pair = nullptr)
 		: pair(pair), vertex(vertex), children{nullptr, nullptr }
 	{
@@ -98,13 +76,6 @@ struct EdgeS{
 
 	bool hasChild() { return children[0] && children[1]; }
 };
-
-/*template<size_t X, size_t Side, typename Data, typename ...Args>
-std::unique_ptr<EdgeS<X, Data>> getSide(std::tuple < std::unique_ptr<EdgeS<Side, Data>, Args...>& list) {
-	static_assert(std::is_same<X, Side>::value);
-	return get_tuple
-}*/
-
 
 enum Quadrant : size_t {
 	TL = 0,
@@ -267,28 +238,6 @@ struct TopFace {
 };
 
 template<size_t S, typename Data>
-void subdivideEdge(EdgeS<S, Data>& edge, 
-	std::shared_ptr<Vertex<Data>> v0 = nullptr , 
-	std::shared_ptr<Vertex<Data>> v1 = nullptr, 
-	std::shared_ptr<Vertex<Data>> v2 = nullptr) 
-{
-	if (!edge.hasChild())
-	{
-		if(!v0) v0 = std::make_shared<Vertex<Data>>();
-		if(!v1) v1 = std::make_shared<Vertex<Data>>();
-		if(!v2) v2 = std::make_shared<Vertex<Data>>();
-
-		edge.children[0] = std::make_unique<EdgeS<S, Data>>(v1);
-		edge.children[1] = std::make_unique<EdgeS<S, Data>>(v2);
-		if (edge.pair) {
-			edge.pair->children[0] = std::make_unique < EdgeS <flip<S>(), Data >> (v1, edge.children[1].get());
-			edge.pair->children[1] = std::make_unique<EdgeS<flip<S>(), Data>>(v0, edge.children[0].get());
-		}
-
-	}
-}
-
-template<size_t S, typename Data>
 void subdivideEdge(EdgeS<S, Data>& edge, Vertex<Data>& p0, Vertex<Data>& p1){
 	if (!edge.hasChild())
 	{
@@ -336,28 +285,6 @@ void subdivideFaceImp(Face_t& face) {
 
 	auto v_center = std::make_shared<Vertex<Data>>();
 
-	//Get corner vertices
-/*	std::shared_ptr<Vertex<Data>> tlVertex = (face.edge<Side::Left>().hasChild()) ?
-		face.edge<Side::Left>().children[0]->pair->vertex :
-		std::make_shared<Vertex<Data>>();
-	std::shared_ptr<Vertex<Data>> trVertex = (face.edge<Side::Top>().hasChild()) ?
-		face.edge<Side::Top>().children[0]->pair->vertex :
-		std::make_shared<Vertex<Data>>();
-	std::shared_ptr<Vertex<Data>> brVertex = (face.edge<Side::Right>().hasChild()) ?
-		face.edge<Side::Right>().children[0]->pair->vertex :
-		std::make_shared<Vertex<Data>>();
-	std::shared_ptr<Vertex<Data>> blVertex = (face.edge<Side::Bottom>().hasChild()) ?
-		face.edge<Side::Bottom>().children[0]->pair->vertex :
-		std::make_shared<Vertex<Data>>();
-		*/
-	// 00 top left, 33 bottom right
-	/*
-	VertexPtr vertices[3][3] = {
-		{ tlVertex, std::make_shared<Vertex<Data>>() , trVertex },
-		{ std::make_shared<Vertex<Data>>(), std::make_shared<Vertex<Data>>() , std::make_shared<Vertex<Data>>() },
-		{ blVertex, std::make_shared<Vertex<Data>>() , brVertex }
-	};
-	*/
 	/***********
 	* Edges
 	*    1__0
@@ -367,12 +294,6 @@ void subdivideFaceImp(Face_t& face) {
 	*/
 
 	//Subdivide outside edges
-	/*
-	subdivideEdge(face.edge<Side::Right>(), vertices[2][2], vertices[2][1], vertices[2][0]);
-	subdivideEdge(face.edge<Side::Top>(), vertices[2][0], vertices[1][0], vertices[0][0]);
-	subdivideEdge(face.edge<Side::Left>(), vertices[0][0], vertices[0][1], vertices[0][2]);
-	subdivideEdge(face.edge<Side::Bottom>(), vertices[0][2], vertices[1][2], vertices[2][2]);
-	*/
 	subdivideEdge(face.edge<Side::Right>(), face.vertex<Quadrant::BR>(), face.vertex<Quadrant::TR>());
 	subdivideEdge(face.edge<Side::Top>(), face.vertex<Quadrant::TR>(), face.vertex<Quadrant::TL>());
 	subdivideEdge(face.edge<Side::Left>(), face.vertex<Quadrant::TL>(), face.vertex<Quadrant::BL>());
@@ -442,12 +363,10 @@ public:
 	size_t ySize() { return m_data.size(); }
 
 	T& operator()(int y, int x) {
-		//return m_data[(y - m_minY)*xSize() + x - m_minX];
 		return m_data[y - m_minY][x - m_minX];
 	}
 
 	const T& operator()(int y, int x) const {
-		//return m_data[(y - m_minY)*xSize() + x - m_minX];
 		return m_data[y - m_minY][x - m_minX];
 	}
 
