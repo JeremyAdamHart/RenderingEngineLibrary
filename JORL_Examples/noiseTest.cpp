@@ -78,6 +78,11 @@ void runAdaptiveNoiseTests() {
 
 	count = 0;
 	TopFace<Counter> face;
+	face.vertexPtr<Quadrant::TL>() = std::make_shared<Vertex<Counter>>();
+	face.vertexPtr<Quadrant::TR>() = std::make_shared<Vertex<Counter>>();
+	face.vertexPtr<Quadrant::BL>() = std::make_shared<Vertex<Counter>>();
+	face.vertexPtr<Quadrant::BR>() = std::make_shared<Vertex<Counter>>();
+
 	printf("===Top Face===\n");
 	validateSubdivideFace<TopFace<Counter>>(face);
 
@@ -85,12 +90,15 @@ void runAdaptiveNoiseTests() {
 	printf("===Face TL===\n");
 	validateSubdivideFace(face.child<Quadrant::TL>());
 
+	//count = 0;
 	printf("===Face TR===\n");
 	validateSubdivideFace(face.child<Quadrant::TR>());
 
+	//count = 0;
 	printf("===Face BL===\n");
 	validateSubdivideFace(face.child<Quadrant::BL>());
 
+	//count = 0;
 	printf("===Face BR===\n");
 	validateSubdivideFace(face.child<Quadrant::BR>());
 }
