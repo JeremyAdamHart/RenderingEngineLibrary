@@ -256,17 +256,19 @@ void subdivideEdge(EdgeS<S, Data>& edge, Vertex<Data>& p0, Vertex<Data>& p1){
 
 template<size_t V, typename Face_t>
 bool hasGeneratedCorner(Face_t& face) {
-	return face.edge<vToS<V>()>().hasChild() || face.edge<(vToS<V>()+1)%4>().hasChild();
+	//return face.edge<vToS<V>()>().hasChild() || face.edge<(vToS<V>()+1)%4>().hasChild();
+	return face.vertex<V>().child != nullptr;
 }
 
 template<size_t V, typename Face_t>
 std::shared_ptr<Vertex<typename Face_t::DataType>> getGeneratedCorner(Face_t& face) {
-	if (face.edge<vToS<V>()>().hasChild())
+	/*if (face.edge<vToS<V>()>().hasChild())
 		return face.edge<vToS<V>()>().children[1]->vertex;
 	else if (face.edge<(vToS<V>() + 1) % 4>().hasChild())
 		return face.edge<(vToS<V>() + 1) % 4>().children[0]->pair->vertex;
 	else
-		return nullptr;
+		return nullptr;*/
+	return face.vertex<V>().child;
 }
 
 template<size_t V, typename Face_t>
@@ -439,8 +441,8 @@ inline float smoothStep(float t) {
 inline float norm1(glm::vec2 v) { return std::max(abs(v.x), abs(v.y)); }
 
 inline float evaluatePerlinSingle(glm::vec2 noiseVector, glm::vec2 p) {
-	return (norm1(p) < 0.5f) ?
-		dot(noiseVector, p)*2.f*smoothStep(1.f - abs(p.x))*smoothStep(1.f - abs(p.y)) :
+	return (norm1(p) < 1.0f) ?
+		dot(noiseVector, p)*smoothStep(1.f - abs(p.x))*smoothStep(1.f - abs(p.y)) :
 		0.f;
 }
 
@@ -513,10 +515,10 @@ float evaluateSide(Face_t& face, glm::vec2 p) {
 template<typename Face_t>
 float evaluatePartialFace(Face_t& face, glm::vec2 p) {
 	float sum = 0.f;
-	glm::vec2 p_bl = p;
-	glm::vec2 p_br = p - glm::vec2(1, 0);
-	glm::vec2 p_tl = p - glm::vec2(0, 1);
-	glm::vec2 p_tr = p - glm::vec2(1, 1);
+	glm::vec2 p_bl = 2.f*p;
+	glm::vec2 p_br = 2.f*(p - glm::vec2(1, 0));
+	glm::vec2 p_tl = 2.f*(p - glm::vec2(0, 1));
+	glm::vec2 p_tr = 2.f*(p - glm::vec2(1, 1));
 
 	if (face.edge<Side::Left>().hasChild())
 		sum += evaluatePerlinSingle(face.edge<Side::Left>().children[0]->vertex->d.vec(), 0.5f*(p_bl + p_tl));
@@ -570,7 +572,7 @@ public:
 			}
 		}
 		else
-			return result + evaluatePartialFace(face, normalizedPoint);
+			return result + evaluatePartialFace(face, normalizedPoint)*factor*0.5f;
 	}
 
 	float evaluateAt(glm::vec2 point);
