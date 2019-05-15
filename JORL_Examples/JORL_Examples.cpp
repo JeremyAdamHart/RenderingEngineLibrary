@@ -6,7 +6,8 @@
 
 #include "AdaptiveNoise.h"
 #include "noiseTest.h"
-
+#include <unordered_map>
+#include <cctype>
 /*template<typename T>
 optional{
 
@@ -32,7 +33,7 @@ class B {
 };
 
 int main()
-{
+{	
 	srand(time(0));
 
 	WindowManager wm(800, 800, "Happy now Cory?");

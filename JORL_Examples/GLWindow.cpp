@@ -885,21 +885,21 @@ void WindowManager::adaptiveNoiseLoop() {
 
 	Camera cam;
 
-	adaptive::SimpleNoiseField simpNoise(2, 2);
+	adaptive::SimpleNoiseField simpNoise(5, 5);
 
 	validateTopFaces(simpNoise.noise);
 
-	const size_t DIMENSION = 100;
-	float* image = new float[DIMENSION*DIMENSION];
+	const size_t DIMENSION = 1000;
+	glm::vec3* image = new glm::vec3[DIMENSION*DIMENSION];
 	for (int y = 0; y < DIMENSION; y++) {
 		for (int x = 0; x < DIMENSION; x++) {
-			image[y*DIMENSION + x] = simpNoise.evaluateAt(glm::vec2(float(x) / float(DIMENSION - 1), float(y) / float(DIMENSION - 1)));
+			image[y*DIMENSION + x] = vec3(1.f)*simpNoise.evaluateAt(glm::vec2(float(x) / float(DIMENSION - 1), float(y) / float(DIMENSION - 1)));
 		}
 	}
 
 	SimpleTexShader texShader;	
 	auto texGeometry = std::make_shared<SimpleTexGeometry>(points, coords, 6, GL_TRIANGLES);
-	Texture noiseTex = createTexture2DFromData(TexInfo(GL_TEXTURE_2D, { int(DIMENSION), int(DIMENSION) }, 0, GL_RED, GL_R32F, GL_FLOAT), &tm, image);
+	Texture noiseTex = createTexture2DFromData(TexInfo(GL_TEXTURE_2D, { int(DIMENSION), int(DIMENSION) }, 0, GL_RGB, GL_RGB16F, GL_FLOAT), &tm, image);
 	Drawable texDrawable(texGeometry, std::make_shared<TextureMat>(noiseTex));
 	
 	while (!glfwWindowShouldClose(window)) {
@@ -919,13 +919,13 @@ void WindowManager::adaptiveNoiseLoop() {
 			simpNoise.subdivideSquare(lastClickPosition);
 			for (int y = 0; y < DIMENSION; y++) {
 				for (int x = 0; x < DIMENSION; x++) {
-					image[y*DIMENSION + x] = simpNoise.evaluateAt(glm::vec2(float(x) / float(DIMENSION - 1), float(y) / float(DIMENSION - 1)));
+					image[y*DIMENSION + x] = vec3(1.f)*simpNoise.evaluateAt(glm::vec2(float(x) / float(DIMENSION - 1), float(y) / float(DIMENSION - 1)));
 				}
 			}
 
 			glActiveTexture(NO_ACTIVE_TEXTURE);
 			glBindTexture(GL_TEXTURE_2D, noiseTex.getID());
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, DIMENSION, DIMENSION, 0, GL_RED, GL_FLOAT, image);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, DIMENSION, DIMENSION, 0, GL_RGB, GL_FLOAT, image);
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 		else if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS && leftButtonPressed){

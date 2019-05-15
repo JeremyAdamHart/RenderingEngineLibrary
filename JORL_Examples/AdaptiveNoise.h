@@ -260,6 +260,16 @@ bool hasGeneratedCorner(Face_t& face) {
 }
 
 template<size_t V, typename Face_t>
+std::shared_ptr<Vertex<typename Face_t::DataType>> getGeneratedCorner(Face_t& face) {
+	if (face.edge<vToS<V>()>().hasChild())
+		return face.edge<vToS<V>()>().children[1]->vertex;
+	else if (face.edge<(vToS<V>() + 1) % 4>().hasChild())
+		return face.edge<(vToS<V>() + 1) % 4>().children[0]->pair->vertex;
+	else
+		return nullptr;
+}
+
+template<size_t V, typename Face_t>
 std::shared_ptr<Vertex<typename Face_t::DataType>>& childCornerPtr(Face_t& face) {
 	if (face.edge<vToS<V>()>().hasChild()) {
 		return face.edge<vToS<V>()>().children[1]->vertex;
@@ -408,8 +418,10 @@ float randNorm();
 class Noise {
 public:
 	float value;
+	float value2;
 
-	Noise() :value(randNorm()*2.f - 1.f) {}
+	Noise() :value(randNorm()*2.f - 1.f), value2(randNorm()*2.f - 1.f) {}
+	glm::vec2 vec() { return glm::vec2(value, value2); }
 };
 
 template<typename Face>
@@ -420,8 +432,33 @@ float evaluate(Face& face, glm::vec2 p) {
 	return (1 - p.y)*v0 + p.y*v1;
 }
 
+inline float smoothStep(float t) {
+	return 6.f*t*t*t*t*t - 15.f*t*t*t*t + 10.f*t*t*t;
+}
+
+inline float norm1(glm::vec2 v) { return std::max(abs(v.x), abs(v.y)); }
+
+inline float evaluatePerlinSingle(glm::vec2 noiseVector, glm::vec2 p) {
+	return (norm1(p) < 0.5f) ?
+		dot(noiseVector, p)*2.f*smoothStep(1.f - abs(p.x))*smoothStep(1.f - abs(p.y)) :
+		0.f;
+}
+
 template<typename Face>
-float evaluateClosest(Face& face, glm::vec2 p) {
+float evaluatePerlin(Face& face, glm::vec2 p) {
+	glm::vec2 blVec = p;
+	glm::vec2 tlVec = p - glm::vec2(0.f, 1.f);
+	glm::vec2 brVec = p - glm::vec2(1.f, 0.f);
+	glm::vec2 trVec = p - glm::vec2(1.f, 1.f);
+
+	float v0 = smoothStep(1 - p.x)*dot(face.vertex<Quadrant::BL>().d.vec(), blVec) + smoothStep(p.x)*dot(face.vertex<Quadrant::BR>().d.vec(), brVec);
+	float v1 = smoothStep(1 - p.x)*dot(face.vertex<Quadrant::TL>().d.vec(), tlVec) + smoothStep(p.x)*dot(face.vertex<Quadrant::TR>().d.vec(), trVec);
+
+	return smoothStep(1 - p.y)*v0 + smoothStep(p.y)*v1;
+}
+
+template<typename Face_t>
+float evaluateClosest(Face_t& face, glm::vec2 p) {
 	if (p.x > 0.5f) {
 		if (p.y > 0.5f)
 			return face.vertex<Quadrant::TR>().d.value;
@@ -436,6 +473,73 @@ float evaluateClosest(Face& face, glm::vec2 p) {
 	}
 }
 
+template<size_t S>
+float distFromEdge(glm::vec2 p) {
+	if constexpr (S == Side::Left)
+		return p.x;
+	else if constexpr (S == Side::Right)
+		return 1.f - p.x;
+	if constexpr (S == Side::Bottom)
+		return p.y;
+	else if constexpr (S == Side::Top)
+		return 1.f - p.y;
+	else {
+		static_assert(false, "distFromEdge(): Invalid edge");
+		return 0.f;
+	}
+}
+
+template<size_t Q>
+glm::vec3 vecFromCorner(glm::vec2 p) {
+	if constexpr (Q == Quadrant::BL)
+		return p;
+	else if constexpr (Q == Quadrant::BR)
+		return p - glm::vec2(1.f, 0.f);
+	else if constexpr (Q == Quadrant::TL)
+		return p - glm::vec2(0.f, 1.f);
+	else if constexpr (Q == Quadrant::TR)
+		return p - glm::vec2(0.f, 1.f);
+	else constexpr{
+		static_assert(false, "vecFromCorner(): Invalid corner");
+		return glm::vec2(0.f);
+	}
+}
+
+template<typename Face_t, size_t S>
+float evaluateSide(Face_t& face, glm::vec2 p) {
+	float u = distFromEdge<S>(p);
+}
+
+template<typename Face_t>
+float evaluatePartialFace(Face_t& face, glm::vec2 p) {
+	float sum = 0.f;
+	glm::vec2 p_bl = p;
+	glm::vec2 p_br = p - glm::vec2(1, 0);
+	glm::vec2 p_tl = p - glm::vec2(0, 1);
+	glm::vec2 p_tr = p - glm::vec2(1, 1);
+
+	if (face.edge<Side::Left>().hasChild())
+		sum += evaluatePerlinSingle(face.edge<Side::Left>().children[0]->vertex->d.vec(), 0.5f*(p_bl + p_tl));
+	if (face.edge<Side::Top>().hasChild())
+		sum += evaluatePerlinSingle(face.edge<Side::Top>().children[0]->vertex->d.vec(), 0.5f*(p_tl + p_tr));
+	if (face.edge<Side::Right>().hasChild())
+		sum += evaluatePerlinSingle(face.edge<Side::Right>().children[0]->vertex->d.vec(), 0.5f*(p_br + p_tr));
+	if (face.edge<Side::Bottom>().hasChild())
+		sum += evaluatePerlinSingle(face.edge<Side::Bottom>().children[0]->vertex->d.vec(), 0.5f*(p_bl + p_br));
+
+	if(hasGeneratedCorner<Quadrant::BL>(face))
+		sum += evaluatePerlinSingle(getGeneratedCorner<Quadrant::BL>(face)->d.vec(), p_bl);
+	if (hasGeneratedCorner<Quadrant::TL>(face))
+		sum += evaluatePerlinSingle(getGeneratedCorner<Quadrant::TL>(face)->d.vec(), p_tl);
+	if (hasGeneratedCorner<Quadrant::BR>(face))
+		sum += evaluatePerlinSingle(getGeneratedCorner<Quadrant::BR>(face)->d.vec(), p_br);
+	if (hasGeneratedCorner<Quadrant::TR>(face))
+		sum += evaluatePerlinSingle(getGeneratedCorner<Quadrant::TR>(face)->d.vec(), p_tr);
+
+	return sum;
+}
+
+
 class SimpleNoiseField{
 public:
 	VariableSizeGrid<TopFace<Noise>> noise;
@@ -444,7 +548,7 @@ public:
 	template<typename Face>
 	float evaluateAtImp(Face& face, glm::vec2 point, glm::vec2 bottomLeft, glm::vec2 dim, float factor) {
 		glm::vec2 normalizedPoint = (point - bottomLeft) / dim;
-		float result = evaluate(face, normalizedPoint)*factor;
+		float result = evaluatePerlin(face, normalizedPoint)*factor;
 
 		if (face.hasChild()) {
 			if (point.x - bottomLeft.x > dim.x*0.5f) {
@@ -465,6 +569,8 @@ public:
 					return result + evaluateAtImp(face.child<Quadrant::BL>(), point, bottomLeft, dim*0.5f, factor*0.5f);
 			}
 		}
+		else
+			return result + evaluatePartialFace(face, normalizedPoint);
 	}
 
 	float evaluateAt(glm::vec2 point);
