@@ -35,6 +35,7 @@ using namespace std;
 #include "StreamGeometry.h"
 #include "ColorShader.h"
 #include "ColorSetMat.h"
+#include "TemplatedGeometry.h"
 
 //Rigid body test
 #include "Physics.h"
@@ -896,7 +897,7 @@ void WindowManager::adaptiveNoiseLoop() {
 			image[y*DIMENSION + x] = vec3(1.f)*simpNoise.evaluateAt(glm::vec2(float(x) / float(DIMENSION - 1), float(y) / float(DIMENSION - 1)));
 		}
 	}
-
+	GeometryT<vec3, vec4, float> testGeometry;
 	SimpleTexShader texShader;	
 	auto texGeometry = std::make_shared<SimpleTexGeometry>(points, coords, 6, GL_TRIANGLES);
 	Texture noiseTex = createTexture2DFromData(TexInfo(GL_TEXTURE_2D, { int(DIMENSION), int(DIMENSION) }, 0, GL_RGB, GL_RGB16F, GL_FLOAT), &tm, image);

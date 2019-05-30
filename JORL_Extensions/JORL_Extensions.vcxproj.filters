@@ -62,6 +62,7 @@
     <ClInclude Include="VertexBufferTemplates.h" />
     <ClInclude Include="GlowShader.h" />
     <ClInclude Include="NormalDisplayShader.h" />
+    <ClInclude Include="TemplatedGeometry.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

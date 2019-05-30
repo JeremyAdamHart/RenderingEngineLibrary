@@ -326,6 +326,7 @@
     <ClInclude Include="ColorShader.h" />
     <ClInclude Include="DrawResourceHandler.h" />
     <ClInclude Include="ElementGeometry.h" />
+    <ClInclude Include="TemplatedGeometry.h" />
     <ClInclude Include="GlowShader.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="MeshInfoLoader.h" />

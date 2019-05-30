@@ -22,25 +22,22 @@ class StreamGeometry : public GLGeometryContainer {
 public:
 	MultiBufferSwitch buffManager;
 protected:
-	GLuint vao;
+	GLVAO vao;
 	size_t bufferSize;
 	size_t elementNum;
 	GLenum mode;
-	std::vector<GLuint> vbo;
+	std::vector<GLBuffer> vbo;
 	std::vector<void*> voidVboPointers; 
 	GLsync drawSync;
-	GLuint vboElement;
+	GLBuffer vboElement;
 	std::vector<wrap_tuple<BufferQueue, Ts...>> queue;
 	std::vector<char> streamed;
 
 	std::vector<unsigned int> vboCopies;
 
 	bool initVAO() {
-		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
-
 		initVertexBuffers<Ts...>(&vbo);
-		glGenBuffers(1, &vboElement);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboElement);
 
 		glBindVertexArray(0);
@@ -54,16 +51,16 @@ protected:
 	}
 
 public:
-	StreamGeometry(GLenum mode = GL_TRIANGLES):
-		bufferSize(0), elementNum(0), mode(mode), queue(MultiBufferSwitch::BUFFER_COPIES), 
-		streamed({}) 
+	StreamGeometry(GLenum mode = GL_TRIANGLES) :
+		bufferSize(0), elementNum(0), mode(mode), queue(MultiBufferSwitch::BUFFER_COPIES),
+		streamed({}), vao(createVAOID()), vboElement(createBufferID())
 	{
 		initVAO();
-		streamed.resize(vbo.size(), true);
+		streamed.resize(vbo.size(), false);
 		createBufferStorage();
 	}
 	StreamGeometry(size_t bufferSize, std::vector<char> streamed = {}, size_t elementNum = 0, GLenum mode = GL_TRIANGLES) :
-		bufferSize(bufferSize), elementNum(elementNum), mode(mode),
+		bufferSize(bufferSize), elementNum(elementNum), mode(mode), vao(createVAOID()), vboElement(createBufferID()),
 		queue(MultiBufferSwitch::BUFFER_COPIES), streamed(streamed)
 	{
 		initVAO();

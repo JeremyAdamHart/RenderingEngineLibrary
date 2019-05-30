@@ -44,6 +44,4 @@ void Shader::loadMaterialUniforms(const Drawable &drawable) {
 	}
 }
 
-//void getMaterialOffsets(std::map<int, int>* offsetMap, int totalOffset) {}
-
 }

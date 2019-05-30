@@ -3,6 +3,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "glSupport.h"
+#include "GLObject.h"
 
 using namespace glm;
 
@@ -10,13 +11,13 @@ using namespace glm;
 namespace renderlib {
 //Change Arg arg to "Arg *arg"
 template<class Arg, class ...Args> 
-void loadVBOs(int index, std::vector<GLuint> *vbos, size_t bufferSize, GLenum usage, Arg* arg, Args*... args) {
+void loadVBOs(int index, std::vector<GLBuffer> *vbos, size_t bufferSize, GLenum usage, Arg* arg, Args*... args) {
 	loadVBOs(index, vbos, bufferSize, usage, arg);
 	loadVBOs(index + 1, vbos, bufferSize, usage, args...);
 }
 
 template<class Arg> 
-void loadVBOs(int index, std::vector<GLuint> *vbos, size_t bufferSize, GLenum usage, Arg* arg) {
+void loadVBOs(int index, std::vector<GLBuffer> *vbos, size_t bufferSize, GLenum usage, Arg* arg) {
 	glBindBuffer(GL_ARRAY_BUFFER, vbos->at(index));
 	glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(*arg), arg, usage);
 }
@@ -24,83 +25,28 @@ void loadVBOs(int index, std::vector<GLuint> *vbos, size_t bufferSize, GLenum us
 //template<class ...Args> void loadVBOs(int index, std::vector<GLuint> *vbos, size_t bufferSize, GLenum usage, Args... args) {}
 
 template<class Arg, class... Args>
-bool initVertexBuffers(std::vector<GLuint> *vbos) {
+bool initVertexBuffers(std::vector<GLBuffer> *vbos) {
 	return initVertexBuffers<Arg>(vbos) && initVertexBuffers<Args...>(vbos);
 }
 
-template<> bool initVertexBuffers<vec3>(std::vector<GLuint> *vbos);	/* {
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
+template<> bool initVertexBuffers<vec4>(std::vector<GLBuffer> *vbos);
 
-	int index = vbos->size();
+template<> bool initVertexBuffers<vec3>(std::vector<GLBuffer> *vbos);	
 
-	glEnableVertexAttribArray(index);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(
-		index,
-		3,
-		GL_FLOAT,
-		GL_FALSE,
-		sizeof(vec3),
-		(void*)0
-	);
+template<> bool initVertexBuffers<vec2>(std::vector<GLBuffer> *vbos);
 
-	vbos->push_back(vbo);
+template<> bool initVertexBuffers<unsigned char>(std::vector<GLBuffer> *vbos);
 
-	return !checkGLErrors("initVertexBuffers");
-}*/
-
-template<> bool initVertexBuffers<vec2>(std::vector<GLuint> *vbos);/* {
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
-
-	int index = vbos->size();
-
-	glEnableVertexAttribArray(index);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(
-		index,
-		2,
-		GL_FLOAT,
-		GL_FALSE,
-		sizeof(vec2),
-		(void*)0
-	);
-
-	vbos->push_back(vbo);
-
-	return !checkGLErrors("initVertexBuffers");
-}*/
-
-template<> bool initVertexBuffers<unsigned char>(std::vector<GLuint> *vbos); /* {
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
-
-	int index = vbos->size();
-
-	glEnableVertexAttribArray(index);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribIPointer(
-		index,
-		1,
-		GL_UNSIGNED_BYTE,
-		sizeof(unsigned char),
-		(void*)0
-	);
-
-	vbos->push_back(vbo);
-
-	return !checkGLErrors("<initVertexBuffers>");
-}*/
+template<> bool initVertexBuffers<float>(std::vector<GLBuffer> *vbos);
 
 template<class T1, class T2, class... Ts> 
-void allocateBufferStorage(GLuint* vbo, char* streamed, size_t bufferSize, void** pointers) {
+void allocateBufferStorage(GLBuffer* vbo, char* streamed, size_t bufferSize, void** pointers) {
 	allocateBufferStorage<T1>(vbo, streamed, bufferSize, pointers);
 	allocateBufferStorage<T2, Ts...>(vbo + 1, streamed+1, bufferSize, pointers+1);
 }
 
 template<class T> 
-void allocateBufferStorage(GLuint* vbo, char* streamed, size_t bufferSize, void** pointer) {
+void allocateBufferStorage(GLBuffer* vbo, char* streamed, size_t bufferSize, void** pointer) {
 	glBindBuffer(GL_ARRAY_BUFFER, (*vbo));
 	if (*streamed) {
 		GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;

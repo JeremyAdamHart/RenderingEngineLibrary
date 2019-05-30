@@ -20,7 +20,8 @@ protected:
 	{
 		programID = createGLProgram(shaders, defines);
 
-		getMaterialOffsets<Mats...>(&materialOffsets);
+		if constexpr(sizeof...(Mats) != 0)
+			getMaterialOffsets<Mats...>(&materialOffsets);
 		calculateUniformLocations();
 	}
 

@@ -561,7 +561,7 @@ public:
 				}
 				else
 					return result + evaluateAtImp(face.child<Quadrant::BR>(), point, bottomLeft, dim*0.5f, factor*0.5f);
-			} 
+			}
 			else {
 				if (point.y - bottomLeft.y > dim.y*0.5f) {
 					bottomLeft.y += dim.y*0.5f;
@@ -572,7 +572,7 @@ public:
 			}
 		}
 		else
-			return result + evaluatePartialFace(face, normalizedPoint)*factor*0.5f;
+			return result +evaluatePartialFace(face, normalizedPoint)*factor*0.5f;
 	}
 
 	float evaluateAt(glm::vec2 point);

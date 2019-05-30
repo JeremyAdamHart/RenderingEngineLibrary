@@ -3,10 +3,31 @@
 namespace renderlib {
 
 template<>
-bool initVertexBuffers<vec3>(std::vector<GLuint> *vbos) {
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
+bool initVertexBuffers<vec4>(std::vector<GLBuffer> *vbos) {
+	GLBuffer vbo = createBufferID();
 
+	int index = vbos->size();
+
+	glEnableVertexAttribArray(index);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(
+		index,
+		4,
+		GL_FLOAT,
+		GL_FALSE,
+		sizeof(vec4),
+		(void*)0
+	);
+
+	vbos->push_back(vbo);
+
+	return !checkGLErrors("initVertexBuffers");
+}
+
+template<>
+bool initVertexBuffers<vec3>(std::vector<GLBuffer> *vbos) {
+	GLBuffer vbo = createBufferID();
+	
 	int index = vbos->size();
 
 	glEnableVertexAttribArray(index);
@@ -26,9 +47,8 @@ bool initVertexBuffers<vec3>(std::vector<GLuint> *vbos) {
 }
 
 template<>
-bool initVertexBuffers<vec2>(std::vector<GLuint> *vbos) {
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
+bool initVertexBuffers<vec2>(std::vector<GLBuffer> *vbos) {
+	GLBuffer vbo = createBufferID();
 
 	int index = vbos->size();
 
@@ -47,11 +67,30 @@ bool initVertexBuffers<vec2>(std::vector<GLuint> *vbos) {
 
 	return !checkGLErrors("initVertexBuffers");
 }
+template<> bool initVertexBuffers<float>(std::vector<GLBuffer> *vbos) {
+	GLBuffer vbo = createBufferID();
+
+	int index = vbos->size();
+
+	glEnableVertexAttribArray(index);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(
+		index,
+		1,
+		GL_FLOAT,
+		GL_FALSE,
+		sizeof(float),
+		(void*)0
+	);
+
+	vbos->push_back(vbo);
+
+	return !checkGLErrors("initVertexBuffers");
+}
 
 template<>
-bool initVertexBuffers<unsigned char>(std::vector<GLuint> *vbos) {
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
+bool initVertexBuffers<unsigned char>(std::vector<GLBuffer> *vbos) {
+	GLBuffer vbo = createBufferID();
 
 	int index = vbos->size();
 
