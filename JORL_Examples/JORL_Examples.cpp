@@ -84,6 +84,7 @@ int main()
 //	wm.noiseLoop();
 //	wm.particleLoop();
 //	wm.convexTestLoop();
-	wm.adaptiveNoiseLoop();
+	//wm.adaptiveNoiseLoop();
+	wm.laplacianSmoothing();
 }
 

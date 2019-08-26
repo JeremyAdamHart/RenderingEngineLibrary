@@ -40,6 +40,7 @@ public:
 	void objLoadingLoop();
 	void rigidBodyTest();
 	void testLoop();
+	void laplacianSmoothing();
 
 	void waveSimulationLoop(int numSegments, float dt);
 	void convexTestLoop();
