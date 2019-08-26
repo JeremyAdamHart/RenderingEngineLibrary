@@ -42,6 +42,7 @@ public:
 	void testLoop();
 	void velocitySpringLoop();
 	void treeGrowthTest();
+	void laplacianSmoothing();
 
 	void waveSimulationLoop(int numSegments, float dt);
 	void convexTestLoop();
