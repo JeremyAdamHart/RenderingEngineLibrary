@@ -75,6 +75,7 @@ int main()
 	*/
 	//std::vector<TopFace<float>> topFaces(4);
 
+	wm.treeGrowthTest();
 //	wm.testLoop();
 //	wm.waveSimulationLoop(1000, 0.0001f);
 //	wm.glowTest();
@@ -84,6 +85,7 @@ int main()
 //	wm.noiseLoop();
 //	wm.particleLoop();
 //	wm.convexTestLoop();
-	wm.adaptiveNoiseLoop();
+//	wm.velocitySpringLoop();
+//	wm.adaptiveNoiseLoop();
 }
 

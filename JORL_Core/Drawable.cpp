@@ -48,6 +48,10 @@ void Drawable::addMaterial(Material* newMaterial) {
 	material[newMaterial->getType()] = shared_ptr<Material>(newMaterial);
 }
 
+void Drawable::addMaterial(sptr<Material> newMaterial) {
+	material[newMaterial->getType()] = newMaterial;
+}
+
 bool Drawable::removeMaterial(int type) {
 	return material.erase(type) > 0;
 }

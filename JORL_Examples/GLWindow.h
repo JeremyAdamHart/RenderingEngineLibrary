@@ -40,6 +40,8 @@ public:
 	void objLoadingLoop();
 	void rigidBodyTest();
 	void testLoop();
+	void velocitySpringLoop();
+	void treeGrowthTest();
 
 	void waveSimulationLoop(int numSegments, float dt);
 	void convexTestLoop();

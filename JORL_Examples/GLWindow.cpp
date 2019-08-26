@@ -36,6 +36,7 @@ using namespace std;
 #include "ColorShader.h"
 #include "ColorSetMat.h"
 #include "TemplatedGeometry.h"
+#include "CommonGeometry.h"
 
 //Rigid body test
 #include "Physics.h"
@@ -51,6 +52,7 @@ using namespace std;
 //Random
 #include <random>
 #include <ctime>
+#include <numeric>
 
 #include <limits>
 
@@ -152,6 +154,95 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 	glDepthFunc(GL_LEQUAL);
 
 	glViewport(0, 0, window_width, window_height);
+}
+
+void WindowManager::velocitySpringLoop() {
+	//glfwSetCursorPosCallback(window, )
+	
+
+	BlinnPhongShaderT bpShader;
+	Drawable test(
+		createSphereGeometry(),
+		make<ColorMat>(vec3(0, 1, 0)));
+	test.addMaterial(make<ShadedMat>(0.2f, 0.4f, 0.5f, 20.f));
+	test.setScale(glm::vec3(0.5f));
+
+	const int smoothedsamples = 5;
+	vec2 mouseVelocity (0.f);
+	std::vector<vec2> mouseVelocityBuffer;
+	mouseVelocityBuffer.resize(5, vec2(0.f));
+	vec2 mousePosition;
+
+	vec2 springPosition(0.f);
+	vec2 springVelocity(0.f);
+	vec2 springAcceleration(0.f);
+
+	int vp[4];
+	glGetIntegerv(GL_VIEWPORT, vp);
+
+	glfwSwapInterval(1);
+
+	float dt = 1.f / 60.f;
+	float k = 100.f;
+	float damping = 1000.f;
+
+	vec3 line[2] = { glm::vec3(0.f, 0.f, 0.f), vec3(0.f, 0.f, 0.f) };
+	auto velocityGeometry = std::make_shared<SimpleGeometry>(line, 2, GL_LINES);
+	Drawable velocityLine(velocityGeometry, std::make_shared<ColorMat>(vec3(0.f, 1.f, 0.f)));
+
+	vec3 position(0.f);
+	auto springGeometry = std::make_shared<SimpleGeometry>(&position, 1, GL_POINTS);
+	Drawable spring(
+		springGeometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
+	
+	FlatColorShader shader;
+
+	Camera cam;
+
+	glClearColor(0.f, 0.f, 1.f, 0.f);
+	glPointSize(10.f);
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		vec2 currentMousePosition = vec2(x / float(vp[2]), -y / float(vp[3]))*2.f - vec2(1, -1);
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+			mouseVelocityBuffer.push_back(currentMousePosition - mousePosition);
+		}
+		else
+			mouseVelocityBuffer.push_back(vec2(0, 0));
+		mousePosition = currentMousePosition;
+		//Update velocity
+		if(mouseVelocityBuffer.size() > smoothedsamples)
+			mouseVelocityBuffer.erase(mouseVelocityBuffer.begin());
+		mouseVelocity = std::accumulate(mouseVelocityBuffer.begin(), mouseVelocityBuffer.end(), vec2(0.f));
+		mouseVelocity /= float(mouseVelocityBuffer.size());
+
+		springAcceleration += dt*(k*(mouseVelocity - springVelocity) - springVelocity*damping);
+		springVelocity += springAcceleration*dt;
+		springPosition += springVelocity * dt;
+
+		line[0] = vec3(springPosition, 0.f);
+		line[1] = vec3(springPosition + springVelocity, 0.f);
+		velocityGeometry->loadGeometry(line, 2);
+
+		printf("Mouse velocity = %f %f\nSpring velocity = %f %f acceleration = %f %f\n", 
+			mouseVelocity.x, mouseVelocity.y,  
+			springVelocity.x, springVelocity.y, 
+			springAcceleration.x, springAcceleration.y);
+
+		spring.position = vec3(springPosition, 0.f);
+
+		bpShader.draw(cam, vec3(10.f, 10.f, 10.f), test);
+		shader.draw(cam, spring);
+		shader.draw(cam, velocityLine);
+
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+	}
+
+	glfwTerminate();
 }
 
 #define M_PI 3.1415926535897932384626433832795
@@ -1100,6 +1191,28 @@ void WindowManager::mainLoop() {
 	}
 
 	glfwTerminate();
+}
+
+void WindowManager::treeGrowthTest() {
+	SimpleShader shader;
+	
+	auto pointGeometry = make<GeometryT<vec3>>(GL_POINTS);
+	auto lineGeometry = make<GeometryT<vec3>>(GL_LINES);
+
+	Drawable pointDrawable(pointGeometry, make<ColorMat>(vec3(1, 0, 0)));
+	Drawable lineDrawable(lineGeometry, make<ColorMat>(vec3(0, 1, 0)));
+
+	vector<vec3> lines = { vec3(0, -1, 0), vec3(0, 0, 0), vec3(0,0, 0), vec3(0, 1, 0), vec3(0, 0, 0), vec3(0.5, 0.5, 0)};
+	lineGeometry->loadBuffers(lines.data(), lines.size());
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		shader.draw(cam, lineDrawable);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
 }
 
 void WindowManager::particleLoop() {

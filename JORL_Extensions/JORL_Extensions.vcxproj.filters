@@ -28,6 +28,8 @@
     <ClCompile Include="VertexBufferTemplates.cpp" />
     <ClCompile Include="GlowShader.cpp" />
     <ClCompile Include="NormalDisplayShader.cpp" />
+    <ClCompile Include="TemplatedGeometry.cpp" />
+    <ClCompile Include="CommonGeometry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tinyply\source\tinyply.h" />
@@ -63,6 +65,8 @@
     <ClInclude Include="GlowShader.h" />
     <ClInclude Include="NormalDisplayShader.h" />
     <ClInclude Include="TemplatedGeometry.h" />
+    <ClInclude Include="CommonGeometry.h" />
+    <ClInclude Include="ShaderCompiler.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
