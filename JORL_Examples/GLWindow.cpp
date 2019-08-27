@@ -678,7 +678,130 @@ constexpr int intMod(int x, int n) {
 	return (x + n) % n;
 }
 
-std::vector<vec3> generateBranchingStructure();
+std::vector<vec3> generateBranchingStructure(vec3 b0, vec3 b1, vec3 b2, vec3 junction, unsigned int divisions, float radius=0.2f) {
+	vec3 planeNormal = vec3(0);
+	vec3 crossResult = cross(b0, b1);
+	if (length(crossResult) > 0.0001f) planeNormal += crossResult;
+	vec3 crossResult = cross(b1, b2);
+	if (length(crossResult) > 0.0001f) planeNormal += crossResult;
+	vec3 crossResult = cross(b2, b0);
+	if (length(crossResult) > 0.0001f) planeNormal += crossResult;
+	planeNormal = normalize(planeNormal);
+
+	vector<vec3> points;
+	points.push_back(junction + planeNormal * radius);	//Front center
+	points.push_back(junction - planeNormal * radius);	//Back center
+
+	unsigned int b0BoundaryIndexMap[8];
+	unsigned int b1BoundaryIndexMap[8];
+	unsigned int b2BoundaryIndexMap[8];
+
+	float lateralStep = 1.f / float(divisions+1);
+
+	b0BoundaryIndexMap[0] = points.size();
+	points.push_back(junction + planeNormal * radius + b0 * lateralStep);
+	b0BoundaryIndexMap[4] = points.size();
+	points.push_back(junction - planeNormal * radius + b0 * lateralStep);
+
+	b1BoundaryIndexMap[0] = points.size();
+	points.push_back(junction + planeNormal * radius + b1 * lateralStep);
+	b1BoundaryIndexMap[4] = points.size();
+	points.push_back(junction - planeNormal * radius + b1 * lateralStep);
+
+	b2BoundaryIndexMap[0] = points.size();
+	points.push_back(junction + planeNormal * radius + b2 * lateralStep);
+	b2BoundaryIndexMap[4] = points.size();
+	points.push_back(junction - planeNormal * radius + b2 * lateralStep);
+
+	vec3 b0b1dir = 0.333f*(b0 + b1 - b2);
+	b0BoundaryIndexMap[1] = b1BoundaryIndexMap[7] = points.size();
+	points.push_back(junction + planeNormal * radius + b0b1dir * lateralStep);
+	b0BoundaryIndexMap[2] = b1BoundaryIndexMap[6] = points.size();
+	points.push_back(junction + b0b1dir * lateralStep);
+	b0BoundaryIndexMap[3] = b1BoundaryIndexMap[5] = points.size();
+	points.push_back(junction - planeNormal * radius + b0b1dir * lateralStep);
+
+	vec3 b1b2dir = 0.333f*(b1 + b2 - b0);
+	b1BoundaryIndexMap[1] = b2BoundaryIndexMap[7] = points.size();
+	points.push_back(junction + planeNormal * radius + b1b2dir * lateralStep);
+	b1BoundaryIndexMap[2] = b2BoundaryIndexMap[6] = points.size();
+	points.push_back(junction + b1b2dir * lateralStep);
+	b1BoundaryIndexMap[3] = b2BoundaryIndexMap[5] = points.size();
+	points.push_back(junction - planeNormal * radius + b1b2dir * lateralStep);
+
+	vec3 b2b0dir = 0.333f*(b2 + b0 - b1);
+	b2BoundaryIndexMap[1] = b0BoundaryIndexMap[7] = points.size();
+	points.push_back(junction + planeNormal * radius + b2b0dir * lateralStep);
+	b2BoundaryIndexMap[2] = b0BoundaryIndexMap[6] = points.size();
+	points.push_back(junction + b2b0dir * lateralStep);
+	b2BoundaryIndexMap[3] = b0BoundaryIndexMap[5] = points.size();
+	points.push_back(junction - planeNormal * radius + b2b0dir * lateralStep);
+
+	//CENTER TRIANGLES
+	std::vector<unsigned int> faces;
+	faces.push_back(0);
+	faces.push_back(b0BoundaryIndexMap[0]);
+	faces.push_back(b0BoundaryIndexMap[1]);
+
+	std::vector<unsigned int> fixedPoints;
+
+	//B0 CYLINDER
+	unsigned int b0Start = points.size();
+	vec3 bx = normalize(cross(planeNormal, b0));
+	vec3 by = normalize(cross(b0, bx));
+
+	float lateral = lateralStep * 2.f;
+	for (unsigned int i = 0; i < divisions; i++) {
+		float theta = 0.f;
+		float thetaStep = 2.f*M_PI / 6.f;
+		for (unsigned int j = 0; j < 6; j++) {
+			if (i > divisions - 3) fixedPoints.push_back(points.size());
+
+			points.push_back(junction + b0*lateral + by * cos(theta) + bx * sin(theta));
+
+			theta += thetaStep;
+		}
+		lateral += lateralStep;
+	}
+
+	//B1 CYLINDER
+	unsigned int b1Start = points.size();
+	bx = normalize(cross(planeNormal, b1));
+	by = normalize(cross(b1, bx));
+
+	lateral = lateralStep * 2.f;
+	for (unsigned int i = 0; i < divisions; i++) {
+		float theta = 0.f;
+		float thetaStep = 2.f*M_PI / 6.f;
+		for (unsigned int j = 0; j < 6; j++) {
+			if (i > divisions - 3) fixedPoints.push_back(points.size());
+
+			points.push_back(junction + b1 * lateral + by * cos(theta) + bx * sin(theta));
+
+			theta += thetaStep;
+		}
+		lateral += lateralStep;
+	}
+
+	//B2 CYLINDER
+	unsigned int b2Start = points.size();
+	bx = normalize(cross(planeNormal, b2));
+	by = normalize(cross(b2, bx));
+
+	lateral = lateralStep * 2.f;
+	for (unsigned int i = 0; i < divisions; i++) {
+		float theta = 0.f;
+		float thetaStep = 2.f*M_PI / 6.f;
+		for (unsigned int j = 0; j < 6; j++) {
+			if (i > divisions - 3) fixedPoints.push_back(points.size());
+
+			points.push_back(junction + b2 * lateral + by * cos(theta) + bx * sin(theta));
+
+			theta += thetaStep;
+		}
+		lateral += lateralStep;
+	}
+}
 
 void WindowManager::laplacianSmoothingMeshLoop() {
 	glfwSetKeyCallback(window, keyCallback);

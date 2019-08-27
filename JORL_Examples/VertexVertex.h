@@ -6,67 +6,30 @@
 namespace renderlib {
 namespace vv {
 
-template<typename T>
+
 class VertexAdjacencyBuilder {
 public:
-	std::vector<std::vector<Vertex<T>*>> neighbourChains;
+	std::vector<std::vector<unsigned int>> neighbourChains;
 
-	VertexAdjacencyBuilder() {}
-
-	void addVertices(Vertex<T>* v0, Vertex<T*> v1) {
-		int insertedAtFront = -1;
-		int insertedAtBack = -1;
-		int index = 0;
-		for (auto chain : neighbourChains) {
-			if (v0 == chain.back()) {
-				chain.push_back(v1);
-				insertedAtBack = index;
-			}
-			else if (v1 == chain.front()) {
-				chain.insert(chain.begin(), v0);
-				insertedAtFront = index;
-			}
-			index++;
-		}
-		if (insertedAtFront < 0 && insertedAtBack < 0) {
-			chain.push_back({ v0, v1 });
-			return;
-		}
-		//If pair conected two chains
-		else if (insertedAtFront > 0 && insertedAtBack > 0) {
-			auto& frontChain = neighbourChains[insertedAtBack];
-			auto& backChain = neighbourChains[insertedAtFront];
-			frontChain.pop_back();		//Remove duplicated element at back
-			frontChain.insert(frontChain.end(), backChain.begin(), backChain.end());
-		}
-	}
+	void addVertices(unsigned int v0, unsigned int v1);
 };
 
-template<typename T>
-class Vertex{
+class Adjacency{
 public:
-	T v;
-	std::vector<Vertex<T>*> neighbours;
-
-	Vertex(T v) :v(v) {}
-	
+	std::vector<unsigned int> neighbours;
 };
 
-
 template<typename T>
-std::vector<Vertex<T>> faceListToVertexVertex(std::vector<unsigned int>& faces, std::vector<T>& vertices) {
-	std::vector<Vertex<T>> outputVertices;
-	
-	for (auto v : vertices)
-		outputVertices.push_back(Vertex<T>(v));
+std::vector<Adjacency> faceListToVertexVertex(std::vector<unsigned int>& faces, std::vector<T>& vertices) {
+	std::vector<unsigned > outputVertices;
 
 	std::vector<VertexAdjacencyBuilder> adjacency;
-	adjacency.resize(outputVertices.size());
+	adjacency.resize(vertices.size());
 
 	for (int i = 0; i+2 < faces.size(); i += 3) {
-		Vertex<T>* a = &outputVertices[faces[i]];
-		Vertex<T>* b = &outputVertices[faces[i + 1]];
-		Vertex<T>* c = &outputVertices[faces[i + 2]];
+		unsigned int a = faces[i]];
+		unsigned int b = faces[i + 1]];
+		unsigned int c = faces[i + 2]];
 
 		auto a_adj = &adjacency[faces[i]];
 		auto b_adj = &adjacency[faces[i + 1]];
@@ -77,8 +40,13 @@ std::vector<Vertex<T>> faceListToVertexVertex(std::vector<unsigned int>& faces, 
 		c_adj->addVertices(a, b);
 	}
 
+	std::vector<Adjacency> outputAdjacency;
+	outputAdjacency.resize(adjacency.size());
+
 	for (int i = 0; i < vertices.size(); i++)
-		outputVertices[i].neighbours = adjacency[i].neighbourChains.front();
+		outputAdjacency[i].neighbours = adjacency[i].neighbourChains.front();
+
+	return outputAdjacency;
 }
 
 }
