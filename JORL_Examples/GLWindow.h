@@ -41,6 +41,7 @@ public:
 	void rigidBodyTest();
 	void testLoop();
 	void laplacianSmoothing();
+	void laplacianSmoothingMeshLoop();
 
 	void waveSimulationLoop(int numSegments, float dt);
 	void convexTestLoop();

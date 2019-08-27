@@ -320,6 +320,7 @@
     <ClInclude Include="noiseTest.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Quadtree.h" />
+    <ClInclude Include="VertexVertex.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AdaptiveNoise.cpp" />

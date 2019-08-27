@@ -47,6 +47,7 @@ using namespace std;
 
 #include "AdaptiveNoise.h"
 #include "noiseTest.h"
+#include "VertexVertex.h"
 
 //Random
 #include <random>
@@ -584,6 +585,108 @@ void WindowManager::convexTestLoop() {
 
 constexpr int intMod(int x, int n) {
 	return (x + n) % n;
+}
+
+std::vector<vec3> generateBranchingStructure();
+
+void WindowManager::laplacianSmoothingMeshLoop() {
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+	SimpleShader shader;
+
+	/*
+	const int SIZE = 7;
+	vec3 points[SIZE] = {
+		vec3(-1, 0, 0), vec3(-0.666, 0, 0), vec3(-0.333, 0, 0), vec3(0, 0, 0), vec3(0, 0.333, 0), vec3(0, 0.666, 0), vec3(0, 1, 0)
+	};
+	//*/
+	///*
+	const int SIZE = 8;
+	//	vec3 points[SIZE] = { vec3(-1, -1, 0), vec3(0, -1, 0), vec3(1, -1, 0), vec3(1, 0, 0), vec3(1, 1, 0), vec3(0, 1, 0), vec3(-1, 1, 0), vec3(-1, 0, 0)};
+	vec3 points[SIZE] = { vec3(-0.1, -1, 0), vec3(0, -1, 0), vec3(1, -1, 0), vec3(0.4, 0, 0), vec3(1, 1, 0), vec3(0, 1, 0), vec3(-1, 1, 0), vec3(-1, 0, 0) };
+
+	//*/
+	vec3 newPoints[SIZE];
+	copy(begin(points), end(points), begin(newPoints));
+
+	std::shared_ptr<SimpleGeometry> geometry = make_shared<SimpleGeometry>(points, SIZE, GL_LINE_LOOP);
+
+	Drawable curve(geometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
+
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		static bool next_iteration_pressed = false;
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !next_iteration_pressed) {
+			next_iteration_pressed = true;
+			for (int j = 0; j < 10; j++) {
+				float weight = 0.1f;
+				float inflate = 0.11f;
+
+				copy(begin(points), end(points), begin(newPoints));
+				float weights[SIZE];
+				float averageWeight = 0.f;
+				////*
+				for (int i = 0; i < SIZE; i++) {
+					newPoints[i] += weight * (0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
+					weights[i] = length(0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
+					float a = length(0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
+					float b = 0.5f*length(points[intMod(i - 1, SIZE)] - points[intMod(i + 1, SIZE)]);
+					float R = (a*a + b * b) / (2 * a);
+					float r = R - a * weight;
+					if (r > 0 && R > 0) {
+						averageWeight += R / r;	//weights[i];
+						weights[i] = R;
+					}
+					else
+						weights[i] = 1.f;
+				}
+
+				averageWeight /= float(SIZE);
+
+				copy(begin(newPoints), end(newPoints), begin(points));
+
+				//Inflate
+				for (int i = 0; i < SIZE; i++) {
+					float a = length(0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
+					float b = 0.5f*length(points[intMod(i - 1, SIZE)] - points[intMod(i + 1, SIZE)]);
+					float R = (a*a + b * b) / (2 * a);
+					float r = R - a * weight;
+					if (averageWeight > 0)
+						//newPoints[i] -= weight*weights[i]/R*(0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
+						newPoints[i] -= inflate * (0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
+				}
+
+				//*/
+
+				/*
+				for (int i = 1; i < SIZE-1; i++) {
+					newPoints[i] = (1.f - weight)*points[i] + weight *0.5f* (points[i - 1] + points[i + 1]);
+				}
+
+				newPoints[1].y -= points[1].y;
+				newPoints[SIZE-2].x -= points[SIZE-2].x;
+				//*/
+
+				geometry->loadGeometry(newPoints, SIZE);
+
+				copy(begin(newPoints), end(newPoints), begin(points));
+			}
+		}
+		else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+			next_iteration_pressed = false;
+		}
+
+		shader.draw(cam, curve);
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
 }
 
 void WindowManager::laplacianSmoothing() {
