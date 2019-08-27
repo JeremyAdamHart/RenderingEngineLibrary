@@ -324,8 +324,10 @@
     <ClInclude Include="ColorMat.h" />
     <ClInclude Include="ColorSetMat.h" />
     <ClInclude Include="ColorShader.h" />
+    <ClInclude Include="CommonGeometry.h" />
     <ClInclude Include="DrawResourceHandler.h" />
     <ClInclude Include="ElementGeometry.h" />
+    <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="TemplatedGeometry.h" />
     <ClInclude Include="GlowShader.h" />
     <ClInclude Include="Light.h" />
@@ -354,6 +356,7 @@
   <ItemGroup>
     <ClCompile Include="..\tinyply\source\tinyply.cpp" />
     <ClCompile Include="ColorSetMat.cpp" />
+    <ClCompile Include="CommonGeometry.cpp" />
     <ClCompile Include="NormalDisplayShader.cpp" />
     <ClCompile Include="AOShader.cpp" />
     <ClCompile Include="BlendShader.cpp" />
@@ -373,6 +376,7 @@
     <ClCompile Include="SimpleTexManager.cpp" />
     <ClCompile Include="simpleTexShader.cpp" />
     <ClCompile Include="StreamGeometry.cpp" />
+    <ClCompile Include="TemplatedGeometry.cpp" />
     <ClCompile Include="TextureCreation.cpp" />
     <ClCompile Include="TextureMat.cpp" />
     <ClCompile Include="BlinnPhongShader.cpp" />

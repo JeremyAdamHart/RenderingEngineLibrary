@@ -40,6 +40,8 @@ public:
 	void objLoadingLoop();
 	void rigidBodyTest();
 	void testLoop();
+	void velocitySpringLoop();
+	void treeGrowthTest();
 	void laplacianSmoothing();
 	void laplacianSmoothingMeshLoop();
 

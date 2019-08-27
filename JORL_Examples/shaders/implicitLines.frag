@@ -5,6 +5,18 @@ out vec4 PixelColour;
 
 in vec2 FragmentTexCoord;
 
+vec2 perpendicular(vec2 v){
+	return vec2(v.y, -v.x);
+}
+
+float onSideOfBranch(vec2 a, vec2 b, float aWidth, float bWidth, vec2 p){
+	float sign = dot(perpendicular(a), b);
+	
+	return clamp(bWidth/aWidth*sign*dot(normalize(perpendicular(a)), p), 0.f, bWidth);
+}
+
+
+
 float distToLine(vec2 p, vec2 a, vec2 b){
 	vec2 d = b - a;
 	vec2 d_perp = normalize(vec2(-d.y, d.x));
@@ -173,7 +185,7 @@ void main(void)
 	vec2 norm_coord = FragmentTexCoord*2.0 - vec2(1, 1);
 
 	float intensity = calculateIntensity(norm_coord);
-	intensity = -1*superEllipticalBlend(norm_coord);
+	//intensity = -1*superEllipticalBlend(norm_coord);
 	/*float dx = calculateIntensity(norm_coord+vec2(E, 0)) - 
 				calculateIntensity(norm_coord-vec2(E, 0));
 	float dy = calculateIntensity(norm_coord+vec2(0, E)) - 
@@ -194,9 +206,9 @@ void main(void)
 	else
 		intensity = intensity;
 
-	if (intensity> 0){
+	if (intensity> 0.0){
 		color = vec3(1, 1, 1);
-		intensity = 1;	
+		//intensity = 1;	
 	}
 //	intensity *= 0.5;
 //	PixelColour = vec4(intensity*color, 1);

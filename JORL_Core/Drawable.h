@@ -6,13 +6,14 @@
 #include "Object.h"
 #include <map>
 #include <memory>
+#include "PointerAliases.h"
 
 namespace renderlib {
 
 class Drawable : public virtual Object{
 protected:
-	std::map<int, std::shared_ptr<Material>> material;
-	std::shared_ptr<GLGeometryContainer> geometry;
+	std::map<int, sptr<Material>> material;
+	sptr<GLGeometryContainer> geometry;
 	glm::vec3 scale;
 
 public:
@@ -20,9 +21,9 @@ public:
 		glm::vec3 position=glm::vec3(0.f), glm::quat orientation=glm::quat());		//Only valid for objects allocated to heap
 	Drawable(GLGeometryContainer *geometry, glm::vec3 position = glm::vec3(0.f), glm::quat orientation = glm::quat());
 
-	Drawable(std::shared_ptr<GLGeometryContainer> geometry, std::shared_ptr<Material> material,
+	Drawable(sptr<GLGeometryContainer> geometry, sptr<Material> material,
 		glm::vec3 position = glm::vec3(0.f), glm::quat orientation = glm::quat());		//Only valid for objects allocated to heap
-	Drawable(std::shared_ptr<GLGeometryContainer> geometry, glm::vec3 position = glm::vec3(0.f), glm::quat orientation = glm::quat());
+	Drawable(sptr<GLGeometryContainer> geometry, glm::vec3 position = glm::vec3(0.f), glm::quat orientation = glm::quat());
 
 	Drawable(glm::vec3 position = glm::vec3(0.f), glm::quat orientation = glm::quat());
 
@@ -30,14 +31,15 @@ public:
 
 	virtual glm::mat4 getTransform() const;
 
-	std::shared_ptr<Material> getMaterial(int type);
-	std::shared_ptr<GLGeometryContainer> getGeometryPtr(){ return geometry; }
+	sptr<Material> getMaterial(int type);
+	sptr<GLGeometryContainer> getGeometryPtr(){ return geometry; }
 
 	void setPosition(glm::vec3 position);
 	void setOrientation(glm::quat orientation);
 	void setScale(glm::vec3 scale);
 
 	void addMaterial(Material* newMaterial);
+	void addMaterial(sptr<Material> newMaterial);
 	bool removeMaterial(int type);
 
 	void deleteMaterialsAndGeometry();

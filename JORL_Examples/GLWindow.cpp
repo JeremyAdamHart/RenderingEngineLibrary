@@ -36,6 +36,7 @@ using namespace std;
 #include "ColorShader.h"
 #include "ColorSetMat.h"
 #include "TemplatedGeometry.h"
+#include "CommonGeometry.h"
 
 //Rigid body test
 #include "Physics.h"
@@ -52,6 +53,7 @@ using namespace std;
 //Random
 #include <random>
 #include <ctime>
+#include <numeric>
 #include <algorithm>
 
 #include <limits>
@@ -154,6 +156,95 @@ WindowManager::WindowManager(int width, int height, std::string name, glm::vec4 
 	glDepthFunc(GL_LEQUAL);
 
 	glViewport(0, 0, window_width, window_height);
+}
+
+void WindowManager::velocitySpringLoop() {
+	//glfwSetCursorPosCallback(window, )
+	
+
+	BlinnPhongShaderT bpShader;
+	Drawable test(
+		createSphereGeometry(),
+		make<ColorMat>(vec3(0, 1, 0)));
+	test.addMaterial(make<ShadedMat>(0.2f, 0.4f, 0.5f, 20.f));
+	test.setScale(glm::vec3(0.5f));
+
+	const int smoothedsamples = 5;
+	vec2 mouseVelocity (0.f);
+	std::vector<vec2> mouseVelocityBuffer;
+	mouseVelocityBuffer.resize(5, vec2(0.f));
+	vec2 mousePosition;
+
+	vec2 springPosition(0.f);
+	vec2 springVelocity(0.f);
+	vec2 springAcceleration(0.f);
+
+	int vp[4];
+	glGetIntegerv(GL_VIEWPORT, vp);
+
+	glfwSwapInterval(1);
+
+	float dt = 1.f / 60.f;
+	float k = 100.f;
+	float damping = 1000.f;
+
+	vec3 line[2] = { glm::vec3(0.f, 0.f, 0.f), vec3(0.f, 0.f, 0.f) };
+	auto velocityGeometry = std::make_shared<SimpleGeometry>(line, 2, GL_LINES);
+	Drawable velocityLine(velocityGeometry, std::make_shared<ColorMat>(vec3(0.f, 1.f, 0.f)));
+
+	vec3 position(0.f);
+	auto springGeometry = std::make_shared<SimpleGeometry>(&position, 1, GL_POINTS);
+	Drawable spring(
+		springGeometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
+	
+	FlatColorShader shader;
+
+	Camera cam;
+
+	glClearColor(0.f, 0.f, 1.f, 0.f);
+	glPointSize(10.f);
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		vec2 currentMousePosition = vec2(x / float(vp[2]), -y / float(vp[3]))*2.f - vec2(1, -1);
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+			mouseVelocityBuffer.push_back(currentMousePosition - mousePosition);
+		}
+		else
+			mouseVelocityBuffer.push_back(vec2(0, 0));
+		mousePosition = currentMousePosition;
+		//Update velocity
+		if(mouseVelocityBuffer.size() > smoothedsamples)
+			mouseVelocityBuffer.erase(mouseVelocityBuffer.begin());
+		mouseVelocity = std::accumulate(mouseVelocityBuffer.begin(), mouseVelocityBuffer.end(), vec2(0.f));
+		mouseVelocity /= float(mouseVelocityBuffer.size());
+
+		springAcceleration += dt*(k*(mouseVelocity - springVelocity) - springVelocity*damping);
+		springVelocity += springAcceleration*dt;
+		springPosition += springVelocity * dt;
+
+		line[0] = vec3(springPosition, 0.f);
+		line[1] = vec3(springPosition + springVelocity, 0.f);
+		velocityGeometry->loadGeometry(line, 2);
+
+		printf("Mouse velocity = %f %f\nSpring velocity = %f %f acceleration = %f %f\n", 
+			mouseVelocity.x, mouseVelocity.y,  
+			springVelocity.x, springVelocity.y, 
+			springAcceleration.x, springAcceleration.y);
+
+		spring.position = vec3(springPosition, 0.f);
+
+		bpShader.draw(cam, vec3(10.f, 10.f, 10.f), test);
+		shader.draw(cam, spring);
+		shader.draw(cam, velocityLine);
+
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+	}
+
+	glfwTerminate();
 }
 
 #define M_PI 3.1415926535897932384626433832795
@@ -697,13 +788,15 @@ void WindowManager::laplacianSmoothing() {
 	SimpleTexManager tm;
 	SimpleShader shader;
 
-	/*
-	const int SIZE = 7;
+	///*
+	const int SIZE = 9;
 	vec3 points[SIZE] = {
-		vec3(-1, 0, 0), vec3(-0.666, 0, 0), vec3(-0.333, 0, 0), vec3(0, 0, 0), vec3(0, 0.333, 0), vec3(0, 0.666, 0), vec3(0, 1, 0)
+		vec3(-1.333, 0, 0),
+		vec3(-1, 0, 0), vec3(-0.666, 0, 0), vec3(-0.333, 0, 0), vec3(0, 0, 0), vec3(0, 0.333, 0), vec3(0, 0.666, 0), vec3(0, 1, 0),
+		vec3(0, 1.333, 0)
 	};
 	//*/
-	///*
+	/*
 	const int SIZE = 8;
 //	vec3 points[SIZE] = { vec3(-1, -1, 0), vec3(0, -1, 0), vec3(1, -1, 0), vec3(1, 0, 0), vec3(1, 1, 0), vec3(0, 1, 0), vec3(-1, 1, 0), vec3(-1, 0, 0)};
 	vec3 points[SIZE] = { vec3(-0.1, -1, 0), vec3(0, -1, 0), vec3(1, -1, 0), vec3(0.4, 0, 0), vec3(1, 1, 0), vec3(0, 1, 0), vec3(-1, 1, 0), vec3(-1, 0, 0) };
@@ -712,7 +805,7 @@ void WindowManager::laplacianSmoothing() {
 	vec3 newPoints[SIZE];
 	copy(begin(points), end(points), begin(newPoints));
 
-	std::shared_ptr<SimpleGeometry> geometry = make_shared<SimpleGeometry>(points, SIZE, GL_LINE_LOOP);
+	std::shared_ptr<SimpleGeometry> geometry = make_shared<SimpleGeometry>(points, SIZE, GL_LINE_STRIP);
 	
 	Drawable curve(geometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
 
@@ -723,14 +816,14 @@ void WindowManager::laplacianSmoothing() {
 		static bool next_iteration_pressed = false;
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !next_iteration_pressed) {
 			next_iteration_pressed = true;
-			for (int j = 0; j < 10; j++) {
-				float weight = 0.1f;
+			for (int j = 0; j < 20; j++) {
+				float weight = 0.5f;
 				float inflate = 0.11f;
 
 				copy(begin(points), end(points), begin(newPoints));
 				float weights[SIZE];
 				float averageWeight = 0.f;
-				////*
+				/*
 				for (int i = 0; i < SIZE; i++) {
 					newPoints[i] += weight * (0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
 					weights[i] = length(0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
@@ -762,14 +855,23 @@ void WindowManager::laplacianSmoothing() {
 				}
 
 				//*/
-
-				/*
+				//CLOSED CURVE
+				
 				for (int i = 1; i < SIZE-1; i++) {
-					newPoints[i] = (1.f - weight)*points[i] + weight *0.5f* (points[i - 1] + points[i + 1]);
+					//NORMAL METHOD
+					//newPoints[i] = (1.f - weight)*points[i] + weight *0.5f* (points[i - 1] + points[i + 1]);
+					vec3 l = 0.5f*(points[i - 1] + points[i + 1]) - points[i];
+					newPoints[i] += 0.5f*weight*l;
+					newPoints[i - 1] -= 0.25f*weight*l;
+					newPoints[i + 1] -= 0.25f*weight*l;
 				}
 
-				newPoints[1].y -= points[1].y;
-				newPoints[SIZE-2].x -= points[SIZE-2].x;
+				//newPoints[1].y -= points[1].y;
+				//newPoints[SIZE-2].x -= points[SIZE-2].x;
+				newPoints[0] = points[0];
+				newPoints[1] = points[1];
+				newPoints[SIZE - 2] = points[SIZE - 2];
+				newPoints[SIZE-1] = points[SIZE-1];
 				//*/
 
 				geometry->loadGeometry(newPoints, SIZE);
@@ -1309,6 +1411,28 @@ void WindowManager::mainLoop() {
 	}
 
 	glfwTerminate();
+}
+
+void WindowManager::treeGrowthTest() {
+	SimpleShader shader;
+	
+	auto pointGeometry = make<GeometryT<vec3>>(GL_POINTS);
+	auto lineGeometry = make<GeometryT<vec3>>(GL_LINES);
+
+	Drawable pointDrawable(pointGeometry, make<ColorMat>(vec3(1, 0, 0)));
+	Drawable lineDrawable(lineGeometry, make<ColorMat>(vec3(0, 1, 0)));
+
+	vector<vec3> lines = { vec3(0, -1, 0), vec3(0, 0, 0), vec3(0,0, 0), vec3(0, 1, 0), vec3(0, 0, 0), vec3(0.5, 0.5, 0)};
+	lineGeometry->loadBuffers(lines.data(), lines.size());
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		shader.draw(cam, lineDrawable);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
 }
 
 void WindowManager::particleLoop() {
