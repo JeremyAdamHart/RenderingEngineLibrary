@@ -678,15 +678,27 @@ constexpr int intMod(int x, int n) {
 	return (x + n) % n;
 }
 
-std::vector<vec3> generateBranchingStructure(vec3 b0, vec3 b1, vec3 b2, vec3 junction, unsigned int divisions, float radius=0.2f) {
+struct BranchingStructureData {
+	std::vector<vec3> points;
+	std::vector<unsigned int> faces;
+	std::vector<unsigned int> fixedPoints;
+};
+
+BranchingStructureData generateBranchingStructure(
+	vec3 b0, float r0,
+	vec3 b1, float r1,
+	vec3 b2, float r2,
+	vec3 junction, unsigned int divisions) {
 	vec3 planeNormal = vec3(0);
 	vec3 crossResult = cross(b0, b1);
 	if (length(crossResult) > 0.0001f) planeNormal += crossResult;
-	vec3 crossResult = cross(b1, b2);
+	crossResult = cross(b1, b2);
 	if (length(crossResult) > 0.0001f) planeNormal += crossResult;
-	vec3 crossResult = cross(b2, b0);
+	crossResult = cross(b2, b0);
 	if (length(crossResult) > 0.0001f) planeNormal += crossResult;
 	planeNormal = normalize(planeNormal);
+
+	float radius = (r0 + r1 + r2)*0.33333f;
 
 	vector<vec3> points;
 	points.push_back(junction + planeNormal * radius);	//Front center
@@ -738,12 +750,53 @@ std::vector<vec3> generateBranchingStructure(vec3 b0, vec3 b1, vec3 b2, vec3 jun
 	points.push_back(junction - planeNormal * radius + b2b0dir * lateralStep);
 
 	//CENTER TRIANGLES
+	//Front side
 	std::vector<unsigned int> faces;
 	faces.push_back(0);
 	faces.push_back(b0BoundaryIndexMap[0]);
 	faces.push_back(b0BoundaryIndexMap[1]);
+	faces.push_back(0);
+	faces.push_back(b0BoundaryIndexMap[7]);
+	faces.push_back(b0BoundaryIndexMap[0]);
+
+	faces.push_back(0);
+	faces.push_back(b1BoundaryIndexMap[0]);
+	faces.push_back(b1BoundaryIndexMap[1]);
+	faces.push_back(0);
+	faces.push_back(b1BoundaryIndexMap[7]);
+	faces.push_back(b1BoundaryIndexMap[0]);
+	
+	faces.push_back(0);
+	faces.push_back(b2BoundaryIndexMap[0]);
+	faces.push_back(b2BoundaryIndexMap[1]);
+	faces.push_back(0);
+	faces.push_back(b2BoundaryIndexMap[7]);
+	faces.push_back(b2BoundaryIndexMap[0]);
+
+	//Back side
+	faces.push_back(1);
+	faces.push_back(b0BoundaryIndexMap[3]);
+	faces.push_back(b0BoundaryIndexMap[4]);
+	faces.push_back(1);
+	faces.push_back(b0BoundaryIndexMap[4]);
+	faces.push_back(b0BoundaryIndexMap[5]);
+
+	faces.push_back(1);
+	faces.push_back(b1BoundaryIndexMap[3]);
+	faces.push_back(b1BoundaryIndexMap[4]);
+	faces.push_back(1);
+	faces.push_back(b1BoundaryIndexMap[4]);
+	faces.push_back(b1BoundaryIndexMap[5]);
+
+	faces.push_back(1);
+	faces.push_back(b2BoundaryIndexMap[3]);
+	faces.push_back(b2BoundaryIndexMap[4]);
+	faces.push_back(1);
+	faces.push_back(b2BoundaryIndexMap[4]);
+	faces.push_back(b2BoundaryIndexMap[5]);
 
 	std::vector<unsigned int> fixedPoints;
+	const unsigned int RADIAL_DIVISIONS = 8;
 
 	//B0 CYLINDER
 	unsigned int b0Start = points.size();
@@ -753,15 +806,65 @@ std::vector<vec3> generateBranchingStructure(vec3 b0, vec3 b1, vec3 b2, vec3 jun
 	float lateral = lateralStep * 2.f;
 	for (unsigned int i = 0; i < divisions; i++) {
 		float theta = 0.f;
-		float thetaStep = 2.f*M_PI / 6.f;
-		for (unsigned int j = 0; j < 6; j++) {
+		float thetaStep = 2.f*M_PI / float(RADIAL_DIVISIONS);
+		for (unsigned int j = 0; j < RADIAL_DIVISIONS; j++) {
 			if (i > divisions - 3) fixedPoints.push_back(points.size());
 
-			points.push_back(junction + b0*lateral + by * cos(theta) + bx * sin(theta));
+			points.push_back(junction + b0*lateral + (by * cos(theta) + bx * sin(theta))*r0);
+
+			if (i+1 < divisions) {
+				unsigned int i00 = b0Start + i * RADIAL_DIVISIONS + j;
+				unsigned int i10 = b0Start + (i + 1)* RADIAL_DIVISIONS + j;
+				unsigned int i01 = b0Start + i * RADIAL_DIVISIONS + intMod(j + 1, RADIAL_DIVISIONS);
+				unsigned int i11 = b0Start + (i + 1) * RADIAL_DIVISIONS + intMod(j + 1, RADIAL_DIVISIONS);
+				
+				if (j % 2 == 0){ //(j < 4) {
+					faces.push_back(i00);
+					faces.push_back(i10);
+					faces.push_back(i11);
+					faces.push_back(i00);
+					faces.push_back(i11);
+					faces.push_back(i01);
+				}
+				else {
+					faces.push_back(i01);
+					faces.push_back(i00);
+					faces.push_back(i10);
+					faces.push_back(i01);
+					faces.push_back(i10);
+					faces.push_back(i11);
+				}
+			}
 
 			theta += thetaStep;
 		}
 		lateral += lateralStep;
+	}
+
+	//Connection between center and b0
+	for (int j = 0; j < RADIAL_DIVISIONS; j++) {
+		
+		unsigned int i00 = b0BoundaryIndexMap[j];
+		unsigned int i10 = b0Start + j;
+		unsigned int i01 = b0BoundaryIndexMap[intMod(j + 1, RADIAL_DIVISIONS)];
+		unsigned int i11 = b0Start + intMod(j+1, RADIAL_DIVISIONS);
+
+		if (j % 2 == 0) { //(j < 4) {
+			faces.push_back(i00);
+			faces.push_back(i10);
+			faces.push_back(i11);
+			faces.push_back(i00);
+			faces.push_back(i11);
+			faces.push_back(i01);
+		}
+		else {
+			faces.push_back(i01);
+			faces.push_back(i00);
+			faces.push_back(i10);
+			faces.push_back(i01);
+			faces.push_back(i10);
+			faces.push_back(i11);
+		}
 	}
 
 	//B1 CYLINDER
@@ -772,15 +875,65 @@ std::vector<vec3> generateBranchingStructure(vec3 b0, vec3 b1, vec3 b2, vec3 jun
 	lateral = lateralStep * 2.f;
 	for (unsigned int i = 0; i < divisions; i++) {
 		float theta = 0.f;
-		float thetaStep = 2.f*M_PI / 6.f;
-		for (unsigned int j = 0; j < 6; j++) {
+		float thetaStep = 2.f*M_PI / float(RADIAL_DIVISIONS);
+		for (unsigned int j = 0; j < RADIAL_DIVISIONS; j++) {
 			if (i > divisions - 3) fixedPoints.push_back(points.size());
 
-			points.push_back(junction + b1 * lateral + by * cos(theta) + bx * sin(theta));
+			points.push_back(junction + b1 * lateral + (by * cos(theta) + bx * sin(theta))*r1);
+
+			if (i + 1 < divisions) {
+				unsigned int i00 = b1Start + i * RADIAL_DIVISIONS + j;
+				unsigned int i10 = b1Start + (i + 1)* RADIAL_DIVISIONS + j;
+				unsigned int i01 = b1Start + i * RADIAL_DIVISIONS + intMod(j + 1, RADIAL_DIVISIONS);
+				unsigned int i11 = b1Start + (i + 1) * RADIAL_DIVISIONS + intMod(j + 1, RADIAL_DIVISIONS);
+
+				if (j % 2 == 0) { //(j < 4) {
+					faces.push_back(i00);
+					faces.push_back(i10);
+					faces.push_back(i11);
+					faces.push_back(i00);
+					faces.push_back(i11);
+					faces.push_back(i01);
+				}
+				else {
+					faces.push_back(i01);
+					faces.push_back(i00);
+					faces.push_back(i10);
+					faces.push_back(i01);
+					faces.push_back(i10);
+					faces.push_back(i11);
+				}
+			}
 
 			theta += thetaStep;
 		}
 		lateral += lateralStep;
+	}
+
+	//Connection between center and b1
+	for (int j = 0; j < RADIAL_DIVISIONS; j++) {
+
+		unsigned int i00 = b1BoundaryIndexMap[j];
+		unsigned int i10 = b1Start + j;
+		unsigned int i01 = b1BoundaryIndexMap[intMod(j + 1, RADIAL_DIVISIONS)];
+		unsigned int i11 = b1Start + intMod(j + 1, RADIAL_DIVISIONS);
+
+		if (j % 2 == 0) { //(j < 4) {
+			faces.push_back(i00);
+			faces.push_back(i10);
+			faces.push_back(i11);
+			faces.push_back(i00);
+			faces.push_back(i11);
+			faces.push_back(i01);
+		}
+		else {
+			faces.push_back(i01);
+			faces.push_back(i00);
+			faces.push_back(i10);
+			faces.push_back(i01);
+			faces.push_back(i10);
+			faces.push_back(i11);
+		}
 	}
 
 	//B2 CYLINDER
@@ -791,17 +944,150 @@ std::vector<vec3> generateBranchingStructure(vec3 b0, vec3 b1, vec3 b2, vec3 jun
 	lateral = lateralStep * 2.f;
 	for (unsigned int i = 0; i < divisions; i++) {
 		float theta = 0.f;
-		float thetaStep = 2.f*M_PI / 6.f;
-		for (unsigned int j = 0; j < 6; j++) {
+		float thetaStep = 2.f*M_PI / float(RADIAL_DIVISIONS);
+		for (unsigned int j = 0; j < RADIAL_DIVISIONS; j++) {
 			if (i > divisions - 3) fixedPoints.push_back(points.size());
 
-			points.push_back(junction + b2 * lateral + by * cos(theta) + bx * sin(theta));
+			points.push_back(junction + b2 * lateral + (by * cos(theta) + bx * sin(theta))*r2);
+
+			if (i + 1 < divisions) {
+				unsigned int i00 = b2Start + i * RADIAL_DIVISIONS + j;
+				unsigned int i10 = b2Start + (i + 1)* RADIAL_DIVISIONS + j;
+				unsigned int i01 = b2Start + i * RADIAL_DIVISIONS + intMod(j + 1, RADIAL_DIVISIONS);
+				unsigned int i11 = b2Start + (i + 1) * RADIAL_DIVISIONS + intMod(j + 1, RADIAL_DIVISIONS);
+
+				if (j % 2 == 0) { //(j < 4) {
+					faces.push_back(i00);
+					faces.push_back(i10);
+					faces.push_back(i11);
+					faces.push_back(i00);
+					faces.push_back(i11);
+					faces.push_back(i01);
+					
+				}
+				else {
+					faces.push_back(i01);
+					faces.push_back(i00);
+					faces.push_back(i10);
+					faces.push_back(i01);
+					faces.push_back(i10);
+					faces.push_back(i11);
+				}
+			}
 
 			theta += thetaStep;
 		}
 		lateral += lateralStep;
 	}
+
+	//Connection between center and b2
+	for (int j = 0; j < RADIAL_DIVISIONS; j++) {
+
+		unsigned int i00 = b2BoundaryIndexMap[j];
+		unsigned int i10 = b2Start + j;
+		unsigned int i01 = b2BoundaryIndexMap[intMod(j + 1, RADIAL_DIVISIONS)];
+		unsigned int i11 = b2Start + intMod(j + 1, RADIAL_DIVISIONS);
+
+		if (j % 2 == 0) { //(j < 4) {
+			faces.push_back(i00);
+			faces.push_back(i10);
+			faces.push_back(i11);
+			faces.push_back(i00);
+			faces.push_back(i11);
+			faces.push_back(i01);
+		}
+		else {
+			faces.push_back(i01);
+			faces.push_back(i00);
+			faces.push_back(i10);
+			faces.push_back(i01);
+			faces.push_back(i10);
+			faces.push_back(i11);
+		}
+	}
+
+	BranchingStructureData ret;
+	ret.points = points;
+	ret.faces = faces;
+	ret.fixedPoints = fixedPoints;
+
+	return ret;
 }
+
+float cotangent(vec3 a, vec3 b) {
+	return acos(dot(normalize(a), normalize(b)));
+}
+
+vec3 cotangentLaplacian(const std::vector<vec3>& vertices, const vv::Adjacency& adjacency, unsigned int vertex) {
+	glm::vec3 centroid(0);
+	float weightSum = 0.f;
+
+	vec3 v = vertices[vertex];
+
+	for (unsigned int i = 0; i < adjacency.neighbours.size();  i++) {
+		vec3 n = vertices[adjacency.neighbours[i]];
+		vec3 l = vertices[adjacency.neighbours[intMod(i - 1, adjacency.neighbours.size())]];
+		vec3 r = vertices[adjacency.neighbours[intMod(i + 1, adjacency.neighbours.size())]];
+		
+		float weight = cotangent(n - l, v - l) + cotangent(n - r, v - r);
+		centroid += weight*n;
+		weightSum += weight;
+	}
+
+	return centroid / weightSum - v;
+}
+
+
+vec3 umbrellaLaplacian(const std::vector<vec3>& vertices, const vv::Adjacency& adjacency, unsigned int vertex) {
+	glm::vec3 centroid (0);
+
+	for (unsigned int adj_v : adjacency.neighbours) {
+		centroid += vertices[adj_v];
+	}
+
+	return centroid/float(adjacency.neighbours.size()) - vertices[vertex];
+}
+
+void cotangentLaplacian3rdLaw(const std::vector<vec3>& vertices, const vv::Adjacency& adjacency, unsigned int vertex, std::vector<vec3>* outputVertices) {
+	float step = 0.0001f;
+
+	glm::vec3 centroid(0);
+	float weightSum = 0.f;
+	std::vector<float> weight;
+	weight.resize(adjacency.neighbours.size());
+	vec3 v = vertices[vertex];
+
+	for (unsigned int i = 0; i < adjacency.neighbours.size(); i++) {
+		vec3 n = vertices[adjacency.neighbours[i]];
+		vec3 l = vertices[adjacency.neighbours[intMod(i - 1, adjacency.neighbours.size())]];
+		vec3 r = vertices[adjacency.neighbours[intMod(i + 1, adjacency.neighbours.size())]];
+
+		weight[i] = cotangent(n - l, v - l) + cotangent(n - r, v - r);
+		centroid += weight[i] * n;
+		weightSum += weight[i];
+	}
+
+	vec3 dir = centroid / weightSum - v;
+
+	for (unsigned int i = 0; i < adjacency.neighbours.size(); i++)
+		(*outputVertices)[adjacency.neighbours[i]] -= dir * 0.5f*step*weight[i] / weightSum;
+
+	(*outputVertices)[vertex] += dir * 0.5f*step;
+}
+
+
+void laplacianOnMesh(const std::vector<vec3>& vertices, const std::vector <vv::Adjacency> & adjacency, std::vector<vec3>* output) {
+	float weight = 0.001f;
+
+	for (int i = 0; i < vertices.size(); i++) {
+		
+		vec3 diff = cotangentLaplacian(vertices, adjacency[i], i);
+		(*output)[i] = vertices[i] + diff * weight*0.5f;
+		
+		//cotangentLaplacian3rdLaw(vertices, adjacency[i], i, output);
+	}
+}
+
 
 void WindowManager::laplacianSmoothingMeshLoop() {
 	glfwSetKeyCallback(window, keyCallback);
@@ -810,91 +1096,63 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	SimpleTexManager tm;
 	SimpleShader shader;
 
-	/*
-	const int SIZE = 7;
-	vec3 points[SIZE] = {
-		vec3(-1, 0, 0), vec3(-0.666, 0, 0), vec3(-0.333, 0, 0), vec3(0, 0, 0), vec3(0, 0.333, 0), vec3(0, 0.666, 0), vec3(0, 1, 0)
-	};
-	//*/
-	///*
-	const int SIZE = 8;
-	//	vec3 points[SIZE] = { vec3(-1, -1, 0), vec3(0, -1, 0), vec3(1, -1, 0), vec3(1, 0, 0), vec3(1, 1, 0), vec3(0, 1, 0), vec3(-1, 1, 0), vec3(-1, 0, 0)};
-	vec3 points[SIZE] = { vec3(-0.1, -1, 0), vec3(0, -1, 0), vec3(1, -1, 0), vec3(0.4, 0, 0), vec3(1, 1, 0), vec3(0, 1, 0), vec3(-1, 1, 0), vec3(-1, 0, 0) };
+	float r0 = 0.2f;
+	float r1 = 0.05f;
+	float r2 = sqrt(r0*r0 + r1 * r1);
 
-	//*/
-	vec3 newPoints[SIZE];
-	copy(begin(points), end(points), begin(newPoints));
+	BranchingStructureData data = generateBranchingStructure(
+		vec3(-0.2, -1.f, 0), r2,
+		vec3(-0, 1.f, 0), r0,
+		vec3(0.7f, 0.3f, 0), r1,
+		vec3(0), 3);
 
-	std::shared_ptr<SimpleGeometry> geometry = make_shared<SimpleGeometry>(points, SIZE, GL_LINE_LOOP);
+	std::vector<vv::Adjacency> adjacencyList = vv::faceListToVertexVertex(data.faces, data.points);
 
-	Drawable curve(geometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
+	auto geometry = make<ElementGeometryT<unsigned int, glm::vec3>>(GL_TRIANGLES);
 
+	geometry->loadIndices(data.faces.data(), data.faces.size());
+	geometry->loadBuffers(data.points.data(), data.points.size());
+
+	Drawable mesh(geometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
+	vector<vec3> vertices[2] = { data.points, data.points };
+
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glLineWidth(3.f);
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		
 		static bool next_iteration_pressed = false;
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !next_iteration_pressed) {
 			next_iteration_pressed = true;
-			for (int j = 0; j < 10; j++) {
-				float weight = 0.1f;
-				float inflate = 0.11f;
+			static int count = 0;
+			for (int i = 0; i < 10000; i++) {
+				unsigned int input = count % 2;
+				unsigned int output = (count + 1) % 2;
 
-				copy(begin(points), end(points), begin(newPoints));
-				float weights[SIZE];
-				float averageWeight = 0.f;
-				////*
-				for (int i = 0; i < SIZE; i++) {
-					newPoints[i] += weight * (0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
-					weights[i] = length(0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
-					float a = length(0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
-					float b = 0.5f*length(points[intMod(i - 1, SIZE)] - points[intMod(i + 1, SIZE)]);
-					float R = (a*a + b * b) / (2 * a);
-					float r = R - a * weight;
-					if (r > 0 && R > 0) {
-						averageWeight += R / r;	//weights[i];
-						weights[i] = R;
-					}
-					else
-						weights[i] = 1.f;
+				laplacianOnMesh(vertices[input], adjacencyList, &vertices[output]);
+			
+				for (unsigned int index : data.fixedPoints) {
+					vertices[output][index] = vertices[input][index];
 				}
 
-				averageWeight /= float(SIZE);
-
-				copy(begin(newPoints), end(newPoints), begin(points));
-
-				//Inflate
-				for (int i = 0; i < SIZE; i++) {
-					float a = length(0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
-					float b = 0.5f*length(points[intMod(i - 1, SIZE)] - points[intMod(i + 1, SIZE)]);
-					float R = (a*a + b * b) / (2 * a);
-					float r = R - a * weight;
-					if (averageWeight > 0)
-						//newPoints[i] -= weight*weights[i]/R*(0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
-						newPoints[i] -= inflate * (0.5f* (points[intMod(i - 1, SIZE)] + points[intMod(i + 1, SIZE)]) - points[i]);
-				}
-
-				//*/
-
-				/*
-				for (int i = 1; i < SIZE-1; i++) {
-					newPoints[i] = (1.f - weight)*points[i] + weight *0.5f* (points[i - 1] + points[i + 1]);
-				}
-
-				newPoints[1].y -= points[1].y;
-				newPoints[SIZE-2].x -= points[SIZE-2].x;
-				//*/
-
-				geometry->loadGeometry(newPoints, SIZE);
-
-				copy(begin(newPoints), end(newPoints), begin(points));
+				count++;
 			}
+
+			unsigned int output = count % 2;
+			geometry->loadBuffers(vertices[output].data(), vertices[output].size());
 		}
 		else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
 			next_iteration_pressed = false;
 		}
+		
+		mesh.getMaterial<ColorMat>()->color = vec4(0, 0, 1, 1);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		shader.draw(cam, mesh);
 
-		shader.draw(cam, curve);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		mesh.getMaterial<ColorMat>()->color = vec4(1, 0, 0, 1);
+		shader.draw(cam, mesh);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

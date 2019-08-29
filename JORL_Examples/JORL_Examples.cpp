@@ -87,7 +87,8 @@ int main()
 //	wm.convexTestLoop();
 //	wm.velocitySpringLoop();
 	//wm.adaptiveNoiseLoop();
-	wm.laplacianSmoothing();
+	//wm.laplacianSmoothing();
+	wm.laplacianSmoothingMeshLoop();
 
 }
 

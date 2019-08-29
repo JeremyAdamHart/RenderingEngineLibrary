@@ -17,6 +17,8 @@ public:
 class Adjacency{
 public:
 	std::vector<unsigned int> neighbours;
+
+	void removeDuplicates();
 };
 
 template<typename T>
@@ -27,9 +29,9 @@ std::vector<Adjacency> faceListToVertexVertex(std::vector<unsigned int>& faces, 
 	adjacency.resize(vertices.size());
 
 	for (int i = 0; i+2 < faces.size(); i += 3) {
-		unsigned int a = faces[i]];
-		unsigned int b = faces[i + 1]];
-		unsigned int c = faces[i + 2]];
+		unsigned int a = faces[i];
+		unsigned int b = faces[i + 1];
+		unsigned int c = faces[i + 2];
 
 		auto a_adj = &adjacency[faces[i]];
 		auto b_adj = &adjacency[faces[i + 1]];
@@ -43,8 +45,11 @@ std::vector<Adjacency> faceListToVertexVertex(std::vector<unsigned int>& faces, 
 	std::vector<Adjacency> outputAdjacency;
 	outputAdjacency.resize(adjacency.size());
 
-	for (int i = 0; i < vertices.size(); i++)
+	for (int i = 0; i < vertices.size(); i++) {
 		outputAdjacency[i].neighbours = adjacency[i].neighbourChains.front();
+		if (outputAdjacency[i].neighbours.front() == outputAdjacency[i].neighbours.back())
+			outputAdjacency[i].neighbours.pop_back();
+	}
 
 	return outputAdjacency;
 }

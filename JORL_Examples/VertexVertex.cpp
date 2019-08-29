@@ -1,13 +1,13 @@
 #include "VertexVertex.h"
 
 namespace renderlib {
-namespace vv {
+namespace vv { 
 
 void VertexAdjacencyBuilder::addVertices(unsigned int v0, unsigned int v1) {
 	int insertedAtFront = -1;
 	int insertedAtBack = -1;
 	int index = 0;
-	for (auto chain : neighbourChains) {
+	for (auto& chain : neighbourChains) {
 		if (v0 == chain.back()) {
 			chain.push_back(v1);
 			insertedAtBack = index;
@@ -23,11 +23,12 @@ void VertexAdjacencyBuilder::addVertices(unsigned int v0, unsigned int v1) {
 		return;
 	}
 	//If pair conected two chains
-	else if (insertedAtFront > 0 && insertedAtBack > 0) {
+	else if (insertedAtFront >= 0 && insertedAtBack >= 0) {
 		auto& frontChain = neighbourChains[insertedAtBack];
 		auto& backChain = neighbourChains[insertedAtFront];
 		frontChain.pop_back();		//Remove duplicated element at back
-		frontChain.insert(frontChain.end(), backChain.begin(), backChain.end());
+		frontChain.insert(frontChain.end(), backChain.begin()+1, backChain.end());
+		neighbourChains.erase(neighbourChains.begin() + insertedAtFront);
 	}
 }
 

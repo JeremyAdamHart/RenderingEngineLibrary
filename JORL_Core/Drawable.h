@@ -32,6 +32,10 @@ public:
 	virtual glm::mat4 getTransform() const;
 
 	sptr<Material> getMaterial(int type);
+	template<typename Mat>
+	sptr<Mat> getMaterial() {
+		return dynamic_pointer_cast<Mat>(getMaterial(Mat::id));
+	}
 	sptr<GLGeometryContainer> getGeometryPtr(){ return geometry; }
 
 	void setPosition(glm::vec3 position);

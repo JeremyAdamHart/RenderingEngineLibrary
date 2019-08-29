@@ -332,6 +332,7 @@
     <ClCompile Include="noiseTest.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="JORL_Examples.cpp" />
+    <ClCompile Include="VertexVertex.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
