@@ -1054,6 +1054,50 @@ vec3 cotangentLaplacian(const std::vector<vec3>& vertices, const vv::Adjacency& 
 	return centroid / weightSum - v;
 }
 
+vec3 normal(const std::vector<vec3>& vertices, const vv::Adjacency& adjacency, unsigned int vertex) {
+	glm::vec3 centroid(0);
+	float weightSum = 0.f;
+
+	vec3 v = vertices[vertex];
+
+	glm::vec3 normalSum(0);
+
+	for (unsigned int i = 0; i < adjacency.neighbours.size(); i++) {
+		vec3 n = vertices[adjacency.neighbours[i]];
+		vec3 l = vertices[adjacency.neighbours[intMod(i - 1, adjacency.neighbours.size())]];
+		vec3 r = vertices[adjacency.neighbours[intMod(i + 1, adjacency.neighbours.size())]];
+
+		float weight = acos(dot(normalize(n), normalize(v)));
+
+		normalSum += weight*normalize(cross(l - v, n - v));
+		centroid += weight * n;
+		weightSum += weight;
+	}
+
+	return normalize(normalSum / weightSum)*length(centroid / weightSum - v);
+}
+
+template<typename T>
+T cotangentLaplacian(const std::vector<vec3>& vertices, const vector<T>& f, const vv::Adjacency& adjacency, unsigned int vertex) {
+	T centroid(0);
+	float weightSum = 0.f;
+
+	vec3 v = vertices[vertex];
+
+	for (unsigned int i = 0; i < adjacency.neighbours.size(); i++) {
+		vec3 n = vertices[adjacency.neighbours[i]];
+		vec3 l = vertices[adjacency.neighbours[intMod(i - 1, adjacency.neighbours.size())]];
+		vec3 r = vertices[adjacency.neighbours[intMod(i + 1, adjacency.neighbours.size())]];
+
+		T n_val = f[adjacency.neighbours[i]];
+
+		float weight = cotangent(n - l, v - l) + cotangent(n - r, v - r);
+		centroid += weight * n_val;
+		weightSum += weight;
+	}
+
+	return centroid / weightSum - f[vertex];
+}
 
 vec3 umbrellaLaplacian(const std::vector<vec3>& vertices, const vv::Adjacency& adjacency, unsigned int vertex) {
 	glm::vec3 centroid (0);
@@ -1097,11 +1141,30 @@ void laplacianOnMesh(const std::vector<vec3>& vertices, const std::vector <vv::A
 	float weight = 0.001f;
 
 	for (int i = 0; i < vertices.size(); i++) {
+
+		vec3 diff = cotangentLaplacian(vertices, adjacency[i], i);
+		//vec3 diff = normal(vertices, adjacency[i], i);
+		(*output)[i] = vertices[i] + diff * weight*0.5f;
 		
-		//vec3 diff = cotangentLaplacian(vertices, adjacency[i], i);
-		//(*output)[i] = vertices[i] + diff * weight*0.5f;
-		
-		cotangentLaplacian3rdLaw(vertices, adjacency[i], i, output);
+		//cotangentLaplacian3rdLaw(vertices, adjacency[i], i, output);
+	}
+}
+
+void laplacianOnMesh2ndOrder(const std::vector<vec3>& vertices, const std::vector <vv::Adjacency> & adjacency, std::vector<vec3>* output) {
+	float weight = 0.1f;
+	std::vector<vec3> laplacians;
+
+	for (int i = 0; i < vertices.size(); i++) {
+
+		laplacians.push_back(-cotangentLaplacian(vertices, adjacency[i], i));
+	}
+
+	for (int i = 0; i < vertices.size(); i++) {
+
+		vec3 diff = cotangentLaplacian(vertices, laplacians, adjacency[i], i);
+		(*output)[i] = vertices[i] + diff * weight*0.5f;
+
+		//cotangentLaplacian3rdLaw(vertices, adjacency[i], i, output);
 	}
 }
 
@@ -1114,17 +1177,17 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	SimpleShader shader;
 
 	float r0 = 0.2f;
-	float r1 = 0.05f;
+	float r1 = 0.15f;
 	float r2 = sqrt(r0*r0 + r1 * r1);
 
-	/*
+	///*
 	BranchingStructureData data = generateBranchingStructure(
 		vec3(-0.2, -1.f, 0), r2,
 		vec3(-0, 1.f, 0), r0,
 		vec3(0.7f, 0.3f, 0), r1,
-		vec3(0), 3);
+		vec3(0), 4);
 	//*/
-	BranchingStructureData data = createBranchingStructure("models/TreeJoint.ply");
+	//BranchingStructureData data = createBranchingStructure("models/TreeJoint.ply");
 
 	std::vector<vv::Adjacency> adjacencyList = vv::faceListToVertexVertex(data.faces, data.points);
 
@@ -1146,11 +1209,11 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !next_iteration_pressed) {
 			next_iteration_pressed = true;
 			static int count = 0;
-			for (int i = 0; i < 1000; i++) {
+			for (int i = 0; i < 10; i++) {
 				unsigned int input = count % 2;
 				unsigned int output = (count + 1) % 2;
 
-				laplacianOnMesh(vertices[input], adjacencyList, &vertices[output]);
+				laplacianOnMesh2ndOrder(vertices[input], adjacencyList, &vertices[output]);
 			
 				for (unsigned int index : data.fixedPoints) {
 					vertices[output][index] = vertices[input][index];
