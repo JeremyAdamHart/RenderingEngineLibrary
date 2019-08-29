@@ -1168,6 +1168,28 @@ void laplacianOnMesh2ndOrder(const std::vector<vec3>& vertices, const std::vecto
 	}
 }
 
+void pushAwayFromBranches(const vector<vec3>& branches, const vector<float>& radii, vec3 junction, vector<vec3>* points) {
+	for (auto& p : *points) {
+		int index = -1;
+		float closestDistance = 1000000.f;
+		vec3 vectorFrom;
+		for (int i = 0; i < branches.size(); i++) {
+			vec3 v = p - junction;
+			float t = dot(v, branches[i]) / dot(branches[i], branches[i]);
+			vec3 v_p = t*branches[i];
+			float dist = length(v - v_p);
+			if (dist < closestDistance && t > 0 && t < 1) {
+				index = i;
+				closestDistance = dist;
+				vectorFrom = v - v_p;
+			}
+		}
+
+		
+		p += normalize(vectorFrom)*std::max(radii[index] - closestDistance, 0.f)*0.1f;
+	}
+}
+
 
 void WindowManager::laplacianSmoothingMeshLoop() {
 	glfwSetKeyCallback(window, keyCallback);
@@ -1181,10 +1203,14 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	float r2 = sqrt(r0*r0 + r1 * r1);
 
 	///*
+	vec3 b0 = vec3(-0, 1.f, 0);
+	vec3 b1 = vec3(0.7f, 0.3f, 0);
+	vec3 b2 = vec3(-0.2, -1.f, 0);
+
 	BranchingStructureData data = generateBranchingStructure(
-		vec3(-0.2, -1.f, 0), r2,
-		vec3(-0, 1.f, 0), r0,
-		vec3(0.7f, 0.3f, 0), r1,
+		b2, r2,
+		b0, r0,
+		b1, r1,
 		vec3(0), 4);
 	//*/
 	//BranchingStructureData data = createBranchingStructure("models/TreeJoint.ply");
@@ -1214,7 +1240,8 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 				unsigned int output = (count + 1) % 2;
 
 				laplacianOnMesh2ndOrder(vertices[input], adjacencyList, &vertices[output]);
-			
+				pushAwayFromBranches({ b0, b1, b2 }, { r0, r1, r2 }, vec3(0), &vertices[output]);
+
 				for (unsigned int index : data.fixedPoints) {
 					vertices[output][index] = vertices[input][index];
 				}
