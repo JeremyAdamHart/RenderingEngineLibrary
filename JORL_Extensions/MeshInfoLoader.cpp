@@ -141,7 +141,8 @@ MeshInfoLoader::MeshInfoLoader(const char *filename) {
 }
 
 vector<vec3> calculateNormalsImp(vector<vec3>* points, vector<unsigned int>* indices) {
-	vector<vec3> normals(points->size(), vec3(0));
+	vector<vec3> normals;
+	normals.resize(points->size(), vec3(0));
 	for (int i = 0; i < indices->size(); i += 3) {
 		unsigned int ai = indices->at(i);
 		unsigned int bi = indices->at(i + 1);
@@ -171,7 +172,7 @@ bool MeshInfoLoader::loadModelPly(const char *filename) {
 	PlyFile file;
 	file.parse_header(ss);
 
-	std::shared_ptr<PlyData> positionData, normalData, texcoordData, faceData;
+	std::shared_ptr<PlyData> positionData, normalData, texcoordData, colorData, faceData;
 
 	try {
 		positionData = file.request_properties_from_element("vertex", { "x", "y", "z" }); 
@@ -186,9 +187,14 @@ bool MeshInfoLoader::loadModelPly(const char *filename) {
 		texcoordData = file.request_properties_from_element("vertex", { "u", "v" });
 	} catch (const std::exception e) { std::cout << "No texture coordinates in mesh - " << e.what() << std::endl; }
 	try {
+		colorData = file.request_properties_from_element("vertex", { "red", "green", "blue" });
+	}
+	catch (const std::exception e) { std::cout << "No color coordinates in mesh - " << e.what() << std::endl; }
+	try {
 		faceData = file.request_properties_from_element("face", { "vertex_indices" });
 	}
 	catch (const std::exception e) { std::cout << "No faces in mesh - " << e.what() << std::endl; }
+
 
 	file.read(ss);
 
@@ -211,6 +217,14 @@ bool MeshInfoLoader::loadModelPly(const char *filename) {
 	if (texcoordData) {
 		uvs.resize(texcoordData->count);
 		std::memcpy(uvs.data(), texcoordData->buffer.get(), texcoordData->buffer.size_bytes());
+	}
+	if (colorData) {
+		std::vector<unsigned char> colorChars;
+		colorChars.resize(colorData->count*3);
+		std::memcpy(colorChars.data(), colorData->buffer.get(), colorData->buffer.size_bytes());
+		for (int i = 0; i + 2 < colorChars.size(); i+=3) {
+			colors.push_back(vec3(float(colorChars[i]), float(colorChars[i + 1]), float(colorChars[i + 2])) / 255.f);
+		}
 	}
 
 	return positionData && faceData;
@@ -393,5 +407,7 @@ void writeToPly(const char* filename, std::vector<glm::vec3>* vertices, std::vec
 
 	fb.close();
 }
+
+
 
 }

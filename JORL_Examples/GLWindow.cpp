@@ -1014,6 +1014,23 @@ BranchingStructureData generateBranchingStructure(
 	return ret;
 }
 
+BranchingStructureData createBranchingStructure(const char* plyFile) {
+	MeshInfoLoader minfo;
+	minfo.loadModelPly(plyFile);
+
+	BranchingStructureData ret;
+	ret.points = minfo.vertices;
+	ret.faces = minfo.indices;
+	
+	for (int i = 0; i < minfo.colors.size(); i++) {
+		if (length(minfo.colors[i]) < 0.3f) {
+			ret.fixedPoints.push_back(i);
+		}
+	}
+
+	return ret;
+}
+
 float cotangent(vec3 a, vec3 b) {
 	return acos(dot(normalize(a), normalize(b)));
 }
@@ -1049,7 +1066,7 @@ vec3 umbrellaLaplacian(const std::vector<vec3>& vertices, const vv::Adjacency& a
 }
 
 void cotangentLaplacian3rdLaw(const std::vector<vec3>& vertices, const vv::Adjacency& adjacency, unsigned int vertex, std::vector<vec3>* outputVertices) {
-	float step = 0.0001f;
+	float step = 0.001f;
 
 	glm::vec3 centroid(0);
 	float weightSum = 0.f;
@@ -1081,10 +1098,10 @@ void laplacianOnMesh(const std::vector<vec3>& vertices, const std::vector <vv::A
 
 	for (int i = 0; i < vertices.size(); i++) {
 		
-		vec3 diff = cotangentLaplacian(vertices, adjacency[i], i);
-		(*output)[i] = vertices[i] + diff * weight*0.5f;
+		//vec3 diff = cotangentLaplacian(vertices, adjacency[i], i);
+		//(*output)[i] = vertices[i] + diff * weight*0.5f;
 		
-		//cotangentLaplacian3rdLaw(vertices, adjacency[i], i, output);
+		cotangentLaplacian3rdLaw(vertices, adjacency[i], i, output);
 	}
 }
 
@@ -1100,11 +1117,14 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	float r1 = 0.05f;
 	float r2 = sqrt(r0*r0 + r1 * r1);
 
+	/*
 	BranchingStructureData data = generateBranchingStructure(
 		vec3(-0.2, -1.f, 0), r2,
 		vec3(-0, 1.f, 0), r0,
 		vec3(0.7f, 0.3f, 0), r1,
 		vec3(0), 3);
+	//*/
+	BranchingStructureData data = createBranchingStructure("models/TreeJoint.ply");
 
 	std::vector<vv::Adjacency> adjacencyList = vv::faceListToVertexVertex(data.faces, data.points);
 
@@ -1126,7 +1146,7 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !next_iteration_pressed) {
 			next_iteration_pressed = true;
 			static int count = 0;
-			for (int i = 0; i < 10000; i++) {
+			for (int i = 0; i < 1000; i++) {
 				unsigned int input = count % 2;
 				unsigned int output = (count + 1) % 2;
 

@@ -25,7 +25,7 @@ public:
 	float getBoundingRadius();
 	float getBottom();
 
-	vector<vec3> vertices, normals;
+	vector<vec3> vertices, normals, colors;
 	vector<vec2> uvs;
 	vector<unsigned int> indices;
 
