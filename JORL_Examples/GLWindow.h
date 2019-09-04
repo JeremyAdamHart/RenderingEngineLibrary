@@ -42,6 +42,7 @@ public:
 	void testLoop();
 	void velocitySpringLoop();
 	void treeGrowthTest();
+	void growthLoop2D();
 	void laplacianSmoothing();
 	void laplacianSmoothingMeshLoop();
 

@@ -90,6 +90,11 @@ void cursorPositionCallback(GLFWwindow *window, double xpos, double ypos) {
 		cam.zoom(pow(2.f, diff.y));
 	}
 
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+		vec2 diff = mousePos - lastPos;
+		cam.center -= diff.x*cam.right + diff.y*cam.up;
+	}
+
 	lastPos = mousePos;
 }
 
@@ -1231,8 +1236,25 @@ std::vector<vec3> extrudeSurface(const std::vector<vec3>& vertices, const std::v
 }
 
 float volumeOfTriangularPrism(vec3 a0, vec3 b0, vec3 c0, vec3 a1, vec3 b1, vec3 c1) {
-	return dot(cross(b0 - a0, c0 - a0), a1 - a0)*0.5f +
-		dot(cross(b1 - a1, c1 - a1), a1 - a0)*0.5f;
+	//return dot(cross(b0 - a0, c0 - a0), a1 - a0)*0.5f +
+		//dot(cross(b1 - a1, c1 - a1), a1 - a0)*0.5f;
+	return dot(cross(b1 - a1, c1 - a1), a1 - a0)*1.f/6.f
+		+ dot(b1 - b0, cross(c0 - b0, a0 - b0))*1.f/6.f
+		+ dot(b1 - c0, cross(c1 - c0, a0 - c0))*1.f/6.f;
+}
+
+vec3 volumeGradient(vec3 a1, vec3 b1, vec3 c1, vec3 a0) {
+	vec3 u = b1 - a1;
+	vec3 v = c1 - a1;
+	vec3 w = a1 - a0;
+
+	vec3 gradient = vec3(
+		dot((u + v), cross(vec3(1, 0, 0), w)) + dot(u, cross(v, vec3(1, 0, 0))),
+		dot((u + v), cross(vec3(0, 1, 0), w)) + dot(u, cross(v, vec3(0, 1, 0))),
+		dot((u + v), cross(vec3(0, 0, 1), w)) + dot(u, cross(v, vec3(0, 0, 1)))
+	)*1.f/6.f;
+
+	return gradient;
 }
 
 //Maybe not exactly gradient? Gives good guess for which direction to step in and by how much
@@ -1251,15 +1273,7 @@ vec3 volumeGradient(const std::vector<vec3>& lowerSurface, const std::vector<vec
 		float currentVolume = volumeOfTriangularPrism(a0, b0, c0, a1, b1, c1);
 		float targetVolume = length(cross(b0 - a0, c0 - a0))*0.5f*growthHeight;
 
-		vec3 u = b1 - a1;
-		vec3 v = c1 - a1;
-		vec3 w = a1 - a0;
-		
-		vec3 gradient(
-			dot((u + v), cross(vec3(1, 0, 0), w)) + dot(u, cross(v, vec3(1, 0, 0))),
-			dot((u + v), cross(vec3(0, 1, 0), w)) + dot(u, cross(v, vec3(0, 1, 0))),
-			dot((u + v), cross(vec3(0, 0, 1), w)) + dot(u, cross(v, vec3(0, 0, 1)))
-		);
+		vec3 gradient = volumeGradient(a1, b1, c1, a0);
 
 		//Newton Rhapson?
 		totalGradient += gradient*(targetVolume - currentVolume)/length(gradient);
@@ -1274,10 +1288,10 @@ void surfaceGrowth(const std::vector<vec3>& vertices, const std::vector <vv::Adj
 	std::vector<vec3> oldSurface = vertices;
 	std::vector<vec3> newSurface = extrudeSurface(vertices, adjacency, growth);
 
-	for (int it = 0; it < 1; it++) {
+	for (int it = 0; it < 100; it++) {
 		std::vector<vec3> modifiedSurface = newSurface;
 		for (int i = 0; i < newSurface.size(); i++) {
-			modifiedSurface[i] = volumeGradient(oldSurface, newSurface, adjacency[i], i, growth)*weight;
+			modifiedSurface[i] += volumeGradient(oldSurface, newSurface, adjacency[i], i, growth)*weight;
 		}
 		newSurface = modifiedSurface;
 	}
@@ -1309,11 +1323,16 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	//*/
 
 	BranchingStructureData data = generateBranchingStructure(
-		b2, 0.1,
-		b0, 0.1,
-		b1, 0.1,
+		b2, 0.01,
+		b0, 0.01,
+		b1, 0.01,
 		vec3(0), 6);
 
+	printf("Volume of half cube = %f\n", 
+	volumeOfTriangularPrism(
+		vec3(0, 0, 0), vec3(0, 0, 1), vec3(1, 0, 0),
+		vec3(0, 1, 0), vec3(0, 1, 1), vec3(1, 1, 0))
+	);
 	//BranchingStructureData data = createBranchingStructure("models/TreeJoint.ply");
 
 	std::vector<vv::Adjacency> adjacencyList = vv::faceListToVertexVertex(data.faces, data.points);
@@ -1343,10 +1362,10 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 				//laplacianOnMesh2ndOrder(vertices[input], adjacencyList, &vertices[output]);
 				//pushAwayFromBranches({ b0, b1, b2 }, { r0, r1, r2 }, vec3(0), &vertices[output]);
 
-				surfaceGrowth(vertices[input], adjacencyList, &vertices[output], 0.1f);
+				surfaceGrowth(vertices[input], adjacencyList, &vertices[output], 0.01f);
 
 				for (unsigned int index : data.fixedPoints) {
-					vertices[output][index] = vertices[input][index];
+					//vertices[output][index] = vertices[input][index];
 				}
 
 				count++;
@@ -1366,6 +1385,212 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		mesh.getMaterial<ColorMat>()->color = vec4(1, 0, 0, 1);
 		shader.draw(cam, mesh);
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
+vec3 perpendicular2D(vec3 v) {
+	return vec3(-v.y, v.x, v.z);
+}
+
+void WindowManager::growthLoop2D() {
+
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+	SimpleShader shader;
+
+	auto debugGeometry = make<SimpleGeometry>(GL_LINES);
+	vector<vec3> debugPoints;
+	Drawable debugDrawable(
+		debugGeometry,
+		make<ColorMat>(vec3(0, 1, 0))
+	);
+
+	vector<vec3> points;
+	const int X_DIVISIONS = 8;
+	const int Y_DIVISIONS = 8;
+	const float width = 1.f;
+	const float height = 1.f;
+	vec3 position = vec3(width*0.5f, -height * 0.5f, 0.f);
+	for (int x = 0; x < X_DIVISIONS; x++) {
+		position.x -= width / float(X_DIVISIONS);
+		points.push_back(position);
+	}
+	for (int y = 0; y < Y_DIVISIONS; y++) {
+		position.y += height / float(Y_DIVISIONS);
+		points.push_back(position);
+	}
+
+	unsigned int lastLayerStart = 0;
+	unsigned int layerSize = X_DIVISIONS + Y_DIVISIONS;
+
+	vector<unsigned int> indices;
+
+	float growth = 0.02;
+
+	float growthArea = growth * width / float(X_DIVISIONS);
+	float targetLength = width / float(X_DIVISIONS);
+
+	unsigned int layerStart = points.size();
+	for (int i = 0; i < layerSize; i++) {
+		vec3 normal(0.f);
+		if (i + 1 < layerSize)
+			normal += perpendicular2D(points[lastLayerStart + i] - points[lastLayerStart + i + 1]);
+		if (i - 1 >= 0)
+			normal += perpendicular2D(points[lastLayerStart + i - 1] - points[lastLayerStart + i]);
+		points.push_back(points[lastLayerStart + i] + normalize(normal)*growth);
+	}
+
+	//Triangulate
+	for (int i = 0; i < layerSize - 1; i++) {
+		indices.push_back(lastLayerStart+i);
+		indices.push_back(layerStart + i);
+		indices.push_back(layerStart + i + 1);
+		
+		indices.push_back(lastLayerStart + i);
+		indices.push_back(layerStart + i + 1);
+		indices.push_back(lastLayerStart + i + 1);
+	}
+
+	
+
+	auto geometry = make<ElementGeometryT <unsigned int, glm::vec3>>(GL_TRIANGLES, indices.data(), indices.size(), points.data(), points.size());
+
+	Drawable tree(geometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
+
+	//cam.projection = mat4(1.f);
+
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		static bool next_iteration_pressed = false;
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !next_iteration_pressed) {
+			next_iteration_pressed = true;
+			
+			static int count = 0;
+
+			if(count %2 == 1){
+				lastLayerStart = layerStart;
+				layerStart = points.size();
+				for (int i = 0; i < layerSize; i++) {
+					vec3 normal(0.f);
+					if (i + 1 < layerSize)
+						normal += perpendicular2D(points[lastLayerStart + i] - points[lastLayerStart + i + 1]);
+					if (i - 1 >= 0)
+						normal += perpendicular2D(points[lastLayerStart + i - 1] - points[lastLayerStart + i]);
+					points.push_back(points[lastLayerStart+i] + normalize(normal)*growth);
+				}
+
+				//Triangulate
+				for (int i = 0; i < layerSize - 1; i++) {
+					indices.push_back(lastLayerStart + i);
+					indices.push_back(layerStart + i);
+					indices.push_back(layerStart + i + 1);
+
+					indices.push_back(lastLayerStart + i);
+					indices.push_back(layerStart + i + 1);
+					indices.push_back(lastLayerStart + i + 1);
+				}
+			}
+
+			//Follow volume gradient
+			else {
+				//printf("--------------------\n");
+				for(int i=0; i<100; i++){
+
+					const float stepSize = 1.f;
+					for (int i = 0; i < layerSize; i++) {
+						vec3 gradient(0.f);
+						vec3 lengthGradient(0.f);
+						float volumeDiff = 0.f;
+						float lengthDiff = 0.f;
+						if (i - 1 >= 0) {
+							vec3 c1 = points[layerStart + i];
+							vec3 r1 = points[layerStart + i - 1];
+							vec3 c0 = points[lastLayerStart + i];
+							vec3 r0 = points[lastLayerStart + i - 1];
+
+							float currentVolume = length(cross(c0 - c1, r1 - c1))*0.5f + length(cross(r0 - c0, r1 - c0))*0.5f;
+							float targetVolume = growthArea;
+
+							debugPoints.push_back(c1);
+							debugPoints.push_back(c1 + normalize(perpendicular2D(r1 - c0))*(targetVolume - currentVolume)*20.f);
+
+							vec3 temp = perpendicular2D(r1 - c0);
+
+							//if (i == 7)
+								//printf("RIGHT: Current volume = %f - Target volume = %f\n\tp = (%f, %f)\n", currentVolume, targetVolume, temp.x, temp.y);
+
+							gradient += normalize(perpendicular2D(r1 - c0))*(targetVolume - currentVolume);
+							volumeDiff += targetVolume - currentVolume;
+							lengthGradient += normalize(c1 - r1)*(targetLength - length(r1 - c1));
+							lengthDiff += targetLength - length(r1 - c1);
+						}
+						if (i + 1 < layerSize) {
+							vec3 c1 = points[layerStart + i];
+							vec3 l1 = points[layerStart + i + 1];
+							vec3 c0 = points[lastLayerStart + i];
+							vec3 l0 = points[lastLayerStart + i + 1];
+
+							float currentVolume = length(cross(l1 - c1, c0 - c1))*0.5f + length(cross(l1 - c0, l0 - c0))*0.5f;
+							float targetVolume = growthArea;	//length(c0 - l0)*growth;
+
+							//printf("Volume = %f\n", currentVolume);
+
+							debugPoints.push_back(c1);
+							debugPoints.push_back(c1 + normalize(perpendicular2D(c0 - l1))*(targetVolume - currentVolume)*20.f);
+
+							vec3 temp = perpendicular2D(c0 - l1);
+
+							//if (i == 7)
+								//printf("LEFT: Current volume = %f - Target volume = %f\n\tp = (%f, %f)\n", currentVolume, targetVolume, temp.x, temp.y);
+
+							gradient += normalize(perpendicular2D(c0 - l1))*(targetVolume - currentVolume);
+							volumeDiff += targetVolume - currentVolume;
+							lengthGradient += normalize(c1 - l1)*(targetLength - length(l1 - c1));
+							lengthDiff += targetLength - length(l1 - c1);
+						}
+
+						//printf("volumeDiff = %f\n", volumeDiff);
+						debugPoints.push_back(points[layerStart + i]);
+						debugPoints.push_back(points[layerStart + i] + normalize(gradient)*volumeDiff*20.f);
+						lengthGradient = (length(lengthGradient) < 0.0001f) ? vec3(0) : normalize(lengthGradient);
+						points[layerStart + i] += normalize(gradient)*abs(volumeDiff) * stepSize;
+					}
+				}
+			}
+
+			count++;
+
+			geometry->loadBuffers(points.data(), points.size());
+			geometry->loadIndices(indices.data(), indices.size());
+			debugGeometry->loadGeometry(debugPoints.data(), debugPoints.size());
+
+			
+		}
+		else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+			next_iteration_pressed = false;
+		}
+
+		glLineWidth(2.f);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		tree.getMaterial<ColorMat>()->color = vec4(0, 0, 1, 1);
+		shader.draw(cam, tree);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		tree.getMaterial<ColorMat>()->color = vec4(1, 0, 0, 1);
+		shader.draw(cam, tree);
+
+		shader.draw(cam, debugDrawable);
+
+		shader.draw(cam, debugDrawable);
+		debugPoints.clear();
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
