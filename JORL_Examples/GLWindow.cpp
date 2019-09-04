@@ -1078,6 +1078,28 @@ vec3 normal(const std::vector<vec3>& vertices, const vv::Adjacency& adjacency, u
 }
 
 template<typename T>
+T angleLaplacian(const std::vector<vec3>& vertices, const vector<T>& f, const vv::Adjacency& adjacency, unsigned int vertex) {
+	T centroid(0);
+	float weightSum = 0.f;
+
+	vec3 v = vertices[vertex];
+
+	for (unsigned int i = 0; i < adjacency.neighbours.size(); i++) {
+		vec3 n = vertices[adjacency.neighbours[i]];
+		vec3 l = vertices[adjacency.neighbours[intMod(i - 1, adjacency.neighbours.size())]];
+		vec3 r = vertices[adjacency.neighbours[intMod(i + 1, adjacency.neighbours.size())]];
+
+		T n_val = f[adjacency.neighbours[i]];
+
+		float weight = acos(dot(normalize(n - v), normalize(l - v))); //cotangent(n - l, v - l) + cotangent(n - r, v - r);
+		centroid += weight * n_val;
+		weightSum += weight;
+	}
+
+	return centroid / weightSum - f[vertex];
+}
+
+template<typename T>
 T cotangentLaplacian(const std::vector<vec3>& vertices, const vector<T>& f, const vv::Adjacency& adjacency, unsigned int vertex) {
 	T centroid(0);
 	float weightSum = 0.f;
@@ -1151,12 +1173,12 @@ void laplacianOnMesh(const std::vector<vec3>& vertices, const std::vector <vv::A
 }
 
 void laplacianOnMesh2ndOrder(const std::vector<vec3>& vertices, const std::vector <vv::Adjacency> & adjacency, std::vector<vec3>* output) {
-	float weight = 0.1f;
+	float weight = 0.01f;
 	std::vector<vec3> laplacians;
 
 	for (int i = 0; i < vertices.size(); i++) {
 
-		laplacians.push_back(-cotangentLaplacian(vertices, adjacency[i], i));
+		laplacians.push_back(-cotangentLaplacian(vertices, vertices, adjacency[i], i));
 	}
 
 	for (int i = 0; i < vertices.size(); i++) {
@@ -1186,10 +1208,82 @@ void pushAwayFromBranches(const vector<vec3>& branches, const vector<float>& rad
 		}
 
 		
-		p += normalize(vectorFrom)*std::max(radii[index] - closestDistance, 0.f)*0.1f;
+		p += normalize(vectorFrom)*std::max(radii[index] - closestDistance, 0.f)*0.01f;
 	}
 }
 
+vec3 vectorDf(vec3 vec, char comp) {
+	vec.x *= (comp == 'x') ? 1.f : 0.f;
+	vec.y *= (comp == 'y') ? 1.f : 0.f;
+	vec.z *= (comp == 'z') ? 1.f : 0.f;
+
+	return vec;
+}
+
+std::vector<vec3> extrudeSurface(const std::vector<vec3>& vertices, const std::vector <vv::Adjacency> & adjacency, float amount) {
+	std::vector<vec3> outputVertices = vertices;
+	
+	for (int i = 0; i < vertices.size(); i++) {
+		outputVertices[i] += normal(vertices, adjacency[i], i)*amount;
+	}
+
+	return outputVertices;
+}
+
+float volumeOfTriangularPrism(vec3 a0, vec3 b0, vec3 c0, vec3 a1, vec3 b1, vec3 c1) {
+	return dot(cross(b0 - a0, c0 - a0), a1 - a0)*0.5f +
+		dot(cross(b1 - a1, c1 - a1), a1 - a0)*0.5f;
+}
+
+//Maybe not exactly gradient? Gives good guess for which direction to step in and by how much
+vec3 volumeGradient(const std::vector<vec3>& lowerSurface, const std::vector<vec3>& upperSurface, const vv::Adjacency& adjacency, unsigned int index, float growthHeight) {
+	vec3 a0 = lowerSurface[index];
+	vec3 a1 = upperSurface[index];
+	
+	vec3 totalGradient = vec3(0);
+
+	for (int i = 0; i < adjacency.neighbours.size(); i++) {
+		vec3 b0 = lowerSurface[adjacency.neighbours[i]];
+		vec3 c0 = lowerSurface[adjacency.neighbours[intMod(i + 1, adjacency.neighbours.size())]];
+		vec3 b1 = upperSurface[adjacency.neighbours[i]];
+		vec3 c1 = upperSurface[adjacency.neighbours[intMod(i + 1, adjacency.neighbours.size())]];
+
+		float currentVolume = volumeOfTriangularPrism(a0, b0, c0, a1, b1, c1);
+		float targetVolume = length(cross(b0 - a0, c0 - a0))*0.5f*growthHeight;
+
+		vec3 u = b1 - a1;
+		vec3 v = c1 - a1;
+		vec3 w = a1 - a0;
+		
+		vec3 gradient(
+			dot((u + v), cross(vec3(1, 0, 0), w)) + dot(u, cross(v, vec3(1, 0, 0))),
+			dot((u + v), cross(vec3(0, 1, 0), w)) + dot(u, cross(v, vec3(0, 1, 0))),
+			dot((u + v), cross(vec3(0, 0, 1), w)) + dot(u, cross(v, vec3(0, 0, 1)))
+		);
+
+		//Newton Rhapson?
+		totalGradient += gradient*(targetVolume - currentVolume)/length(gradient);
+	}
+
+	return totalGradient;
+}
+
+void surfaceGrowth(const std::vector<vec3>& vertices, const std::vector <vv::Adjacency> & adjacency, std::vector<vec3>* output, float growth) {
+	float weight = 0.1f;
+
+	std::vector<vec3> oldSurface = vertices;
+	std::vector<vec3> newSurface = extrudeSurface(vertices, adjacency, growth);
+
+	for (int it = 0; it < 1; it++) {
+		std::vector<vec3> modifiedSurface = newSurface;
+		for (int i = 0; i < newSurface.size(); i++) {
+			modifiedSurface[i] = volumeGradient(oldSurface, newSurface, adjacency[i], i, growth)*weight;
+		}
+		newSurface = modifiedSurface;
+	}
+
+	(*output) = newSurface;
+}
 
 void WindowManager::laplacianSmoothingMeshLoop() {
 	glfwSetKeyCallback(window, keyCallback);
@@ -1207,12 +1301,19 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	vec3 b1 = vec3(0.7f, 0.3f, 0);
 	vec3 b2 = vec3(-0.2, -1.f, 0);
 
-	BranchingStructureData data = generateBranchingStructure(
+	/*BranchingStructureData data = generateBranchingStructure(
 		b2, r2,
 		b0, r0,
 		b1, r1,
-		vec3(0), 4);
+		vec3(0), 7);
 	//*/
+
+	BranchingStructureData data = generateBranchingStructure(
+		b2, 0.1,
+		b0, 0.1,
+		b1, 0.1,
+		vec3(0), 6);
+
 	//BranchingStructureData data = createBranchingStructure("models/TreeJoint.ply");
 
 	std::vector<vv::Adjacency> adjacencyList = vv::faceListToVertexVertex(data.faces, data.points);
@@ -1223,7 +1324,7 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	geometry->loadBuffers(data.points.data(), data.points.size());
 
 	Drawable mesh(geometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
-	vector<vec3> vertices[2] = { data.points, data.points };
+	vector<vec3> vertices[3] = { data.points, data.points, data.points };
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glLineWidth(3.f);
@@ -1235,12 +1336,14 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !next_iteration_pressed) {
 			next_iteration_pressed = true;
 			static int count = 0;
-			for (int i = 0; i < 10; i++) {
+			for (int i = 0; i < 1; i++) {
 				unsigned int input = count % 2;
 				unsigned int output = (count + 1) % 2;
 
-				laplacianOnMesh2ndOrder(vertices[input], adjacencyList, &vertices[output]);
-				pushAwayFromBranches({ b0, b1, b2 }, { r0, r1, r2 }, vec3(0), &vertices[output]);
+				//laplacianOnMesh2ndOrder(vertices[input], adjacencyList, &vertices[output]);
+				//pushAwayFromBranches({ b0, b1, b2 }, { r0, r1, r2 }, vec3(0), &vertices[output]);
+
+				surfaceGrowth(vertices[input], adjacencyList, &vertices[output], 0.1f);
 
 				for (unsigned int index : data.fixedPoints) {
 					vertices[output][index] = vertices[input][index];
