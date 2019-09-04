@@ -88,8 +88,8 @@ int main()
 //	wm.velocitySpringLoop();
 	//wm.adaptiveNoiseLoop();
 	//wm.laplacianSmoothing();
-	//wm.laplacianSmoothingMeshLoop();
-	wm.growthLoop2D();
+	wm.laplacianSmoothingMeshLoop();
+	//wm.growthLoop2D();
 
 }
 

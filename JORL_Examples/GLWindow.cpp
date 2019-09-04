@@ -1257,12 +1257,17 @@ vec3 volumeGradient(vec3 a1, vec3 b1, vec3 c1, vec3 a0) {
 	return gradient;
 }
 
+vec3 volumeGradientNormalized(vec3 a0, vec3 b1, vec3 c1) {
+	return normalize(cross(b1 - a0, c1 - a0));
+}
+
 //Maybe not exactly gradient? Gives good guess for which direction to step in and by how much
 vec3 volumeGradient(const std::vector<vec3>& lowerSurface, const std::vector<vec3>& upperSurface, const vv::Adjacency& adjacency, unsigned int index, float growthHeight) {
 	vec3 a0 = lowerSurface[index];
 	vec3 a1 = upperSurface[index];
 	
 	vec3 totalGradient = vec3(0);
+	float totalVolumeDiff = 0.f;
 
 	for (int i = 0; i < adjacency.neighbours.size(); i++) {
 		vec3 b0 = lowerSurface[adjacency.neighbours[i]];
@@ -1273,13 +1278,14 @@ vec3 volumeGradient(const std::vector<vec3>& lowerSurface, const std::vector<vec
 		float currentVolume = volumeOfTriangularPrism(a0, b0, c0, a1, b1, c1);
 		float targetVolume = length(cross(b0 - a0, c0 - a0))*0.5f*growthHeight;
 
-		vec3 gradient = volumeGradient(a1, b1, c1, a0);
+		vec3 gradient = volumeGradientNormalized(a0, b1, c1);
 
 		//Newton Rhapson?
 		totalGradient += gradient*(targetVolume - currentVolume)/length(gradient);
+		totalVolumeDiff += targetVolume - currentVolume;
 	}
 
-	return totalGradient;
+	return totalGradient * abs(totalVolumeDiff);
 }
 
 void surfaceGrowth(const std::vector<vec3>& vertices, const std::vector <vv::Adjacency> & adjacency, std::vector<vec3>* output, float growth) {
@@ -1315,19 +1321,20 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	vec3 b1 = vec3(0.7f, 0.3f, 0);
 	vec3 b2 = vec3(-0.2, -1.f, 0);
 
-	/*BranchingStructureData data = generateBranchingStructure(
+	/*
+	BranchingStructureData data = generateBranchingStructure(
 		b2, r2,
 		b0, r0,
 		b1, r1,
-		vec3(0), 7);
+		vec3(0), 8);
 	//*/
-
+	///*
 	BranchingStructureData data = generateBranchingStructure(
 		b2, 0.01,
 		b0, 0.01,
 		b1, 0.01,
-		vec3(0), 6);
-
+		vec3(0), 10);
+		//*/
 	printf("Volume of half cube = %f\n", 
 	volumeOfTriangularPrism(
 		vec3(0, 0, 0), vec3(0, 0, 1), vec3(1, 0, 0),
@@ -1355,7 +1362,7 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !next_iteration_pressed) {
 			next_iteration_pressed = true;
 			static int count = 0;
-			for (int i = 0; i < 1; i++) {
+			for (int i = 0; i < 100; i++) {
 				unsigned int input = count % 2;
 				unsigned int output = (count + 1) % 2;
 
@@ -1413,8 +1420,8 @@ void WindowManager::growthLoop2D() {
 	);
 
 	vector<vec3> points;
-	const int X_DIVISIONS = 8;
-	const int Y_DIVISIONS = 8;
+	const int X_DIVISIONS = 20;
+	const int Y_DIVISIONS = 20;
 	const float width = 1.f;
 	const float height = 1.f;
 	vec3 position = vec3(width*0.5f, -height * 0.5f, 0.f);
@@ -1432,7 +1439,7 @@ void WindowManager::growthLoop2D() {
 
 	vector<unsigned int> indices;
 
-	float growth = 0.02;
+	float growth = 0.005;
 
 	float growthArea = growth * width / float(X_DIVISIONS);
 	float targetLength = width / float(X_DIVISIONS);
@@ -1503,9 +1510,11 @@ void WindowManager::growthLoop2D() {
 			else {
 				//printf("--------------------\n");
 				for(int i=0; i<100; i++){
+					vector<vec3> offsets;
+					offsets.resize(layerSize, vec3(0.f));
 
 					const float stepSize = 1.f;
-					for (int i = 0; i < layerSize; i++) {
+					for (int i = 1; i < layerSize-1; i++) {
 						vec3 gradient(0.f);
 						vec3 lengthGradient(0.f);
 						float volumeDiff = 0.f;
@@ -1561,8 +1570,12 @@ void WindowManager::growthLoop2D() {
 						debugPoints.push_back(points[layerStart + i]);
 						debugPoints.push_back(points[layerStart + i] + normalize(gradient)*volumeDiff*20.f);
 						lengthGradient = (length(lengthGradient) < 0.0001f) ? vec3(0) : normalize(lengthGradient);
-						points[layerStart + i] += normalize(gradient)*abs(volumeDiff) * stepSize;
+						//points[layerStart + i] += normalize(gradient)*abs(volumeDiff) * stepSize;
+						offsets[i] = normalize(gradient)*abs(volumeDiff) * stepSize;
 					}
+
+					for (int i = 0; i < layerSize; i++)
+						points[layerStart + i] += offsets[i];
 				}
 			}
 
