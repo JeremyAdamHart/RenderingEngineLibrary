@@ -5,7 +5,10 @@
 
 namespace renderlib {
 
-class TextureMat : public Material {
+struct ColorTag {};
+
+template<typename T>
+class TextureMatT : public Material {
 public:
 	enum {
 		TEXTURE_LOCATION = 0,
@@ -23,13 +26,19 @@ public:
 	static const int id;
 
 	Texture tex;
-	int subtype;
+	unsigned int subtype;
 
-	TextureMat(Texture tex, int subtype=COLOR);
+	TextureMatT(Texture tex, unsigned int subtype=COLOR) :tex(tex), subtype(subtype){}
 
-	virtual int getType() const override;
-	virtual void loadUniforms(GLint *locations) const override;	//Must have already called useProgram
-//	virtual int getUniformNum() const override;
+	virtual int getType() const override { return id | subtype;  };
+	virtual void loadUniforms(GLint *locations) const override {
+		glUniform1i(locations[TEXTURE_LOCATION], tex.getTexUnit());
+	}
 };
+
+template<typename T>
+const int TextureMatT<T>::id = Material::getNextID();
+
+using TextureMat = TextureMatT<ColorTag>;
 
 }

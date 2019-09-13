@@ -1,7 +1,7 @@
 #include "TextureMat.h"
 
 namespace renderlib {
-
+/*
 const int TextureMat::id = Material::getNextID();
 
 TextureMat::TextureMat(Texture tex, int subtype) :tex(tex), subtype(subtype) {}
@@ -13,5 +13,5 @@ void TextureMat::loadUniforms(GLint *locations) const {
 }
 
 //int TextureMat::getUniformNum() const { return COUNT; }
-
+*/
 }

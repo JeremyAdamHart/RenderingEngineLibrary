@@ -1420,13 +1420,14 @@ void WindowManager::growthLoop2D() {
 	);
 
 	vector<vec3> points;
+	vec3 xDirection = normalize(vec3(1, -1, 0));
 	const int X_DIVISIONS = 20;
 	const int Y_DIVISIONS = 20;
 	const float width = 1.f;
 	const float height = 1.f;
 	vec3 position = vec3(width*0.5f, -height * 0.5f, 0.f);
 	for (int x = 0; x < X_DIVISIONS; x++) {
-		position.x -= width / float(X_DIVISIONS);
+		position -= xDirection*width / float(X_DIVISIONS);
 		points.push_back(position);
 	}
 	for (int y = 0; y < Y_DIVISIONS; y++) {
