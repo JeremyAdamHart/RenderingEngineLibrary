@@ -1,4 +1,4 @@
-<h1>JORL - Jeremy's Original Graphic's Library</h1>
+<h1>JORL - Jeremy's Original Graphics Library</h1>
 
 This library is split between the Core and Extensions. 
 
