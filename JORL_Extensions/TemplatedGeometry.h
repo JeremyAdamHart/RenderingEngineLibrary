@@ -177,7 +177,7 @@ public:
 	void loadInstanceBuffer(nth_type<N, Ts...>* data) {
 		int index = vbo.size() - sizeof...(Ts);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[index]);
-		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(nth_type<N, Ts...>), data, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, instanceBufferSize * sizeof(nth_type<N, Ts...>), data, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
