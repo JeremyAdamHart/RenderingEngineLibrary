@@ -20,7 +20,7 @@ void loadBuffers_rec(C* obj, T1* t1, T2* t2, Args*... args) {
 
 template<size_t N, class C, class T1>
 void loadInstanceBuffers_rec(C* obj, T1* t1) {
-	obj->loadBuffer<N>(t1);
+	obj->loadInstanceBuffer<N>(t1);
 }
 
 template<size_t N, class C, class T1, class T2, class... Args>
@@ -34,15 +34,14 @@ class GeometryT : public GLGeometryContainer {
 protected:
 	GLVAO vao;
 	size_t bufferSize;
+	unsigned int attributeNumber;
 	GLenum mode;
 	std::vector<GLBuffer>vbo;
 
-	virtual bool initVAO() {
+	virtual void initVAO() {
 		glBindVertexArray(vao);
-		bool result = initVertexBuffers<Ts...>(&vbo);
+		attributeNumber = initVertexBuffers<Ts...>(&vbo);
 		glBindVertexArray(0);
-
-		return result;
 	}
 public:
 	const static bool Elements = false;
@@ -96,17 +95,16 @@ protected:
 	GLVAO vao;
 	size_t bufferSize;
 	size_t indexSize;
+	unsigned int attributeNumber;
 	GLenum mode;
 	std::vector<GLBuffer>vbo;
 
-	virtual bool initVAO() {
+	virtual void initVAO() {
 		glBindVertexArray(vao);
-		bool result = initVertexBuffers<Ts...>(&vbo);
+		attributeNumber = initVertexBuffers<Ts...>(&vbo);
 		vbo.push_back(createBufferID());
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
 		glBindVertexArray(0);
-
-		return result;
 	}
 public:
 	const static bool Elements = true;
@@ -162,15 +160,13 @@ public:
 template<class BaseGeometry, class... Ts>
 class InstancedGeometryT : public BaseGeometry {
 protected:
-	size_t instancedBufferSize;
+	size_t instanceBufferSize;
 	//std::vector<GLBuffer>instancedVbo;
 
-	virtual bool initVAO() override {
+	virtual void initVAO() override {
 		glBindVertexArray(vao);
-		bool result = initVertexBuffers<Ts...>(&vbo, 1);
+		attributeNumber = initVertexBuffers<Ts...>(&vbo, 1, attributeNumber);
 		glBindVertexArray(0);
-
-		return result;
 	}
 public:
 	InstancedGeometryT(GLenum mode = GL_TRIANGLES) : BaseGeometry(mode) {
@@ -179,7 +175,7 @@ public:
 
 	template<size_t N>
 	void loadInstanceBuffer(nth_type<N, Ts...>* data) {
-		int index = vbos.size() - sizeof...(Ts);
+		int index = vbo.size() - sizeof...(Ts);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[index]);
 		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(nth_type<N, Ts...>), data, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -193,9 +189,9 @@ public:
 	virtual void drawGeometry() {
 		glBindVertexArray(vao);
 		if constexpr (Elements)
-			glDrawElementsInstanced(mode, indexSize, toGLenum<IndexType>(), 0, instancedBufferSize);
+			glDrawElementsInstanced(mode, indexSize, toGLenum<IndexType>(), 0, instanceBufferSize);
 		else
-			glDrawArraysInstanced(mode, 0, bufferSize, instancedBufferSize);
+			glDrawArraysInstanced(mode, 0, bufferSize, instanceBufferSize);
 		glBindVertexArray(0);
 	}
 };

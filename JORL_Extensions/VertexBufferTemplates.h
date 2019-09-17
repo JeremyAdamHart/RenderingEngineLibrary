@@ -25,20 +25,21 @@ void loadVBOs(int index, std::vector<GLBuffer> *vbos, size_t bufferSize, GLenum 
 //template<class ...Args> void loadVBOs(int index, std::vector<GLuint> *vbos, size_t bufferSize, GLenum usage, Args... args) {}
 
 template<class Arg, class... Args>
-bool initVertexBuffers(std::vector<GLBuffer> *vbos, unsigned int attribDivisor=0) {
-	return initVertexBuffers<Arg>(vbos, attribDivisor) && initVertexBuffers<Args...>(vbos, attribDivisor);
+unsigned int initVertexBuffers(std::vector<GLBuffer> *vbos, unsigned int attribDivisor=0, unsigned int attributeIndex=0) {
+	return initVertexBuffers<Args...>(vbos, attribDivisor, 
+		initVertexBuffers<Arg>(vbos, attribDivisor, attributeIndex));
 }
-template<> bool initVertexBuffers<vec4>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor);
+template<> unsigned int initVertexBuffers<vec4>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor, unsigned int attributeIndex);
 
-template<> bool initVertexBuffers<vec3>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor);
+template<> unsigned int initVertexBuffers<vec3>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor, unsigned int attributeIndex);
 
-template<> bool initVertexBuffers<vec2>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor);
+template<> unsigned int initVertexBuffers<vec2>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor, unsigned int attributeIndex);
 
-template<> bool initVertexBuffers<unsigned char>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor);
+template<> unsigned int initVertexBuffers<unsigned char>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor, unsigned int attributeIndex);
 
-template<> bool initVertexBuffers<float>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor);
+template<> unsigned int initVertexBuffers<float>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor, unsigned int attributeIndex);
 
-template<> bool initVertexBuffers<glm::mat4>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor);
+template<> unsigned int initVertexBuffers<glm::mat4>(std::vector<GLBuffer> *vbos, unsigned int attribDivisor, unsigned int attributeIndex);
 
 template<class T1, class T2, class... Ts> 
 void allocateBufferStorage(GLBuffer* vbo, char* streamed, size_t bufferSize, void** pointers) {
