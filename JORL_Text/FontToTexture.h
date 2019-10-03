@@ -6,7 +6,9 @@
 #include <map>
 #include "glmSupport.h"
 
+
 namespace renderlib {
+
 
 class CharBitmap {
 public:
@@ -39,7 +41,10 @@ public:
 	std::map<char, Character> charInfo;
 
 	Character& character(unsigned char c);
+	const Character& character(unsigned char c) const;
 };
 
-Font createFontTexture(FT_Library* ft, const char* fontFilename, TextureManager* texManager);
+Font createFont(FT_Library* ft, const char* fontFilename, TextureManager* texManager, unsigned int resolution=64);
+
+void getTextBuffers(const char* text, const Font& font, std::vector<glm::vec3>* points, std::vector<glm::vec2>* uvs, std::vector<unsigned int>* faces);
 }

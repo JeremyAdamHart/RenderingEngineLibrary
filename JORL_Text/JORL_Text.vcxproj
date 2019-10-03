@@ -37,9 +37,11 @@
   <ItemGroup>
     <ClInclude Include="FontToTexture.h" />
     <ClInclude Include="TextDrawable.h" />
+    <ClInclude Include="TextShader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FontToTexture.cpp" />
+    <ClCompile Include="TextShader.cpp" />
     <ClCompile Include="TextDrawable.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

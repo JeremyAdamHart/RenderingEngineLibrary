@@ -51,6 +51,7 @@ using namespace std;
 #include "VertexVertex.h"
 #include "CommonGeometry.h"
 #include "FontToTexture.h"
+#include "TextShader.h"
 
 //Random
 #include <random>
@@ -1403,16 +1404,30 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	FT_Library freetype;
 	FT_Init_FreeType(&freetype);
 
-	Font font = createFontTexture(&freetype, "fonts/OpenSans-Regular.ttf", &tm);
+	Font font = createFont(&freetype, "fonts/OpenSans-Regular.ttf", &tm, 64);
 
-	auto fontGeom = createPlaneGeometry(Orientation::PositiveZ);
-	Character c = font.character('R');
+	//auto fontGeom = createPlaneGeometry(Orientation::PositiveZ);
+	//Character c = font.character('R');
 	//std::vector<vec3> verts = { vec3(c.pointCoords[0], 0), vec3(c.pointCoords[1], 0), vec3(c.pointCoords[2], 0), vec3(c.pointCoords[3], 0) };
-	//sptr<GeometryT<glm::vec3, glm::vec2>> fontGeom = make<GeometryT<glm::vec3, glm::vec2>>(GL_TRIANGLE_FAN);
-	//fontGeom->loadBuffers(verts.data(), c.uvCoords, 4);
+	std::vector<glm::vec3> verts;
+	std::vector<glm::vec2> uvs;
+	std::vector<unsigned int> faces;
+
+	TextShader textShader;
+
+	getTextBuffers("I'm just making text here", font, &verts, &uvs, &faces);
+	//auto fontGeom = make<GeometryT<glm::vec3, glm::vec3, glm::vec2>>(GL_TRIANGLE_FAN);
+	auto fontGeom = make<ElementGeometryT<unsigned int, glm::vec3, glm::vec3, glm::vec2>>(GL_TRIANGLES);
+	//fontGeom->loadBuffers(verts.data(), verts.data(), c.uvCoords, 4);
+	fontGeom->loadBuffers(verts.data(), verts.data(), uvs.data(), verts.size());
+	fontGeom->loadIndices(faces.data(), faces.size());
 
 	Drawable fontDrawable(fontGeom, make<TextureMat>(font.tex));
+	fontDrawable.addMaterial(make<ColorMat>(vec4(0.f, 0.f, 0.f, 1.f)));
 	SimpleTexShader texShader;
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glLineWidth(3.f);
@@ -1459,7 +1474,7 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//shader.draw(cam, mesh);
 
-		texShader.draw(cam, fontDrawable);
+		textShader.draw(cam, fontDrawable);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		mesh.getMaterial<ColorMat>()->color = vec4(1, 0, 0, 1);

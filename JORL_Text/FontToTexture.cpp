@@ -9,10 +9,10 @@ using namespace glm;
 CharBitmap::CharBitmap() :width(0), height(0) {}
 CharBitmap::CharBitmap(unsigned int width, unsigned int height):width(width), height(height){}
 
-Font createFontTexture(FT_Library* ft, const char* fontFilename, TextureManager* texManager) {
+Font createFont(FT_Library* ft, const char* fontFilename, TextureManager* texManager, unsigned int resolution) {
 
-	int resolutionX = 16;
-	int resolutionY = 16;
+	int resolutionX = resolution;
+	int resolutionY = resolution;
 
 	FT_Face face;
 	FT_New_Face(*ft, fontFilename, 0, &face);
@@ -24,7 +24,7 @@ Font createFontTexture(FT_Library* ft, const char* fontFilename, TextureManager*
 	unsigned int maxBitmapWidth = 0;
 	unsigned int maxBitmapHeight = 0;
 
-	for (unsigned char i = 20; i < 126; i++) {
+	for (unsigned char i = 32; i < 127; i++) {
 		FT_Load_Char(face, i, FT_LOAD_DEFAULT);	//FT_LOAD_MONOCHROME);
 		FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
 
@@ -89,11 +89,16 @@ Font createFontTexture(FT_Library* ft, const char* fontFilename, TextureManager*
 		}	
 	}
 
+	int padding = 1;
+
+	maxBitmapWidth+= padding;
+	maxBitmapHeight+= padding;
+
 	//@TODO Rename to rows/columns?
-	unsigned int tableBlockWidth = 9;
+	unsigned int tableBlockWidth = 8;
 	unsigned int tableBlockHeight = 12;
-	unsigned int tableWidth = tableBlockWidth * resolutionX;
-	unsigned int tableHeight = tableBlockHeight * resolutionY;
+	unsigned int tableWidth = tableBlockWidth * maxBitmapWidth;
+	unsigned int tableHeight = tableBlockHeight * maxBitmapHeight;
 
 	float blockWidth = 1.f / float(tableBlockWidth);
 	float blockHeight = 1.f / float(tableBlockHeight);
@@ -101,8 +106,8 @@ Font createFontTexture(FT_Library* ft, const char* fontFilename, TextureManager*
 	std::vector<unsigned char> bitmapTable;
 	bitmapTable.resize(tableWidth*tableHeight, 0);
 
-	unsigned char characterOffset = 20;
-	for (unsigned char i = 0; i < 106; i++) {
+	unsigned char characterOffset = 32;
+	for (unsigned char i = 0; i < 95; i++) {
 		unsigned int tableBlockIndexX = i % tableBlockWidth;
 		unsigned int tableBlockIndexY = i / tableBlockWidth;
 
@@ -114,30 +119,36 @@ Font createFontTexture(FT_Library* ft, const char* fontFilename, TextureManager*
 
 		for (size_t y = 0; y < c.bitmap.height; y++) {
 			for (size_t x = 0; x < c.bitmap.width; x++) {
-				size_t indexY = tableBlockIndexY * resolutionY + y;
-				size_t indexX = tableBlockIndexX * resolutionX + x;
+				size_t indexY = tableBlockIndexY * maxBitmapHeight + y;
+				size_t indexX = tableBlockIndexX * maxBitmapWidth + x;
 				size_t index = indexY * tableWidth + indexX;
 
 				bitmapTable[index] = c.bitmap.data[y*c.bitmap.width + x];
 			}
 		}
 
+		float charWidthUV = float(c.bitmap.width) / float(tableWidth);
+		float charHeightUV = float(c.bitmap.height) / float(tableHeight);
+
+		vec2 widthOffset(float(padding) / float(tableWidth), float(padding)/float(tableHeight));
+		widthOffset.y = 0.f;
+
 		//Calculate uv coordinate
 		vec2 topLeftUV = vec2(float(tableBlockIndexX), float(tableBlockIndexY));
-
+		topLeftUV *= vec2(blockWidth, blockHeight);
 
 		//TL
 		c.pointCoords[0] = c.textTopLeftFromHorizontalOrigin;
-		c.uvCoords[0] = (vec2(float(tableBlockIndexX), float(tableBlockIndexY)) + vec2(0, c.height))*vec2(blockWidth, blockHeight);
+		c.uvCoords[0] = topLeftUV + vec2(0, 0);
 		//TR
 		c.pointCoords[1] = c.textTopLeftFromHorizontalOrigin + vec2(c.width, 0);
-		c.uvCoords[1] = (topLeftUV + vec2(0, c.height))*vec2(blockWidth, blockHeight);
+		c.uvCoords[1] = topLeftUV + vec2(charWidthUV, 0);
 		//BR
 		c.pointCoords[2] = c.textTopLeftFromHorizontalOrigin + vec2(c.width, -c.height);
-		c.uvCoords[2] = (topLeftUV + vec2(c.width, 0))*vec2(blockWidth, blockHeight);
+		c.uvCoords[2] = topLeftUV + vec2(charWidthUV, charHeightUV);
 		//BL
 		c.pointCoords[3] = c.textTopLeftFromHorizontalOrigin + vec2(0, -c.height);
-		c.uvCoords[3] = (topLeftUV + vec2(0, 0))*vec2(blockWidth, blockHeight);
+		c.uvCoords[3] = topLeftUV + vec2(0, charHeightUV);
 
 	}
 
@@ -151,7 +162,14 @@ Font createFontTexture(FT_Library* ft, const char* fontFilename, TextureManager*
 			GL_UNSIGNED_BYTE),
 		texManager,
 		bitmapTable.data());
+	/*
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex.getID());
 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	*/
 	font.tex = tex;
 
 	return font;
@@ -161,6 +179,30 @@ Character& Font::character(unsigned char c) {
 	return charInfo[c];
 }
 
+const Character& Font::character(unsigned char c) const { return charInfo.at(c); }
+
+void getTextBuffers(const char* text, const Font& font, std::vector<glm::vec3>* points, std::vector<glm::vec2>* uvs, std::vector<unsigned int>* faces) {
+	int t_index = 0;
+	float horizontalOffset = 0.f;
+	while (text[t_index] != '\0') {
+		const Character& c = font.character(text[t_index]);
+		for (int i = 0; i < 4; i++) {
+			points->push_back(glm::vec3(c.pointCoords[i] + vec2(horizontalOffset, 0), 0.f));
+			uvs->push_back(c.uvCoords[i]);
+		}
+
+		unsigned int faceIndex0 = points->size() - 4;
+		faces->push_back(faceIndex0);
+		faces->push_back(faceIndex0 + 1);
+		faces->push_back(faceIndex0 + 2);
+		faces->push_back(faceIndex0);
+		faces->push_back(faceIndex0 + 2);
+		faces->push_back(faceIndex0 + 3);
+
+		horizontalOffset += c.horizontalAdvance;
+		t_index++;
+	}
+}
 
 
 }
