@@ -48,6 +48,8 @@ Texture createTexture2D(TexInfo info, TextureManager *manager,
 	unsigned char *data) {
 	GLTexture texID = createTextureID();
 
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
 	glActiveTexture(NO_ACTIVE_TEXTURE);	//Bind to avoid disturbing active units
 	glBindTexture(GL_TEXTURE_2D, texID);
 	//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -58,6 +60,8 @@ Texture createTexture2D(TexInfo info, TextureManager *manager,
 
 	glTexImage2D(GL_TEXTURE_2D, info.level, info.internalFormat, info.dimensions[0],
 		info.dimensions[1], 0, info.format, GL_UNSIGNED_BYTE, data);
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);		//Return to default
 
 	return Texture(texID, info, manager);
 }

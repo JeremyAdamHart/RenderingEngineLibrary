@@ -49,6 +49,8 @@ using namespace std;
 #include "AdaptiveNoise.h"
 #include "noiseTest.h"
 #include "VertexVertex.h"
+#include "CommonGeometry.h"
+#include "FontToTexture.h"
 
 //Random
 #include <random>
@@ -1397,6 +1399,21 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 
 	calculateVolumes(vertices[0], adjacencyList);
 
+	//Textured plane
+	FT_Library freetype;
+	FT_Init_FreeType(&freetype);
+
+	Font font = createFontTexture(&freetype, "fonts/OpenSans-Regular.ttf", &tm);
+
+	auto fontGeom = createPlaneGeometry(Orientation::PositiveZ);
+	Character c = font.character('R');
+	//std::vector<vec3> verts = { vec3(c.pointCoords[0], 0), vec3(c.pointCoords[1], 0), vec3(c.pointCoords[2], 0), vec3(c.pointCoords[3], 0) };
+	//sptr<GeometryT<glm::vec3, glm::vec2>> fontGeom = make<GeometryT<glm::vec3, glm::vec2>>(GL_TRIANGLE_FAN);
+	//fontGeom->loadBuffers(verts.data(), c.uvCoords, 4);
+
+	Drawable fontDrawable(fontGeom, make<TextureMat>(font.tex));
+	SimpleTexShader texShader;
+
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glLineWidth(3.f);
 
@@ -1440,11 +1457,13 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		
 		mesh.getMaterial<ColorMat>()->color = vec4(0, 0, 1, 1);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		shader.draw(cam, mesh);
+		//shader.draw(cam, mesh);
+
+		texShader.draw(cam, fontDrawable);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		mesh.getMaterial<ColorMat>()->color = vec4(1, 0, 0, 1);
-		shader.draw(cam, mesh);
+		//shader.draw(cam, mesh);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
