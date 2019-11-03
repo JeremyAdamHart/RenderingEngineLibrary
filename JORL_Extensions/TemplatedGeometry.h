@@ -5,6 +5,8 @@
 #include "TemplateParameterParsing.h"
 #include "VertexBufferTemplates.h"
 
+#include "VertexAttribLayout.h"
+
 namespace renderlib {
 
 template<size_t N, class C, class T1>
@@ -28,6 +30,8 @@ void loadInstanceBuffers_rec(C* obj, T1* t1, T2* t2, Args*... args) {
 	loadInstanceBuffers_rec<N>(obj, t1);
 	loadInstanceBuffers_rec<N + 1>(obj, t2, args...);
 }
+
+
 
 template<class... Ts>
 class GeometryT : public GLGeometryContainer {
@@ -195,6 +199,79 @@ public:
 		glBindVertexArray(0);
 	}
 };
+
+
+template<class C, class T1>
+void loadBuffers_rec2(C* obj, typename T1::Type* t1) {
+	obj->loadBuffer<T1>(t1);
+}
+
+template<class C, class T1, class T2, class... Ts>
+void loadBuffers_rec2(C* obj, typename T1::Type* t1, typename T2::Type* t2, typename Ts::Type*... args) {
+	loadBuffers_rec2<C, T1>(obj, t1);
+	loadBuffers_rec2<C, T2, Ts...>(obj, t2, args...);
+}
+
+//NEW CLASSES
+template<typename... Ts>
+class GeometryT2 : public GLGeometryContainer {
+	VertexBindingMapping vaoMap;
+	size_t bufferSize;
+	unsigned int nextAttributeNumber;
+	GLenum mode;
+	std::vector<GLBuffer>vbo;
+
+	template<size_t N>
+	void loadBuffer(nth_type<N, typename Ts::Type...>* data) {
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[N]);
+		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(nth_type<N, typename Ts::Type...>), data, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+
+public:
+	const static bool Elements = false;
+
+	GeometryT2(GLenum mode = GL_TRIANGLES) : bufferSize(0), mode(mode) {
+		for (int i = 0; i < sizeof...(Ts); i++) {
+			vbo.push_back(createBufferID());
+			glBindBuffer(GL_ARRAY_BUFFER, vbo.back());
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	GeometryT2(GLenum mode, typename Ts::Type*... data, size_t dataSize)
+		: vao(createVAOID()), bufferSize(dataSize), mode(mode)
+	{
+		for (int i = 0; i < sizeof(Ts); i++) {
+			vbo.push_back(createBufferID());
+			glBindBuffer(GL_ARRAY_BUFFER, vbo.back());
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		loadBuffers(data..., dataSize);
+	}
+
+	template<typename A>
+	void loadBuffer(typename A::Type* data) {
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[indexOf<A, Ts...>()]);
+		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(typename A::Type), data, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	virtual void loadBuffers(typename Ts::Type*... data, size_t dataSize) {
+		bufferSize = dataSize;
+		loadBuffers_rec2<GeometryT2<Ts...>, Ts...>(this, data...);
+	}
+
+	virtual void drawGeometry(GLProgram program) override {
+		vaoMap.requestVAO<Ts...>(program, &vbo);	//glBindVertexArray(vao);
+		glDrawArrays(mode, 0, bufferSize);
+		glBindVertexArray(0);
+	}
+};
+
+
 
 
 }

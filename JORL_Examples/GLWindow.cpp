@@ -1355,6 +1355,7 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 
 	SimpleTexManager tm;
 	SimpleShader shader;
+	BlinnPhongShaderT bpShader;
 
 	float r0 = 0.2f;
 	float r1 = 0.15f;
@@ -1426,6 +1427,24 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	fontDrawable.addMaterial(make<ColorMat>(vec4(0.f, 0.f, 0.f, 1.f)));
 	SimpleTexShader texShader;
 
+	auto testGeom = make<GeometryT2<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES);
+	testGeom->loadBuffers(verts.data(), uvs.data(), verts.size());
+	GeometryT2<attrib::Position> testGeom2;
+
+	std::vector<vec3> bpPositions = { vec3(0, 0, 0.1), vec3(1, 0, 0.1), vec3(0, 1, 0.1) };
+	std::vector<vec3> bpNormals = { vec3(0, 0, 1), vec3(0, 0, 1), vec3(0, 0, 1) };
+	auto bpGeom = make<GeometryT2<attrib::Normal, attrib::Position>>(GL_TRIANGLES);
+	bpGeom->loadBuffers(bpNormals.data(), bpPositions.data(), bpPositions.size());
+
+	Drawable bpDrawable(bpGeom, make<ColorMat>(vec4(1.f, 0.f, 0.f, 1.f)));
+	bpDrawable.addMaterial(make<ShadedMat>(0.3f, 0.4f, 0.4f, 10.f));
+
+	//loadBuffers_rec2<GeometryT2<attrib::Position>, attrib::Position>(&testGeom2, vertices->data());
+	//loadBuffers_rec2<GeometryT2<attrib::Position, attrib::TexCoord>, attrib::Position, attrib::TexCoord>
+	//	(static_cast<GeometryT2<attrib::Position, attrib::TexCoord>*>(testGeom.get()), verts.data(), uvs.data());
+
+	//testGeom->loadBuffer<attrib::Position>(verts.data());
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -1475,6 +1494,7 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		//shader.draw(cam, mesh);
 
 		textShader.draw(cam, fontDrawable);
+		bpShader.drawVertexBinding(cam, vec3(10, 10, 10), bpDrawable);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		mesh.getMaterial<ColorMat>()->color = vec4(1, 0, 0, 1);

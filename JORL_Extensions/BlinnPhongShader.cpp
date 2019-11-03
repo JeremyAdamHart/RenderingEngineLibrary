@@ -30,8 +30,8 @@ static vector<pair<GLenum, string>> shaders{
 //TEST SHADER vv
 BlinnPhongShaderT::BlinnPhongShaderT() :
 	ShaderT<ShadedMat, ColorMat>(shaders, {},
-	{ "ka", "kd", "ks", "alpha", "color", 
-		"view_projection_matrix",  "model_matrix", "camera_position", "lightPos" }) 
+		{ "ka", "kd", "ks", "alpha", "color",
+			"view_projection_matrix",  "model_matrix", "camera_position", "lightPos" })
 {}
 
 void BlinnPhongShaderT::draw(const Camera &cam, vec3 lightPos,
@@ -50,6 +50,24 @@ void BlinnPhongShaderT::draw(const Camera &cam, vec3 lightPos,
 	glUniform3f(uniformLocations[LIGHT_POS_LOCATION],
 		lightPos.x, lightPos.y, lightPos.z);
 	obj.getGeometry().drawGeometry();
+	glUseProgram(0);
+}
+
+void BlinnPhongShaderT::drawVertexBinding(const Camera& cam, glm::vec3 lightPos, Drawable &obj)
+{
+	glUseProgram(programID);
+
+	mat4 vp_matrix = cam.getProjectionMatrix()*cam.getCameraMatrix();
+	mat4 m_matrix = obj.getTransform();
+	vec3 camera_pos = cam.getPosition();
+
+	loadMaterialUniforms(obj);
+	glUniformMatrix4fv(uniformLocations[VP_MATRIX_LOCATION], 1, false, &vp_matrix[0][0]);
+	glUniformMatrix4fv(uniformLocations[M_MATRIX_LOCATION], 1, false, &m_matrix[0][0]);
+	glUniform3f(uniformLocations[CAMERA_POS_LOCATION], camera_pos.x, camera_pos.y, camera_pos.z);
+	glUniform3f(uniformLocations[LIGHT_POS_LOCATION],
+		lightPos.x, lightPos.y, lightPos.z);
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 

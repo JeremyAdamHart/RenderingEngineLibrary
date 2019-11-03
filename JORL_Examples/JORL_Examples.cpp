@@ -8,6 +8,8 @@
 #include "noiseTest.h"
 #include <unordered_map>
 #include <cctype>
+
+#include <iostream>
 /*template<typename T>
 optional{
 
@@ -21,7 +23,7 @@ class PartialF{
 	
 };
 */
-
+/*
 template<typename T1, typename T2>
 struct A {
 	std::tuple<T1, T2> t;
@@ -31,16 +33,20 @@ class B {
 	adaptive::VariableSizeGrid<adaptive::TopFace<adaptive::Noise>> grid;
 	B(int x, int y) : grid(x, y) {}
 };
+*/
+
+
 
 int main()
 {	
+	
 	srand(time(0));
 
 	WindowManager wm(800, 800, "Happy now Cory?");
 
 	std::tuple<float, int, char> tp;
 
-	A<float, int> obj1;
+	//A<float, int> obj1;
 
 	using namespace adaptive;
 

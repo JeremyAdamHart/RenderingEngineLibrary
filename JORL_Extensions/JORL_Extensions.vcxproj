@@ -351,7 +351,6 @@
     <ClInclude Include="BlinnPhongShader.h" />
     <ClInclude Include="TrackballCamera.h" />
     <ClInclude Include="TrackerCamera.h" />
-    <ClInclude Include="VertexBufferTemplates.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\tinyply\source\tinyply.cpp" />
@@ -382,7 +381,6 @@
     <ClCompile Include="BlinnPhongShader.cpp" />
     <ClCompile Include="TrackballCamera.cpp" />
     <ClCompile Include="TrackerCamera.cpp" />
-    <ClCompile Include="VertexBufferTemplates.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

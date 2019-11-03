@@ -80,6 +80,7 @@ protected:
 
 public:
 	virtual void drawGeometry() {}
+	virtual void drawGeometry(GLProgram programID) {}
 
 	virtual void bindGeometry() {}
 	virtual int startIndex() const { return 0; }

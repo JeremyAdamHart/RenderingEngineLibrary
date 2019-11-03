@@ -25,7 +25,6 @@
     <ClCompile Include="BlinnPhongShader.cpp" />
     <ClCompile Include="TrackballCamera.cpp" />
     <ClCompile Include="TrackerCamera.cpp" />
-    <ClCompile Include="VertexBufferTemplates.cpp" />
     <ClCompile Include="GlowShader.cpp" />
     <ClCompile Include="NormalDisplayShader.cpp" />
     <ClCompile Include="TemplatedGeometry.cpp" />
@@ -61,7 +60,6 @@
     <ClInclude Include="BlinnPhongShader.h" />
     <ClInclude Include="TrackballCamera.h" />
     <ClInclude Include="TrackerCamera.h" />
-    <ClInclude Include="VertexBufferTemplates.h" />
     <ClInclude Include="GlowShader.h" />
     <ClInclude Include="NormalDisplayShader.h" />
     <ClInclude Include="TemplatedGeometry.h" />
