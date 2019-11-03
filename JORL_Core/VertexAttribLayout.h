@@ -20,7 +20,7 @@ template<typename T>
 class Attribute {
 public:
 	using Type = T;
-	static inline int Divisor = 0;
+	static constexpr int Divisor = 0;
 	static inline std::string name() { return ""; }
 };
 

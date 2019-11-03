@@ -17,7 +17,7 @@ void loadBuffers_rec(C* obj, T1* t1) {
 template<size_t N, class C, class T1, class T2, class... Args>
 void loadBuffers_rec(C* obj, T1* t1, T2* t2, Args*... args) {
 	loadBuffers_rec<N>(obj, t1);
-	loadBuffers_rec<N+1>(obj, t2, args...);
+	loadBuffers_rec<N + 1>(obj, t2, args...);
 }
 
 template<size_t N, class C, class T1>
@@ -50,7 +50,7 @@ protected:
 public:
 	const static bool Elements = false;
 
-	GeometryT(GLenum mode = GL_TRIANGLES) : vao(createVAOID()), bufferSize(0), mode(mode){
+	GeometryT(GLenum mode = GL_TRIANGLES) : vao(createVAOID()), bufferSize(0), mode(mode) {
 		initVAO();
 	}
 
@@ -117,9 +117,9 @@ public:
 	ElementGeometryT(GLenum mode = GL_TRIANGLES) : vao(createVAOID()), bufferSize(0), indexSize(0), mode(mode) {
 		initVAO();
 	}
-	
-	ElementGeometryT(GLenum mode, I* indices, size_t indexSize, Ts*... data, size_t dataSize) 
-		: vao(createVAOID()), bufferSize(dataSize), indexSize(indexSize), mode(mode) 
+
+	ElementGeometryT(GLenum mode, I* indices, size_t indexSize, Ts*... data, size_t dataSize)
+		: vao(createVAOID()), bufferSize(dataSize), indexSize(indexSize), mode(mode)
 	{
 		initVAO();
 		loadBuffers(data..., dataSize);
@@ -142,7 +142,7 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(nth_type<N, Ts...>), data, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
-	
+
 	void loadIndices(I* indices, size_t size) {
 		indexSize = size;
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
@@ -200,6 +200,20 @@ public:
 	}
 };
 
+template<typename T1>
+constexpr bool usingInstanced() {
+	return T1::Divisor > 0;
+}
+
+
+template<typename T1, typename T2, typename... Args>
+constexpr bool usingInstanced() {
+	if constexpr (T1::Divisor > 0)
+		return true;
+	else
+		return usingInstanced<T2, Args...>();
+}
+
 
 template<class C, class T1>
 void loadBuffers_rec2(C* obj, typename T1::Type* t1) {
@@ -216,21 +230,13 @@ void loadBuffers_rec2(C* obj, typename T1::Type* t1, typename T2::Type* t2, type
 template<typename... Ts>
 class GeometryT2 : public GLGeometryContainer {
 	VertexBindingMapping vaoMap;
-	size_t bufferSize;
 	unsigned int nextAttributeNumber;
 	GLenum mode;
 	std::vector<GLBuffer>vbo;
-
-	template<size_t N>
-	void loadBuffer(nth_type<N, typename Ts::Type...>* data) {
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[N]);
-		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(nth_type<N, typename Ts::Type...>), data, GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-
 public:
 	const static bool Elements = false;
+	size_t bufferSize;
+	size_t instanceCount;
 
 	GeometryT2(GLenum mode = GL_TRIANGLES) : bufferSize(0), mode(mode) {
 		for (int i = 0; i < sizeof...(Ts); i++) {
@@ -240,8 +246,8 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	GeometryT2(GLenum mode, typename Ts::Type*... data, size_t dataSize)
-		: vao(createVAOID()), bufferSize(dataSize), mode(mode)
+	GeometryT2(GLenum mode, typename Ts::Type*... data, size_t dataSize, size_t dataInstances=1)
+		: bufferSize(dataSize), instanceCount(dataInstances), mode(mode)
 	{
 		for (int i = 0; i < sizeof(Ts); i++) {
 			vbo.push_back(createBufferID());
@@ -249,29 +255,79 @@ public:
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		loadBuffers(data..., dataSize);
+		loadBuffers(data..., dataSize, instanceCount);
 	}
 
 	template<typename A>
 	void loadBuffer(typename A::Type* data) {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[indexOf<A, Ts...>()]);
 		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(typename A::Type), data, GL_DYNAMIC_DRAW);
+		/*
+		unsigned int dataSize;
+		//if constexpr (A::Divisor > 0) dataSize = instanceCount;
+		//else 
+		dataSize = bufferSize;
+
+		glBufferData(GL_ARRAY_BUFFER, dataSize * sizeof(typename A::Type), data, GL_DYNAMIC_DRAW);
+		*/
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 	virtual void loadBuffers(typename Ts::Type*... data, size_t dataSize) {
 		bufferSize = dataSize;
+		//instanceCount = dataInstances;
 		loadBuffers_rec2<GeometryT2<Ts...>, Ts...>(this, data...);
 	}
 
 	virtual void drawGeometry(GLProgram program) override {
-		vaoMap.requestVAO<Ts...>(program, &vbo);	//glBindVertexArray(vao);
-		glDrawArrays(mode, 0, bufferSize);
+		
+		vaoMap.requestVAO<Ts...>(program, &vbo);
+		//glDrawArrays(mode, 0, bufferSize);
+		
+		if constexpr (!usingInstanced<Ts...>())
+			//glDrawArrays(mode, 0, bufferSize);
+			printf("Using instanced\n");
+		else
+			printf("Not using instanced\n");
+//			glDrawArraysInstanced(mode, 0, bufferSize, instanceCount);
 		glBindVertexArray(0);
 	}
 };
 
+template<typename IndexT, typename... Ts>
+class IndexGeometryT : public GeometryT2<Ts...> {
+	size_t indexSize;
+public:
+	IndexGeometryT(GLenum mode = GL_TRIANGLES) : GeometryT2<Ts...>(mode) {
+		vbo.push_back(createBufferID());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
 
+	IndexGeometryT(GLenum mode, IndexT* indices, size_t indexSize, typename Ts::Type*... data, size_t dataSize, size_t dataInstances=1)
+		: GeometryT2<Ts...>(mode, data..., dataSize, dataInstances)
+	{
+		vbo.push_back(createBufferID());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+		loadIndices(indices, indexSize);
+	}
+
+	void loadIndices(IndexT* indices, size_t newIndexSize) {
+		indexSize = newIndexSize;
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize, indices, GL_DYNAMIC_DRAW);
+	}
+
+	virtual void drawGeometry(GLProgram program) override {
+		vaoMap.requestVAO<Ts...>(program, &vbo);	//glBindVertexArray(vao);
+		if constexpr (!usingInstanced<Ts...>())
+			glDrawElements(mode, indexSize, toGLenum<IndexT>(), 0);
+		else
+			glDrawElementsInstanced(mode, 0, toGLenum<IndexT>(), 0, instanceCount);
+		glBindVertexArray(0);
+	}
+};
 
 }
