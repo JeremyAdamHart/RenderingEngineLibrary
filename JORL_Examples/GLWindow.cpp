@@ -1417,10 +1417,8 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	TextShader textShader;
 
 	getTextBuffers("I'm just making text here", font, &verts, &uvs, &faces);
-	//auto fontGeom = make<GeometryT<glm::vec3, glm::vec3, glm::vec2>>(GL_TRIANGLE_FAN);
-	auto fontGeom = make<ElementGeometryT<unsigned int, glm::vec3, glm::vec3, glm::vec2>>(GL_TRIANGLES);
-	//fontGeom->loadBuffers(verts.data(), verts.data(), c.uvCoords, 4);
-	fontGeom->loadBuffers(verts.data(), verts.data(), uvs.data(), verts.size());
+	auto fontGeom = make<IndexGeometryT<unsigned int, attrib::Position, attrib::TexCoord>>(GL_TRIANGLES);
+	fontGeom->loadBuffers(verts.data(), uvs.data(), verts.size());
 	fontGeom->loadIndices(faces.data(), faces.size());
 
 	Drawable fontDrawable(fontGeom, make<TextureMat>(font.tex));
@@ -1493,7 +1491,7 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//shader.draw(cam, mesh);
 
-		textShader.draw(cam, fontDrawable);
+		textShader.drawVertexBinding(cam, fontDrawable);
 		bpShader.drawVertexBinding(cam, vec3(10, 10, 10), bpDrawable);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

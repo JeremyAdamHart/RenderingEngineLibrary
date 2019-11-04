@@ -201,18 +201,22 @@ public:
 };
 
 template<typename T1>
-constexpr bool usingInstanced() {
+constexpr bool usingInstancedImp() {
 	return T1::Divisor > 0;
 }
 
-
 template<typename T1, typename T2, typename... Args>
-constexpr bool usingInstanced() {
+constexpr bool usingInstancedImp() {
 	if constexpr (T1::Divisor > 0)
 		return true;
 	else
-		return usingInstanced<T2, Args...>();
+		return usingInstancedImp<T2, Args...>();
 }
+
+template<typename... Args>
+struct usingInstanced {
+	static constexpr bool value = usingInstancedImp<Args...>();
+};
 
 
 template<class C, class T1>
@@ -229,6 +233,7 @@ void loadBuffers_rec2(C* obj, typename T1::Type* t1, typename T2::Type* t2, type
 //NEW CLASSES
 template<typename... Ts>
 class GeometryT2 : public GLGeometryContainer {
+protected:
 	VertexBindingMapping vaoMap;
 	unsigned int nextAttributeNumber;
 	GLenum mode;
@@ -246,7 +251,7 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	GeometryT2(GLenum mode, typename Ts::Type*... data, size_t dataSize, size_t dataInstances=1)
+	GeometryT2(GLenum mode, typename Ts::Type*... data, size_t dataSize, size_t dataInstances)
 		: bufferSize(dataSize), instanceCount(dataInstances), mode(mode)
 	{
 		for (int i = 0; i < sizeof(Ts); i++) {
@@ -255,47 +260,49 @@ public:
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		loadBuffers(data..., dataSize, instanceCount);
+		loadBuffers(data..., dataSize, instanceCount, dataInstances);
 	}
 
 	template<typename A>
 	void loadBuffer(typename A::Type* data) {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[indexOf<A, Ts...>()]);
-		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(typename A::Type), data, GL_DYNAMIC_DRAW);
-		/*
+		
 		unsigned int dataSize;
-		//if constexpr (A::Divisor > 0) dataSize = instanceCount;
-		//else 
+		if constexpr (A::Divisor > 0) dataSize = instanceCount;
+			else 
 		dataSize = bufferSize;
 
 		glBufferData(GL_ARRAY_BUFFER, dataSize * sizeof(typename A::Type), data, GL_DYNAMIC_DRAW);
-		*/
+		
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 	virtual void loadBuffers(typename Ts::Type*... data, size_t dataSize) {
+		loadBuffers(data..., dataSize, 1);
+	}
+
+	virtual void loadBuffers(typename Ts::Type*... data, size_t dataSize, size_t dataInstances) {
 		bufferSize = dataSize;
-		//instanceCount = dataInstances;
+		instanceCount = dataInstances;
 		loadBuffers_rec2<GeometryT2<Ts...>, Ts...>(this, data...);
 	}
 
 	virtual void drawGeometry(GLProgram program) override {
 		
 		vaoMap.requestVAO<Ts...>(program, &vbo);
-		//glDrawArrays(mode, 0, bufferSize);
+		glDrawArrays(mode, 0, bufferSize);
 		
-		if constexpr (!usingInstanced<Ts...>())
-			//glDrawArrays(mode, 0, bufferSize);
-			printf("Using instanced\n");
+		if constexpr (!usingInstanced<Ts...>::value)
+			glDrawArrays(mode, 0, bufferSize);
 		else
-			printf("Not using instanced\n");
-//			glDrawArraysInstanced(mode, 0, bufferSize, instanceCount);
+			glDrawArraysInstanced(mode, 0, bufferSize, instanceCount);
 		glBindVertexArray(0);
 	}
 };
 
 template<typename IndexT, typename... Ts>
 class IndexGeometryT : public GeometryT2<Ts...> {
+protected:
 	size_t indexSize;
 public:
 	IndexGeometryT(GLenum mode = GL_TRIANGLES) : GeometryT2<Ts...>(mode) {
@@ -317,12 +324,13 @@ public:
 	void loadIndices(IndexT* indices, size_t newIndexSize) {
 		indexSize = newIndexSize;
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize, indices, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize*sizeof(IndexT), indices, GL_DYNAMIC_DRAW);
 	}
 
 	virtual void drawGeometry(GLProgram program) override {
 		vaoMap.requestVAO<Ts...>(program, &vbo);	//glBindVertexArray(vao);
-		if constexpr (!usingInstanced<Ts...>())
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());		//Should be built into requestVAO
+		if constexpr (!usingInstanced<Ts...>::value)
 			glDrawElements(mode, indexSize, toGLenum<IndexT>(), 0);
 		else
 			glDrawElementsInstanced(mode, 0, toGLenum<IndexT>(), 0, instanceCount);

@@ -13,6 +13,7 @@ class TextShader : public ShaderT<TextureMat, ColorMat> {
 public:
 	TextShader();
 	void draw(Camera& cam, Drawable& obj);
+	void drawVertexBinding(Camera& cam, Drawable& obj);
 };
 
 
