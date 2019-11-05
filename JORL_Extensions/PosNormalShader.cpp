@@ -62,7 +62,7 @@ void PosNormalShader::draw(const Camera &cam, vec3 lightPos,
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), 
 		obj.getTransform());
 	
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 

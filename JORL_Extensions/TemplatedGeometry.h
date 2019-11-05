@@ -254,14 +254,18 @@ public:
 	GeometryT2(GLenum mode, typename Ts::Type*... data, size_t dataSize, size_t dataInstances)
 		: bufferSize(dataSize), instanceCount(dataInstances), mode(mode)
 	{
-		for (int i = 0; i < sizeof(Ts); i++) {
+		for (int i = 0; i < sizeof...(Ts); i++) {
 			vbo.push_back(createBufferID());
 			glBindBuffer(GL_ARRAY_BUFFER, vbo.back());
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		loadBuffers(data..., dataSize, instanceCount, dataInstances);
+		loadBuffers(data..., dataSize, dataInstances);
 	}
+
+	GeometryT2(GLenum mode, typename Ts::Type*... data, size_t dataSize)
+		: GeometryT2(mode, data..., dataSize, 1)
+	{}
 
 	template<typename A>
 	void loadBuffer(typename A::Type* data) {
@@ -311,8 +315,18 @@ public:
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	IndexGeometryT(GLenum mode, IndexT* indices, size_t indexSize, typename Ts::Type*... data, size_t dataSize, size_t dataInstances=1)
+	IndexGeometryT(GLenum mode, IndexT* indices, size_t indexSize, typename Ts::Type*... data, size_t dataSize, size_t dataInstances)
 		: GeometryT2<Ts...>(mode, data..., dataSize, dataInstances)
+	{
+		vbo.push_back(createBufferID());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		loadIndices(indices, indexSize);
+	}
+
+	IndexGeometryT(GLenum mode, IndexT* indices, size_t indexSize, typename Ts::Type*... data, size_t dataSize)
+		: GeometryT2<Ts...>(mode, data..., dataSize, 1)
 	{
 		vbo.push_back(createBufferID());
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
@@ -337,5 +351,15 @@ public:
 		glBindVertexArray(0);
 	}
 };
+
+//Default IndexGeometry with unsigned int
+template<typename... Args>
+using IndexGeometryUint = IndexGeometryT<unsigned int, Args...>;
+using StandardGeometry = GeometryT2<attrib::Position, attrib::Normal, attrib::TexCoord>;
+using TextureGeometry = GeometryT2<attrib::Position, attrib::TexCoord>;
+using NormalGeometry = GeometryT2 < attrib::Position, attrib::TexCoord>;
+using StandardIndexGeometry = IndexGeometryUint<attrib::Position, attrib::Normal, attrib::TexCoord>;
+using TextureIndexGeometry = IndexGeometryUint<attrib::Position, attrib::TexCoord>;
+using NormalIndexGeometry = IndexGeometryUint<attrib::Position, attrib::Normal>;
 
 }

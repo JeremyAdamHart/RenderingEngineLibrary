@@ -49,7 +49,7 @@ void BlinnPhongShaderT::draw(const Camera &cam, vec3 lightPos,
 	glUniform3f(uniformLocations[CAMERA_POS_LOCATION], camera_pos.x, camera_pos.y, camera_pos.z);
 	glUniform3f(uniformLocations[LIGHT_POS_LOCATION],
 		lightPos.x, lightPos.y, lightPos.z);
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 
@@ -157,7 +157,7 @@ void BlinnPhongShader::draw(const Camera &cam, vec3 lightPos,
 
 	obj.loadUniforms(ShadedMat::id, &uniformLocations[0]);
 
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
  	glUseProgram(0);
 }
 

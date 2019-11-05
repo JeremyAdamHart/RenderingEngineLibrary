@@ -85,7 +85,7 @@ void ColorShader::draw(const Camera &cam, glm::vec3 lightPos, Drawable &obj) {
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), obj.getTransform(), cam.getPosition(), lightPos);
 	obj.loadUniforms(ShadedMat::id, &uniformLocations[0]);
 	obj.loadUniforms(ColorSetMat::id, &uniformLocations[ShadedMat::COUNT]);
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 

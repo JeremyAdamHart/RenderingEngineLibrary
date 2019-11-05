@@ -46,7 +46,7 @@ void SimpleShader::draw(const Camera &cam, Drawable &obj) {
 	
 	loadMaterialUniforms(obj);
 	
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 

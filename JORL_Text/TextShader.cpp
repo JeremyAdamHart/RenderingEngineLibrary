@@ -24,7 +24,7 @@ void TextShader::draw(Camera& cam, Drawable& obj) {
 	glm::mat4 modelViewProjectionMatrix = cam.getProjectionMatrix()*cam.getCameraMatrix()*obj.getTransform();
 	glUniformMatrix4fv(uniformLocations[MODEL_VIEW_PROJECTION], 1, false, &modelViewProjectionMatrix[0][0]);
 
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 
 	glUseProgram(0);
 }

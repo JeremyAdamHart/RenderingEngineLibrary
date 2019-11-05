@@ -43,7 +43,7 @@ void BlendShader::draw(Drawable &obj) {
 	obj.loadUniforms(TextureMat::id | TextureMat::TRANSLUCENT, 
 		&uniformLocations[TextureMat::COUNT]);
 
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 

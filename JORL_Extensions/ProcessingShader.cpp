@@ -17,7 +17,7 @@ bool ProcessingShader::createProgram(map<GLenum, string> defines) {
 
 void ProcessingShader::draw(Drawable &obj) {
 	glUseProgram(programID);
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 

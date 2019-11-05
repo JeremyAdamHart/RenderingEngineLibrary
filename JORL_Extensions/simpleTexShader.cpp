@@ -52,7 +52,7 @@ void SimpleTexShader::draw(const Camera &cam, Drawable &obj) {
 	loadUniforms(cam.getProjectionMatrix()*cam.getCameraMatrix(), obj.getTransform());
 	obj.loadUniforms(TextureMat::id, &uniformLocations[0]);
 
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 

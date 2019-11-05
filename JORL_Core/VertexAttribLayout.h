@@ -47,7 +47,7 @@ namespace attrib {
 
 	template<typename T, int N>
 	struct Instanced : public T {
-		static inline int Divisor = N;
+		static constexpr int Divisor = N;
 	};
 
 

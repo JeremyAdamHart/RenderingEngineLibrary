@@ -23,7 +23,7 @@ void FlatColorShader::draw(Camera& cam, Drawable obj) {
 	glm::mat4 modelViewProjectionMatrix = cam.getProjectionMatrix()*cam.getCameraMatrix()*obj.getTransform();
 	glUniformMatrix4fv(uniformLocations[MODEL_VIEW_PROJECTION_LOC], 1, false, &modelViewProjectionMatrix[0][0]);
 
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 
 	glUseProgram(0);
 }
@@ -57,7 +57,7 @@ void GaussianBlurShader::draw(float sigma, int n, Direction direction, Drawable&
 	glUniform1i(uniformLocations[N], n);
 	glUniform1i(uniformLocations[DIRECTION], int(direction));
 
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 
 	glUseProgram(0);
 }

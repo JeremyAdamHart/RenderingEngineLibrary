@@ -102,7 +102,7 @@ void VRColorShader::draw(const Camera &cam, glm::vec3 lightPos,
 		lightPos, fogScale, fogDistance, fogColor);
 	obj.loadUniforms(ShadedMat::id, &uniformLocations[0]);
 	obj.loadUniforms(ColorSetMat::id, &uniformLocations[ShadedMat::COUNT]);
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 

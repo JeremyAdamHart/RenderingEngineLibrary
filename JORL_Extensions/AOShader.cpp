@@ -78,7 +78,7 @@ void AOShader::draw(const Camera &cam, vec3 lightPos, Drawable &obj) {
 	obj.loadUniforms(TextureMat::id | TextureMat::POSITION, &uniformLocations[0]);
 	obj.loadUniforms(TextureMat::id | TextureMat::NORMAL, &uniformLocations[TextureMat::COUNT]);
 
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 }
 

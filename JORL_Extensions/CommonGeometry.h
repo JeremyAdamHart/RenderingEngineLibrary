@@ -7,11 +7,11 @@
 namespace renderlib {
 struct SphereGeometry {
 	using Indices = unsigned int;
-	using Type = ElementGeometryT<Indices, glm::vec3, glm::vec3, glm::vec2>;
+	using Type = IndexGeometryT<Indices, attrib::Position, attrib::Normal, attrib::TexCoord>;
 };
 
 struct PlaneGeometry {
-	using Type = GeometryT<glm::vec3, glm::vec3, glm::vec2>;
+	using Type = GeometryT2<attrib::Position, attrib::Normal, attrib::TexCoord>;
 };
 
 enum class Orientation {
@@ -41,7 +41,7 @@ constexpr quat axisRotation(const Orientation orientation) {
 }
 
 struct CubeGeometry {
-	using Type = GeometryT<glm::vec3, glm::vec3, glm::vec2>;
+	using Type = GeometryT2<attrib::Position, attrib::Normal, attrib::TexCoord>;
 };
 
 sptr<SphereGeometry::Type> createSphereGeometry(unsigned int azimuthResolution = 40, unsigned int altitudeResolution = 20, float orientation=1.f);

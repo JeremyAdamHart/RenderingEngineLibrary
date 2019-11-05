@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "ElementGeometry.h"
+#include "PointerAliases.h"
+#include "TemplatedGeometry.h"
 
 namespace renderlib {
 
@@ -38,6 +40,8 @@ private:
 
 void writeToPly(const char* filename, std::vector<glm::vec3>* vertices, std::vector<unsigned int>* faces);
 
-ElementGeometry *objToElementGeometry(char *filename);
+
+using MeshGeometryType = IndexGeometryUint<attrib::Position, attrib::Normal, attrib::TexCoord>;
+sptr<MeshGeometryType> objToElementGeometry(char *filename);
 vector<vec3> calculateNormalsImp(vector<vec3>* points, vector<unsigned int>* indices);
 }
