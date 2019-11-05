@@ -66,8 +66,8 @@ using namespace std;
 
 using namespace renderlib;
 
-using PositionGeometry = GeometryT2<attrib::Position>;
-using PositionNormalGeometry = GeometryT2<attrib::Position, attrib::Normal>;
+using PositionGeometry = GeometryT<attrib::Position>;
+using PositionNormalGeometry = GeometryT<attrib::Position, attrib::Normal>;
 
 
 TrackballCamera cam(
@@ -378,7 +378,7 @@ int intRand(int range) {
 	return rand() % range;
 }
 
-void loadGeometryWithHalfEdgeMesh(GeometryT2<attrib::Position>* geom, HalfEdgeMesh<vec3>& mesh) {
+void loadGeometryWithHalfEdgeMesh(GeometryT<attrib::Position>* geom, HalfEdgeMesh<vec3>& mesh) {
 	vector<vec3> points;
 
 	for (auto f : mesh.faces) {
@@ -504,17 +504,17 @@ void WindowManager::convexTestLoop() {
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	Drawable hullObject(make<GeometryT2<attrib::Position>>(GL_POINTS, hullPoints.data(), hullPoints.size()),
+	Drawable hullObject(make<GeometryT<attrib::Position>>(GL_POINTS, hullPoints.data(), hullPoints.size()),
 		make_shared<ColorMat>(vec3(1, 1, 1)));
 
 	vector<vec3> debugPoints;
-	auto debugGeometry = make<GeometryT2<attrib::Position>>(GL_POINTS);
+	auto debugGeometry = make<GeometryT<attrib::Position>>(GL_POINTS);
 	Drawable debugObject(debugGeometry, make_shared<ColorMat>(vec3(0.2, 0.5, 1)));
 
-	auto halfEdgeDebugGeometry = make<GeometryT2<attrib::Position>>(GL_LINES);
+	auto halfEdgeDebugGeometry = make<GeometryT<attrib::Position>>(GL_LINES);
 	Drawable halfEdgeDebugObject(halfEdgeDebugGeometry, make_shared<ColorMat>(vec3(1.f, 0.f, 1.f)));
 
-	auto halfEdgeTrackingGeometry = make<GeometryT2<attrib::Position>>(GL_LINES);
+	auto halfEdgeTrackingGeometry = make<GeometryT<attrib::Position>>(GL_LINES);
 	Drawable halfEdgeTrackingObject(halfEdgeTrackingGeometry, make_shared<ColorMat>(vec3(0, 1.f, 0.f)));
 	SlotMap<HalfEdge<vec3>>::Index trackingEdge = mesh.edges.begin().toIndex();
 
@@ -1430,21 +1430,21 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	fontDrawable.addMaterial(make<ColorMat>(vec4(0.f, 0.f, 0.f, 1.f)));
 	SimpleTexShader texShader;
 
-	auto testGeom = make<GeometryT2<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES);
+	auto testGeom = make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES);
 	testGeom->loadBuffers(verts.data(), uvs.data(), verts.size());
-	GeometryT2<attrib::Position> testGeom2;
+	GeometryT<attrib::Position> testGeom2;
 
 	std::vector<vec3> bpPositions = { vec3(0, 0, 0.1), vec3(1, 0, 0.1), vec3(0, 1, 0.1) };
 	std::vector<vec3> bpNormals = { vec3(0, 0, 1), vec3(0, 0, 1), vec3(0, 0, 1) };
-	auto bpGeom = make<GeometryT2<attrib::Normal, attrib::Position>>(GL_TRIANGLES);
+	auto bpGeom = make<GeometryT<attrib::Normal, attrib::Position>>(GL_TRIANGLES);
 	bpGeom->loadBuffers(bpNormals.data(), bpPositions.data(), bpPositions.size());
 
 	Drawable bpDrawable(bpGeom, make<ColorMat>(vec4(1.f, 0.f, 0.f, 1.f)));
 	bpDrawable.addMaterial(make<ShadedMat>(0.3f, 0.4f, 0.4f, 10.f));
 
-	//loadBuffers_rec2<GeometryT2<attrib::Position>, attrib::Position>(&testGeom2, vertices->data());
-	//loadBuffers_rec2<GeometryT2<attrib::Position, attrib::TexCoord>, attrib::Position, attrib::TexCoord>
-	//	(static_cast<GeometryT2<attrib::Position, attrib::TexCoord>*>(testGeom.get()), verts.data(), uvs.data());
+	//loadBuffers_rec2<GeometryT<attrib::Position>, attrib::Position>(&testGeom2, vertices->data());
+	//loadBuffers_rec2<GeometryT<attrib::Position, attrib::TexCoord>, attrib::Position, attrib::TexCoord>
+	//	(static_cast<GeometryT<attrib::Position, attrib::TexCoord>*>(testGeom.get()), verts.data(), uvs.data());
 
 	//testGeom->loadBuffer<attrib::Position>(verts.data());
 
@@ -1780,7 +1780,7 @@ void WindowManager::laplacianSmoothing() {
 	vec3 newPoints[SIZE];
 	copy(begin(points), end(points), begin(newPoints));
 
-	auto geometry = make<GeometryT2<attrib::Position>>(GL_LINE_STRIP, points, SIZE);
+	auto geometry = make<GeometryT<attrib::Position>>(GL_LINE_STRIP, points, SIZE);
 	
 	Drawable curve(geometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
 
@@ -1896,7 +1896,7 @@ void WindowManager::noiseLoop() {
 	SimpleTexManager tm;
 	PerlinNoiseShader2D perlinShader;
 	Drawable texSquare(
-		make<GeometryT2<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
 		make<TextureMat>(createTexture2D(1, 1, &tm)));
 
 	while (!glfwWindowShouldClose(window)) {
@@ -1972,11 +1972,11 @@ void WindowManager::glowTest() {
 	GaussianBlurShader gaussianShader;
 
 	Drawable texSquareHorizontal(
-		make<GeometryT2<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
 		make<TextureMat>(lightFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
 
 	Drawable texSquareVertical(
-		make<GeometryT2<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
 		make<TextureMat>(gaussianFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
 
 
@@ -2181,7 +2181,7 @@ void WindowManager::adaptiveNoiseLoop() {
 	}
 	//GeometryT<vec3, vec4, float> testGeometry;
 	SimpleTexShader texShader;	
-	auto texGeometry = make<GeometryT2<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6);
+	auto texGeometry = make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6);
 	Texture noiseTex = createTexture2DFromData(TexInfo(GL_TEXTURE_2D, { int(DIMENSION), int(DIMENSION) }, 0, GL_RGB, GL_RGB16F, GL_FLOAT), &tm, image);
 	Drawable texDrawable(texGeometry, std::make_shared<TextureMat>(noiseTex));
 	
@@ -2298,7 +2298,7 @@ void WindowManager::mainLoop() {
 	dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
 
 	Drawable texSquare(
-		make<GeometryT2<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
 		make<TextureMat>(fbTex.getTexture(GL_COLOR_ATTACHMENT0)));
 
 	texSquare.addMaterial(make<TextureMat>(pnFbo.getTexture(GL_COLOR_ATTACHMENT0), TextureMat::POSITION));
@@ -2387,8 +2387,8 @@ void WindowManager::mainLoop() {
 void WindowManager::treeGrowthTest() {
 	SimpleShader shader;
 	
-	auto pointGeometry = make<GeometryT2<attrib::Position>>(GL_POINTS);
-	auto lineGeometry = make<GeometryT2<attrib::Position>>(GL_LINES);
+	auto pointGeometry = make<GeometryT<attrib::Position>>(GL_POINTS);
+	auto lineGeometry = make<GeometryT<attrib::Position>>(GL_LINES);
 
 	Drawable pointDrawable(pointGeometry, make<ColorMat>(vec3(1, 0, 0)));
 	Drawable lineDrawable(lineGeometry, make<ColorMat>(vec3(0, 1, 0)));

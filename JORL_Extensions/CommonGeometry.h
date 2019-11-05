@@ -11,7 +11,7 @@ struct SphereGeometry {
 };
 
 struct PlaneGeometry {
-	using Type = GeometryT2<attrib::Position, attrib::Normal, attrib::TexCoord>;
+	using Type = GeometryT<attrib::Position, attrib::Normal, attrib::TexCoord>;
 };
 
 enum class Orientation {
@@ -41,11 +41,10 @@ constexpr quat axisRotation(const Orientation orientation) {
 }
 
 struct CubeGeometry {
-	using Type = GeometryT2<attrib::Position, attrib::Normal, attrib::TexCoord>;
+	using Type = GeometryT<attrib::Position, attrib::Normal, attrib::TexCoord>;
 };
 
 sptr<SphereGeometry::Type> createSphereGeometry(unsigned int azimuthResolution = 40, unsigned int altitudeResolution = 20, float orientation=1.f);
-//sptr<ElementGeometry> createSphereGeometry(unsigned int azimuthResolution = 40, unsigned int altitudeResolution = 20, float orientation = 1.f);
 sptr<PlaneGeometry::Type> createPlaneGeometry(Orientation orientation=Orientation::PositiveY);
 sptr<CubeGeometry::Type> createCubeGeometry();
 

@@ -33,7 +33,7 @@ struct ParticleHeat :public Instanced<Attribute<float>, 1> {
 }
 }
 
-using HeatParticleGeometry = renderlib::GeometryT2<
+using HeatParticleGeometry = renderlib::GeometryT<
 	renderlib::attrib::Position, 
 	renderlib::attrib::ParticlePosition, 
 	renderlib::attrib::ParticleVelocity, 

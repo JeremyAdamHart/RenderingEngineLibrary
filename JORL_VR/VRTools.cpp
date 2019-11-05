@@ -2,6 +2,7 @@
 #include <TextureCreation.h>
 #include <TextureMat.h>
 #include <ShadedMat.h>
+#include <TemplatedGeometry.h>
 
 using namespace renderlib;
 
@@ -26,9 +27,9 @@ void openvrRenderModelToDrawable(Drawable *drawable,
 		indices[i] = openvrModel->rIndexData[i];
 	}
 
-	ElementGeometry *geom = new ElementGeometry(positions,
-		normals, texCoords, indices, openvrModel->unVertexCount, 
-		openvrModel->unTriangleCount * 3);
+	auto geom = new StandardIndexGeometry(GL_TRIANGLES, 
+		indices, openvrModel->unTriangleCount*3, 
+		positions, normals, texCoords, openvrModel->unVertexCount);
 
 	vr::RenderModel_TextureMap_t *openvrTex;
 	vr::EVRRenderModelError error;
