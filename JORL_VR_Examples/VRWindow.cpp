@@ -5,7 +5,6 @@
 #include <iostream>
 
 #include "Drawable.h"
-#include "SimpleGeometry.h"
 
 #include "SimpleShader.h"
 #include "simpleTexShader.h"

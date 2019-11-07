@@ -7,7 +7,6 @@ using namespace std;
 
 #include "ModelLoader.h"
 #include "Drawable.h"
-#include "SimpleGeometry.h"
 #include "SimpleShader.h"
 #include "ColorMat.h"
 #include "TrackballCamera.h"
@@ -1522,7 +1521,7 @@ void WindowManager::growthLoop2D() {
 	SimpleTexManager tm;
 	SimpleShader shader;
 
-	auto debugGeometry = make<SimpleGeometry>(GL_LINES);
+	auto debugGeometry = make<PositionGeometry>(GL_LINES);
 	vector<vec3> debugPoints;
 	Drawable debugDrawable(
 		debugGeometry,
@@ -1726,7 +1725,7 @@ void WindowManager::growthLoop2D() {
 
 			geometry->loadBuffers(points.data(), points.size());
 			geometry->loadIndices(indices.data(), indices.size());
-			debugGeometry->loadGeometry(debugPoints.data(), debugPoints.size());
+			debugGeometry->loadBuffers(debugPoints.data(), debugPoints.size());
 
 			
 		}
@@ -1989,7 +1988,7 @@ void WindowManager::glowTest() {
 
 	Drawable glowDragon(
 		objToElementGeometry("models/dragon.obj"),
-		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)*40.f));
+		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)*2.f));
 
 	const int N = 301;
 	const float SIGMA = 0.4f*float(N + 1);
@@ -2059,7 +2058,7 @@ void WindowManager::rigidBodyTest() {
 	SimpleTexManager tm;
 	MeshInfoLoader minfo("models/coryPrism.obj");
 
-	Drawable rectPrism(make<StandardIndexGeometry>(GL_TRIANGLES,
+	Drawable rectPrism(make<TexNormalIndexGeometry>(GL_TRIANGLES,
 		minfo.indices.data(), minfo.indices.size(),
 		minfo.vertices.data(), minfo.normals.data(), minfo.uvs.data(), 
 		minfo.vertices.size()), 

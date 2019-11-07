@@ -49,7 +49,10 @@ void loadBuffers_rec(C* obj, typename T1::Type* t1, typename T2::Type* t2, typen
 	loadBuffers_rec<C, T2, Ts...>(obj, t2, args...);
 }
 
-//NEW CLASSES
+///
+/// Template class for geometry
+/// @tparam Ts The list of vertex attributes provided
+///
 template<typename... Ts>
 class GeometryT : public GLGeometryContainer {
 protected:
@@ -86,6 +89,10 @@ public:
 		: GeometryT(mode, data..., dataSize, 1)
 	{}
 
+	///
+	/// Loads buffer for a single attribute
+	///@tparam A - The Attribute to load data into
+	///@param data - Data to uploaded to the vertex buffer
 	template<typename A>
 	void loadBuffer(typename A::Type* data) {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[indexOf<A, Ts...>()]);
@@ -174,7 +181,7 @@ public:
 //Default IndexGeometry with unsigned int
 template<typename... Args>
 using IndexGeometryUint = IndexGeometryT<unsigned int, Args...>;
-using StandardGeometry = GeometryT<attrib::Position, attrib::Normal, attrib::TexCoord>;
+using TexNormalGeometry = GeometryT<attrib::Position, attrib::Normal, attrib::TexCoord>;
 using TextureGeometry = GeometryT<attrib::Position, attrib::TexCoord>;
 using NormalGeometry = GeometryT < attrib::Position, attrib::TexCoord>;
 using TexNormalIndexGeometry = IndexGeometryUint<attrib::Position, attrib::Normal, attrib::TexCoord>;

@@ -26,9 +26,9 @@ int main()
 //	wm.treeGrowthTest();
 //	wm.testLoop();
 //	wm.waveSimulationLoop(1000, 0.0001f);
-//	wm.glowTest();
+	wm.glowTest();
 //	wm.testLoop();
-	wm.rigidBodyTest();
+//	wm.rigidBodyTest();
 //	wm.mainLoop();
 //	wm.noiseLoop();
 //	wm.particleLoop();

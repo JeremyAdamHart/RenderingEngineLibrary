@@ -27,7 +27,7 @@ void openvrRenderModelToDrawable(Drawable *drawable,
 		indices[i] = openvrModel->rIndexData[i];
 	}
 
-	auto geom = new StandardIndexGeometry(GL_TRIANGLES, 
+	auto geom = new TexNormalIndexGeometry(GL_TRIANGLES, 
 		indices, openvrModel->unTriangleCount*3, 
 		positions, normals, texCoords, openvrModel->unVertexCount);
 

@@ -4,7 +4,6 @@
 #define NOMINMAX
 #include <glm/glm.hpp>
 #include <vector>
-#include "ElementGeometry.h"
 #include "PointerAliases.h"
 #include "TemplatedGeometry.h"
 

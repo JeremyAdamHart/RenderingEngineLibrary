@@ -325,12 +325,9 @@
     <ClInclude Include="ColorSetMat.h" />
     <ClInclude Include="ColorShader.h" />
     <ClInclude Include="CommonGeometry.h" />
-    <ClInclude Include="DrawResourceHandler.h" />
-    <ClInclude Include="ElementGeometry.h" />
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="TemplatedGeometry.h" />
     <ClInclude Include="GlowShader.h" />
-    <ClInclude Include="Light.h" />
     <ClInclude Include="MeshInfoLoader.h" />
     <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="MultiBuffer.h" />
@@ -339,7 +336,6 @@
     <ClInclude Include="PosNormalShader.h" />
     <ClInclude Include="ProcessingShader.h" />
     <ClInclude Include="ShadedMat.h" />
-    <ClInclude Include="SimpleGeometry.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="SimpleTexManager.h" />
     <ClInclude Include="simpleTexShader.h" />
@@ -361,7 +357,6 @@
     <ClCompile Include="BlendShader.cpp" />
     <ClCompile Include="ColorMat.cpp" />
     <ClCompile Include="ColorShader.cpp" />
-    <ClCompile Include="ElementGeometry.cpp" />
     <ClCompile Include="GlowShader.cpp" />
     <ClCompile Include="MeshInfoLoader.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
@@ -370,7 +365,6 @@
     <ClCompile Include="PosNormalShader.cpp" />
     <ClCompile Include="ProcessingShader.cpp" />
     <ClCompile Include="ShadedMat.cpp" />
-    <ClCompile Include="SimpleGeometry.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
     <ClCompile Include="SimpleTexManager.cpp" />
     <ClCompile Include="simpleTexShader.cpp" />

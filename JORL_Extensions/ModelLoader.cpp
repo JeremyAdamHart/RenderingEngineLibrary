@@ -2,11 +2,11 @@
 
 #include "ModelLoader.h"
 
-#include "ElementGeometry.h"
 #include "TextureMat.h"
 #include "ColorMat.h"
 #include "ShadedMat.h"
 #include "TextureCreation.h"
+#include <TemplatedGeometry.h>
 
 #include <fstream>
 #include <map>
@@ -453,13 +453,14 @@ bool loadWavefront(std::string directory, std::string filename, std::vector<Draw
 		ks /= sum;
 
 		drawables->push_back(Drawable(
-			new ElementGeometry(
+			new TexNormalIndexGeometry(
+				GL_TRIANGLES,
+				&object.faces[0],
+				object.faces.size(),
 				&object.vertices[0],
 				&object.normals[0],
 				&object.texCoords[0],
-				&object.faces[0],
-				object.vertices.size(),
-				object.faces.size()),
+				object.vertices.size()),
 			new ShadedMat(
 				ka, kd, ks,
 				std::max(materials[mat].ns*50.f, 1.f))

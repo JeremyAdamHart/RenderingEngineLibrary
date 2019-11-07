@@ -1,7 +1,6 @@
 #pragma once
 
 #include <TemplatedGeometry.h>
-#include <ElementGeometry.h>
 #include <Drawable.h>
 
 namespace renderlib {

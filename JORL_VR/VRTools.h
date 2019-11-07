@@ -2,7 +2,6 @@
 
 #include <openvr/openvr.h>
 #include <glm/glm.hpp>
-#include <ElementGeometry.h>
 #include <Drawable.h>
 #include <Texture.h>
 

@@ -10,8 +10,6 @@
 #include "SimpleTexManager.h"
 #include "TextureCreation.h"
 #include "TextureMat.h"
-#include "SimpleGeometry.h"
-#include "ElementGeometry.h"
 #include "simpleTexShader.h"
 #include "BlinnPhongShader.h"
 #include "MeshInfoLoader.h"
@@ -185,7 +183,7 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 		make<TextureMat>(vrContext.getTexture(vr::Eye_Left)));
 
 	Drawable rightSquare(
-		make<SimpleTexGeometry>(points, coords, 6, GL_TRIANGLES),
+		make<TextureGeometry>(GL_TRIANGLES, points, coords, 6),
 		make<TextureMat>(vrContext.getTexture(vr::Eye_Right)));
 
 	SimpleTexShader texShader;
