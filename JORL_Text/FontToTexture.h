@@ -46,5 +46,6 @@ public:
 
 Font createFont(FT_Library* ft, const char* fontFilename, TextureManager* texManager, unsigned int resolution=64);
 
-void getTextBuffers(const char* text, const Font& font, std::vector<glm::vec3>* points, std::vector<glm::vec2>* uvs, std::vector<unsigned int>* faces);
+void getTextBuffers(const char* text, const Font& font, std::vector<glm::vec3>* points, std::vector<glm::vec3>* offsets, std::vector<glm::vec2>* uvs, std::vector<unsigned int>* faces);
+void getTextBuffers(const char* text, const Font& font, glm::vec3 value, float scale, std::vector<glm::vec3>* points, std::vector<glm::vec3>* offsets, std::vector<glm::vec2>* uvs, std::vector<unsigned int>* faces);
 }

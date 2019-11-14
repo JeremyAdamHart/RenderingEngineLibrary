@@ -15,9 +15,11 @@ struct Viewport {
 		unsigned int x = 0, unsigned int y = 0);
 
 	void use() const;
+	void useAtIndex(unsigned int index) const;
 };
 
 class Framebuffer {
+protected:
 	map<GLenum, Texture> tex;
 
 	vector<GLenum> drawBuffers;
@@ -32,17 +34,27 @@ public:
 	GLFramebuffer getID() const;
 	const Texture &getTexture(GLenum attachment) const;
 	bool addTexture(Texture newTex, GLenum attachment);
-	void use() const;
+	virtual void use() const;
 
 	map<GLenum, Texture>::iterator textureBegin();
 	map<GLenum, Texture>::iterator textureEnd();
 
 	void resize(int width, int height);
-
-//	void deleteTextures();
-//	void deleteFramebuffer();
 };
 
-void blit(Framebuffer read, Framebuffer write);
+class IndexedFramebuffer : public Framebuffer{
+	std::vector<Viewport> vps;
+public:
+	IndexedFramebuffer();
+	IndexedFramebuffer(unsigned int width, unsigned int height);
+	IndexedFramebuffer(GLFramebuffer id, Texture tex, GLenum attachment);
+	unsigned int addViewport(unsigned int width, unsigned int height, unsigned int x, unsigned int y);
+	Framebuffer operator[](unsigned int index);
+
+	virtual void use() const override;
+	//void use(unsigned int index) const;
+};
+
+void blit(const Framebuffer& read, const Framebuffer& write);
 
 }

@@ -42,4 +42,7 @@ Framebuffer createNewFramebuffer(int width, int height);
 Framebuffer createFramebufferWithColorAndDepth(int width, int height, TextureManager *manager, size_t num_samples);
 Framebuffer createFramebufferWithColorAndDepth(int width, int height, TextureManager *manager);
 
+IndexedFramebuffer createIndexedFramebufferWithColorAndDepth(int width, int height, TextureManager *manager, size_t num_samples);
+IndexedFramebuffer createIndexedFramebufferWithColorAndDepth(int width, int height, TextureManager *manager);
+
 }

@@ -1410,21 +1410,34 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	//Character c = font.character('R');
 	//std::vector<vec3> verts = { vec3(c.pointCoords[0], 0), vec3(c.pointCoords[1], 0), vec3(c.pointCoords[2], 0), vec3(c.pointCoords[3], 0) };
 	std::vector<glm::vec3> verts;
+	std::vector<glm::vec3> offsets;
 	std::vector<glm::vec2> uvs;
 	std::vector<unsigned int> faces;
 
 	TextShader textShader;
-
-	getTextBuffers("I'm just making text here", font, &verts, &uvs, &faces);
+	getTextBuffers("Words with lots of different letters", font, &verts, &offsets, &uvs, &faces);
 	//auto fontGeom = make<GeometryT<glm::vec3, glm::vec3, glm::vec2>>(GL_TRIANGLE_FAN);
 	auto fontGeom = make<ElementGeometryT<unsigned int, glm::vec3, glm::vec3, glm::vec2>>(GL_TRIANGLES);
 	//fontGeom->loadBuffers(verts.data(), verts.data(), c.uvCoords, 4);
-	fontGeom->loadBuffers(verts.data(), verts.data(), uvs.data(), verts.size());
+	fontGeom->loadBuffers(verts.data(), offsets.data(), uvs.data(), verts.size());
 	fontGeom->loadIndices(faces.data(), faces.size());
 
 	Drawable fontDrawable(fontGeom, make<TextureMat>(font.tex));
-	fontDrawable.addMaterial(make<ColorMat>(vec4(0.f, 0.f, 0.f, 1.f)));
-	SimpleTexShader texShader;
+	fontDrawable.addMaterial(make<ColorMat>(vec4(0.1f, 0.2f, 0.4f, 1.f)));
+	SimpleTexShader texShader;	
+
+	BlinnPhongShader bpShader;
+
+	Drawable sphereDrawable(createSphereGeometry(), make<ColorMat>(vec3(1.0, 1.0, 1.0)));
+	sphereDrawable.addMaterial(make<ShadedMat>(0.0f, 0.8f, 0.5f, 10.f));
+	Drawable planeDrawable(createPlaneGeometry(), make<ColorMat>(vec3(0.5, 0.5, 0.2)));
+	planeDrawable.addMaterial(make<ShadedMat>(0.3f, 0.2f, 0.8f, 10.f));
+	planeDrawable.position = vec3(0, -1, 0);
+	glm::vec3 lightPosition = vec3(1.f, 1.f, 0.f)*2.f;
+	Drawable lightDrawable(createSphereGeometry(20, 20, 1.f), make<ColorMat>(vec3(1.0, 1.0, 0.)));
+	lightDrawable.addMaterial(make<ShadedMat>(1.f, 0.f, 0.f, 10.f));
+	lightDrawable.position = lightPosition;
+	lightDrawable.setScale(vec3(0.2, 0.2, 0.2));
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1476,6 +1489,10 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 
 		textShader.draw(cam, fontDrawable);
 
+		bpShader.draw(cam, lightPosition, sphereDrawable);
+		bpShader.draw(cam, lightPosition, planeDrawable);
+		bpShader.draw(cam, lightPosition, lightDrawable);
+		
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		mesh.getMaterial<ColorMat>()->color = vec4(1, 0, 0, 1);
 		//shader.draw(cam, mesh);

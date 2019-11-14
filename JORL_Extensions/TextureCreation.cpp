@@ -126,4 +126,32 @@ Framebuffer createFramebufferWithColorAndDepth(int width, int height, TextureMan
 	return fb;
 }
 
+IndexedFramebuffer createIndexedFramebufferWithColorAndDepth(int width, int height, TextureManager *manager, size_t num_samples) {
+	IndexedFramebuffer fb(width, height);
+	if (!fb.addTexture(
+		createTexture2DMulti(width, height, manager, num_samples),
+		GL_COLOR_ATTACHMENT0) ||
+		!fb.addTexture(
+			createDepthTextureMulti(width, height, manager, num_samples), GL_DEPTH_ATTACHMENT))
+	{
+		std::cout << "FBO creation failed" << endl;
+	}
+
+	return fb;
+}
+
+IndexedFramebuffer createIndexedFramebufferWithColorAndDepth(int width, int height, TextureManager *manager) {
+	IndexedFramebuffer fb (width, height);
+	if (!fb.addTexture(
+		createTexture2D(width, height, manager),
+		GL_COLOR_ATTACHMENT0) ||
+		!fb.addTexture(
+			createDepthTexture(width, height, manager), GL_DEPTH_ATTACHMENT))
+	{
+		std::cout << "FBO creation failed" << endl;
+	}
+
+	return fb;
+}
+
 }

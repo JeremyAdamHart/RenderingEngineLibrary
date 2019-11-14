@@ -81,14 +81,14 @@ int main()
 //	wm.glowTest();
 //	wm.testLoop();
 //	wm.rigidBodyTest();
-//	wm.mainLoop();
+	wm.mainLoop();
 //	wm.noiseLoop();
 //	wm.particleLoop();
 //	wm.convexTestLoop();
 //	wm.velocitySpringLoop();
 	//wm.adaptiveNoiseLoop();
 	//wm.laplacianSmoothing();
-	wm.laplacianSmoothingMeshLoop();
+//	wm.laplacianSmoothingMeshLoop();
 	//wm.growthLoop2D();
 
 }

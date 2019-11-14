@@ -27,12 +27,13 @@ struct TexInfo {
 
 class Texture {
 	GLTexture texID;
-	TexInfo info;
 
 	TextureManager *manager;
 	int handle;		//Handle for texture manager
 
 public:
+	TexInfo info;
+
 	Texture();
 	Texture(GLTexture texID, TexInfo info, TextureManager *manager);
 

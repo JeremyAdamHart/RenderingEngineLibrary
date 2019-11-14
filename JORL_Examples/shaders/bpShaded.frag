@@ -37,13 +37,15 @@ float blinnPhongLighting(vec3 normal, vec3 position, vec3 viewPosition)
 */
 	float lambertion = clamp(dot(normal, light), 0.0, 1.0);
 
-	return ks*(alpha+2.0)*(0.5/M_PI) * clamp(pow(dot(normal, h), alpha), 0.0, 1.0)*lambertion
+	float specularCoefficient = lambertion;	//max(sign(lambertion), 0.0);
+
+	return ks*(alpha+2.0)*(alpha+4.0)/(8.0*M_PI*(exp2(-alpha/2.0)+alpha)) * clamp(pow(dot(normal, h), alpha), 0.0, 1.0)*specularCoefficient
 			+ kd*lambertion + ka;
 }
 
 
 void main(void)
-{
+{	
 	#ifdef USING_TEXTURE
 		vec3 baseColor = texture(colorTexture, vec2(FragmentTexCoord.x, FragmentTexCoord.y)).rgb;
 		float alpha = 1.0;

@@ -27,5 +27,24 @@ public:
 
 };
 
+class IndexedViewportVRContext {
+
+
+public:
+	IndexedFramebuffer framebuffer;
+	vr::IVRSystem *vrSystem;
+
+
+
+	IndexedViewportVRContext(TextureManager* texManager);
+
+	unsigned int renderTargetWidth();
+	unsigned int renderTargetHeight();
+
+	Texture getTexture();
+	void submitFrame(const IndexedFramebuffer& frame);
+	void submitFrameDirect(const IndexedFramebuffer& frame);
+
+};
 
 }

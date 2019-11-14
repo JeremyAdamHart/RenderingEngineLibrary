@@ -20,7 +20,7 @@ sptr<SphereGeometry::Type> createSphereGeometry(unsigned int azimuthDivisions, u
 	float uStep = 1.f / float(azimuthDivisions);
 	for (int i = 0; i < azimuthDivisions+1; i++) {
 		float v = 0.f;
-		float vStep = 1.f / float(altitudeDivisions);
+		float vStep = 1.f / float(altitudeDivisions-1);
 		for (int j = 0; j < altitudeDivisions; j++) {
 			positions.push_back(sphereEquation(u, v));
 			normals.push_back(orientation*normalize(positions.back()));

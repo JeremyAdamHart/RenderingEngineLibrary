@@ -162,14 +162,7 @@ Font createFont(FT_Library* ft, const char* fontFilename, TextureManager* texMan
 			GL_UNSIGNED_BYTE),
 		texManager,
 		bitmapTable.data());
-	/*
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex.getID());
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	*/
+	
 	font.tex = tex;
 
 	return font;
@@ -181,13 +174,14 @@ Character& Font::character(unsigned char c) {
 
 const Character& Font::character(unsigned char c) const { return charInfo.at(c); }
 
-void getTextBuffers(const char* text, const Font& font, std::vector<glm::vec3>* points, std::vector<glm::vec2>* uvs, std::vector<unsigned int>* faces) {
+void getTextBuffers(const char* text, const Font& font, glm::vec3 offset, float scale, std::vector<glm::vec3>* points, std::vector<glm::vec3>* offsets, std::vector<glm::vec2>* uvs, std::vector<unsigned int>* faces) {
 	int t_index = 0;
 	float horizontalOffset = 0.f;
 	while (text[t_index] != '\0') {
 		const Character& c = font.character(text[t_index]);
 		for (int i = 0; i < 4; i++) {
-			points->push_back(glm::vec3(c.pointCoords[i] + vec2(horizontalOffset, 0), 0.f));
+			points->push_back(glm::vec3((c.pointCoords[i] +vec2(horizontalOffset, 0))*scale, 0.f));
+			offsets->push_back(offset);
 			uvs->push_back(c.uvCoords[i]);
 		}
 
@@ -202,6 +196,10 @@ void getTextBuffers(const char* text, const Font& font, std::vector<glm::vec3>* 
 		horizontalOffset += c.horizontalAdvance;
 		t_index++;
 	}
+}
+
+void getTextBuffers(const char* text, const Font& font, std::vector<glm::vec3>* points, std::vector<glm::vec3>* offsets, std::vector<glm::vec2>* uvs, std::vector<unsigned int>* faces) {
+	getTextBuffers(text, font, vec3(0), 1.f, points, offsets, uvs, faces);
 }
 
 
