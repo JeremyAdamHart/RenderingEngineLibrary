@@ -380,12 +380,11 @@ float MeshInfoLoader::getBoundingRadius()
 	return boundingRadius;
 }
 
-ElementGeometry *objToElementGeometry(char *filename) {
+sptr<MeshGeometryType> objToElementGeometry(char *filename) {
 	MeshInfoLoader minfo(filename);
 	
-	return new ElementGeometry(minfo.vertices.data(), minfo.normals.data(),
-		minfo.uvs.data(), minfo.indices.data(), minfo.vertices.size(),
-		minfo.indices.size(), GL_TRIANGLES);
+	return make<MeshGeometryType>(GL_TRIANGLES, minfo.indices.data(), minfo.indices.size(), 
+		minfo.vertices.data(), minfo.normals.data(), minfo.uvs.data(), minfo.vertices.size());
 }
 
 void writeToPly(const char* filename, std::vector<glm::vec3>* vertices, std::vector<unsigned int>* faces) {

@@ -7,7 +7,6 @@ using namespace std;
 
 #include "ModelLoader.h"
 #include "Drawable.h"
-#include "SimpleGeometry.h"
 #include "SimpleShader.h"
 #include "ColorMat.h"
 #include "TrackballCamera.h"
@@ -53,6 +52,8 @@ using namespace std;
 #include "FontToTexture.h"
 #include "TextShader.h"
 
+#include "ShadowShader.h"
+
 //Random
 #include <random>
 #include <ctime>
@@ -65,6 +66,10 @@ using namespace std;
 
 
 using namespace renderlib;
+
+using PositionGeometry = GeometryT<attrib::Position>;
+using PositionNormalGeometry = GeometryT<attrib::Position, attrib::Normal>;
+
 
 TrackballCamera cam(
 	vec3(0, 0, -1), vec3(0, 0, 2),
@@ -197,11 +202,12 @@ void WindowManager::velocitySpringLoop() {
 	float damping = 1000.f;
 
 	vec3 line[2] = { glm::vec3(0.f, 0.f, 0.f), vec3(0.f, 0.f, 0.f) };
-	auto velocityGeometry = std::make_shared<SimpleGeometry>(line, 2, GL_LINES);
+	//auto velocityGeometry = std::make_shared<SimpleGeometry>(line, 2, GL_LINES);
+	auto velocityGeometry = std::make_shared<PositionGeometry>(GL_LINES, line, 2);
 	Drawable velocityLine(velocityGeometry, std::make_shared<ColorMat>(vec3(0.f, 1.f, 0.f)));
 
 	vec3 position(0.f);
-	auto springGeometry = std::make_shared<SimpleGeometry>(&position, 1, GL_POINTS);
+	auto springGeometry = std::make_shared<PositionGeometry>(GL_POINTS, &position, 1);
 	Drawable spring(
 		springGeometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
 	
@@ -235,7 +241,7 @@ void WindowManager::velocitySpringLoop() {
 
 		line[0] = vec3(springPosition, 0.f);
 		line[1] = vec3(springPosition + springVelocity, 0.f);
-		velocityGeometry->loadGeometry(line, 2);
+		velocityGeometry->loadBuffers(line, 2);
 
 		printf("Mouse velocity = %f %f\nSpring velocity = %f %f acceleration = %f %f\n", 
 			mouseVelocity.x, mouseVelocity.y,  
@@ -278,7 +284,7 @@ void WindowManager::waveSimulationLoop(int numSegments, float dt) {
 		//pressuresT1[i] = pressuresT0[i] = sin(M_PI*6.f*u)*0.01f;
 	}
 
-	auto geometry = make_shared<SimpleGeometry>(GL_LINE_STRIP);
+	auto geometry = make_shared<PositionGeometry>(GL_LINE_STRIP);
 	Drawable waveDrawable(geometry, make_shared<ColorMat>(vec3(1, 0, 0)));
 	SimpleShader simpleShader;
 
@@ -354,7 +360,7 @@ void WindowManager::waveSimulationLoop(int numSegments, float dt) {
 		for (int i = 0; i < numSegments; i++) {
 			points.push_back(vec3(leftEdge + float(i)*step, pressuresT2[i] * height, 0.f));
 		}
-		geometry->loadGeometry(points.data(), points.size());
+		geometry->loadBuffers(points.data(), points.size());
 
 		simpleShader.draw(cam, waveDrawable);
 
@@ -373,7 +379,7 @@ int intRand(int range) {
 	return rand() % range;
 }
 
-void loadGeometryWithHalfEdgeMesh(SimpleGeometry* geom, HalfEdgeMesh<vec3>& mesh) {
+void loadGeometryWithHalfEdgeMesh(GeometryT<attrib::Position>* geom, HalfEdgeMesh<vec3>& mesh) {
 	vector<vec3> points;
 
 	for (auto f : mesh.faces) {
@@ -401,7 +407,7 @@ void loadGeometryWithHalfEdgeMesh(SimpleGeometry* geom, HalfEdgeMesh<vec3>& mesh
 		if (count >= 10) printf("Face with > 10 sides detected\n");
 	}
 
-	geom->loadGeometry(points.data(), points.size());
+	geom->loadBuffers(points.data(), points.size());
 }
 
 template<typename T>
@@ -416,7 +422,6 @@ bool allDistinct(T* arr, size_t size) {
 	return true;
 }
 
-
 void WindowManager::convexTestLoop() {
 	srand(time(0));
 
@@ -430,8 +435,7 @@ void WindowManager::convexTestLoop() {
 
 	MeshInfoLoader modelMinfo("models/dragon.obj");
 	//MeshInfoLoader modelMinfo("untrackedmodels/181203_kale_01_use.obj");
-	shared_ptr<ElementGeometry> modelGeom = make_shared<ElementGeometry>(modelMinfo.vertices.data(), modelMinfo.normals.data(), nullptr, 
-		modelMinfo.indices.data(), modelMinfo.vertices.size(), modelMinfo.indices.size());
+	auto modelGeom = make<IndexGeometryUint<attrib::Position, attrib::Normal>>(GL_TRIANGLES, modelMinfo.indices.data(), modelMinfo.indices.size(), modelMinfo.vertices.data(), modelMinfo.normals.data(), modelMinfo.vertices.size());
 
 	Drawable modelDrawable(modelGeom, make_shared<ColorMat>(vec3(0, 1, 0)));
 	modelDrawable.addMaterial(new ShadedMat(0.3f, 0.4f, 0.4f, 5.f));
@@ -487,7 +491,8 @@ void WindowManager::convexTestLoop() {
 	SimpleTexManager tm;
 	SimpleShader simpleShader;
 	BlinnPhongShader bpShader;
-	shared_ptr<ElementGeometry> geom = make_shared<ElementGeometry>(points.data(), normals.data(), nullptr, indices.data(), points.size(), indices.size());
+	auto geom = make<IndexGeometryUint<attrib::Position, attrib::Normal>>(
+		GL_TRIANGLES, indices.data(), indices.size(), points.data(), normals.data(), points.size());
 	//enum {POSITIONS=0, NORMALS};
 	//StreamGeometry<vec3, vec3> geom({ false, false })
 
@@ -500,17 +505,17 @@ void WindowManager::convexTestLoop() {
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	Drawable hullObject(make_shared<SimpleGeometry>(hullPoints.data(), hullPoints.size(), GL_POINTS), 
+	Drawable hullObject(make<GeometryT<attrib::Position>>(GL_POINTS, hullPoints.data(), hullPoints.size()),
 		make_shared<ColorMat>(vec3(1, 1, 1)));
 
 	vector<vec3> debugPoints;
-	shared_ptr<SimpleGeometry> debugGeometry = make_shared<SimpleGeometry>(GL_POINTS);
+	auto debugGeometry = make<GeometryT<attrib::Position>>(GL_POINTS);
 	Drawable debugObject(debugGeometry, make_shared<ColorMat>(vec3(0.2, 0.5, 1)));
 
-	shared_ptr<SimpleGeometry> halfEdgeDebugGeometry = make_shared<SimpleGeometry>(GL_LINES);
+	auto halfEdgeDebugGeometry = make<GeometryT<attrib::Position>>(GL_LINES);
 	Drawable halfEdgeDebugObject(halfEdgeDebugGeometry, make_shared<ColorMat>(vec3(1.f, 0.f, 1.f)));
 
-	shared_ptr<SimpleGeometry> halfEdgeTrackingGeometry = make_shared<SimpleGeometry>(GL_LINES);
+	auto halfEdgeTrackingGeometry = make<GeometryT<attrib::Position>>(GL_LINES);
 	Drawable halfEdgeTrackingObject(halfEdgeTrackingGeometry, make_shared<ColorMat>(vec3(0, 1.f, 0.f)));
 	SlotMap<HalfEdge<vec3>>::Index trackingEdge = mesh.edges.begin().toIndex();
 
@@ -594,8 +599,9 @@ void WindowManager::convexTestLoop() {
 				halfEdgeToFaceList(&points, &indices, mesh);
 				normals = calculateNormalsImp(&points, &indices);
 				vector<vec2> texCoords(normals.size());
-				geom->loadGeometry(points.data(), normals.data(), texCoords.data(), &indices[0], points.size(), indices.size());
-				debugGeometry->loadGeometry(debugPoints.data(), debugPoints.size());
+				geom->loadIndices(indices.data(), indices.size());
+				geom->loadBuffers(points.data(), normals.data(), points.size());
+				debugGeometry->loadBuffers(debugPoints.data(), debugPoints.size());
 				
 			}
 			
@@ -619,7 +625,7 @@ void WindowManager::convexTestLoop() {
 			vec3 normal = (!mesh.isBoundary(trackingEdge)) ? mesh.normal(mesh[mesh[trackingEdge].face]) : vec3(0.f);
 			trackingEdge = mesh[trackingEdge].pair;
 			vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos + normal*0.01f, mesh[mesh[mesh.prev(trackingEdge)].head].pos + normal*0.01f };
-			halfEdgeTrackingGeometry->loadGeometry(endPoints, 2);
+			halfEdgeTrackingGeometry->loadBuffers(endPoints, 2);
 
 			//Temporary testing
 			vec3 furthestPoint;
@@ -636,7 +642,7 @@ void WindowManager::convexTestLoop() {
 			}
 
 			vec3 arr[2] = { furthestPoint, faceCenter };
-			debugGeometry->loadGeometry(arr, 2);
+			debugGeometry->loadBuffers(arr, 2);
 		}
 		else if(glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE){
 			pKeyPressed = false;
@@ -648,7 +654,7 @@ void WindowManager::convexTestLoop() {
 			vec3 normal = (!mesh.isBoundary(trackingEdge)) ? mesh.normal(mesh[mesh[trackingEdge].face]) : vec3(0.f);
 			trackingEdge = mesh[trackingEdge].next;
 			vec3 endPoints[2] = { mesh[mesh[trackingEdge].head].pos + normal*0.01f, mesh[mesh[mesh.prev(trackingEdge)].head].pos + normal*0.01f };
-			halfEdgeTrackingGeometry->loadGeometry(endPoints, 2);
+			halfEdgeTrackingGeometry->loadBuffers(endPoints, 2);
 		}
 		else if(glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE){
 			nKeyPressed = false;
@@ -1355,6 +1361,7 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 
 	SimpleTexManager tm;
 	SimpleShader shader;
+	BlinnPhongShaderT bpShader;
 
 	float r0 = 0.2f;
 	float r1 = 0.15f;
@@ -1388,7 +1395,7 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 
 	std::vector<vv::Adjacency> adjacencyList = vv::faceListToVertexVertex(data.faces, data.points);
 
-	auto geometry = make<ElementGeometryT<unsigned int, glm::vec3>>(GL_TRIANGLES);
+	auto geometry = make<IndexGeometryUint<attrib::Position>>(GL_TRIANGLES);
 
 	geometry->loadIndices(data.faces.data(), data.faces.size());
 	geometry->loadBuffers(data.points.data(), data.points.size());
@@ -1415,18 +1422,14 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	std::vector<unsigned int> faces;
 
 	TextShader textShader;
-	getTextBuffers("Words with lots of different letters", font, &verts, &offsets, &uvs, &faces);
-	//auto fontGeom = make<GeometryT<glm::vec3, glm::vec3, glm::vec2>>(GL_TRIANGLE_FAN);
-	auto fontGeom = make<ElementGeometryT<unsigned int, glm::vec3, glm::vec3, glm::vec2>>(GL_TRIANGLES);
-	//fontGeom->loadBuffers(verts.data(), verts.data(), c.uvCoords, 4);
-	fontGeom->loadBuffers(verts.data(), offsets.data(), uvs.data(), verts.size());
+	getTextBuffers("Random words", font, &verts, &offsets, &uvs, &faces);
+	auto fontGeom = make<IndexGeometryT<unsigned int, attrib::Position, attrib::TexCoord>>(GL_TRIANGLES);
+	fontGeom->loadBuffers(verts.data(), uvs.data(), verts.size());
 	fontGeom->loadIndices(faces.data(), faces.size());
 
 	Drawable fontDrawable(fontGeom, make<TextureMat>(font.tex));
 	fontDrawable.addMaterial(make<ColorMat>(vec4(0.1f, 0.2f, 0.4f, 1.f)));
 	SimpleTexShader texShader;	
-
-	BlinnPhongShader bpShader;
 
 	Drawable sphereDrawable(createSphereGeometry(), make<ColorMat>(vec3(1.0, 1.0, 1.0)));
 	sphereDrawable.addMaterial(make<ShadedMat>(0.0f, 0.8f, 0.5f, 10.f));
@@ -1438,6 +1441,24 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 	lightDrawable.addMaterial(make<ShadedMat>(1.f, 0.f, 0.f, 10.f));
 	lightDrawable.position = lightPosition;
 	lightDrawable.setScale(vec3(0.2, 0.2, 0.2));
+
+	auto testGeom = make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES);
+	testGeom->loadBuffers(verts.data(), uvs.data(), verts.size());
+	GeometryT<attrib::Position> testGeom2;
+
+	std::vector<vec3> bpPositions = { vec3(0, 0, 0.1), vec3(1, 0, 0.1), vec3(0, 1, 0.1) };
+	std::vector<vec3> bpNormals = { vec3(0, 0, 1), vec3(0, 0, 1), vec3(0, 0, 1) };
+	auto bpGeom = make<GeometryT<attrib::Normal, attrib::Position>>(GL_TRIANGLES);
+	bpGeom->loadBuffers(bpNormals.data(), bpPositions.data(), bpPositions.size());
+
+	Drawable bpDrawable(bpGeom, make<ColorMat>(vec4(1.f, 0.f, 0.f, 1.f)));
+	bpDrawable.addMaterial(make<ShadedMat>(0.3f, 0.4f, 0.4f, 10.f));
+
+	//loadBuffers_rec2<GeometryT<attrib::Position>, attrib::Position>(&testGeom2, vertices->data());
+	//loadBuffers_rec2<GeometryT<attrib::Position, attrib::TexCoord>, attrib::Position, attrib::TexCoord>
+	//	(static_cast<GeometryT<attrib::Position, attrib::TexCoord>*>(testGeom.get()), verts.data(), uvs.data());
+
+	//testGeom->loadBuffer<attrib::Position>(verts.data());
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1488,9 +1509,10 @@ void WindowManager::laplacianSmoothingMeshLoop() {
 		//shader.draw(cam, mesh);
 
 		textShader.draw(cam, fontDrawable);
+		//bpShader.draw(cam, vec3(10, 10, 10), bpDrawable);
 
-		bpShader.draw(cam, lightPosition, sphereDrawable);
-		bpShader.draw(cam, lightPosition, planeDrawable);
+		//bpShader.draw(cam, lightPosition, sphereDrawable);
+		//bpShader.draw(cam, lightPosition, planeDrawable);
 		bpShader.draw(cam, lightPosition, lightDrawable);
 		
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -1516,7 +1538,7 @@ void WindowManager::growthLoop2D() {
 	SimpleTexManager tm;
 	SimpleShader shader;
 
-	auto debugGeometry = make<SimpleGeometry>(GL_LINES);
+	auto debugGeometry = make<PositionGeometry>(GL_LINES);
 	vector<vec3> debugPoints;
 	Drawable debugDrawable(
 		debugGeometry,
@@ -1574,7 +1596,7 @@ void WindowManager::growthLoop2D() {
 
 	
 
-	auto geometry = make<ElementGeometryT <unsigned int, glm::vec3>>(GL_TRIANGLES, indices.data(), indices.size(), points.data(), points.size());
+	auto geometry = make<IndexGeometryUint <attrib::Position>>(GL_TRIANGLES, indices.data(), indices.size(), points.data(), points.size());
 
 	Drawable tree(geometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
 
@@ -1720,7 +1742,7 @@ void WindowManager::growthLoop2D() {
 
 			geometry->loadBuffers(points.data(), points.size());
 			geometry->loadIndices(indices.data(), indices.size());
-			debugGeometry->loadGeometry(debugPoints.data(), debugPoints.size());
+			debugGeometry->loadBuffers(debugPoints.data(), debugPoints.size());
 
 			
 		}
@@ -1774,7 +1796,7 @@ void WindowManager::laplacianSmoothing() {
 	vec3 newPoints[SIZE];
 	copy(begin(points), end(points), begin(newPoints));
 
-	std::shared_ptr<SimpleGeometry> geometry = make_shared<SimpleGeometry>(points, SIZE, GL_LINE_STRIP);
+	auto geometry = make<GeometryT<attrib::Position>>(GL_LINE_STRIP, points, SIZE);
 	
 	Drawable curve(geometry, std::make_shared<ColorMat>(vec3(1, 0, 0)));
 
@@ -1843,7 +1865,7 @@ void WindowManager::laplacianSmoothing() {
 				newPoints[SIZE-1] = points[SIZE-1];
 				//*/
 
-				geometry->loadGeometry(newPoints, SIZE);
+				geometry->loadBuffers(newPoints, SIZE);
 
 				copy(begin(newPoints), end(newPoints), begin(points));
 			}
@@ -1890,8 +1912,8 @@ void WindowManager::noiseLoop() {
 	SimpleTexManager tm;
 	PerlinNoiseShader2D perlinShader;
 	Drawable texSquare(
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
-		new TextureMat(createTexture2D(1, 1, &tm)));
+		make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<TextureMat>(createTexture2D(1, 1, &tm)));
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1908,6 +1930,140 @@ void WindowManager::noiseLoop() {
 
 		perlinShader.draw(cam, texSquare);
 
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
+void WindowManager::simpleModelLoop() {
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+
+	BlinnPhongShader bpShader;
+
+	//Dragon
+	Drawable dragon(
+		objToElementGeometry("models/dragon.obj"),
+		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)));
+	dragon.addMaterial(make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	//Plane
+	Drawable plane(createPlaneGeometry(),
+		make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	plane.addMaterial(make<ColorMat>(vec3(1.f, 0, 0)));
+	plane.position = vec3(0, -0.3, 0);
+
+	vec3 lightPos(10, 10, 10);
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		bpShader.draw(cam, lightPos, dragon);
+		bpShader.draw(cam, lightPos, plane);
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
+void WindowManager::shadowLoop() {
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+
+	BlinnPhongShader bpShader;
+	ShadowShader<ColorMat> shadowShader;
+	DepthVarianceShader depthShader;
+	GaussianBlurShader blurShader;
+
+	TrackballCamera shadowCam(
+		normalize(vec3(-1, -1, -1)), vec3(2, 2, 2),
+		glm::perspective(70.f*3.14159f / 180.f, 1.f, 0.1f, 100.f));
+
+	Framebuffer fbWindow(window_width, window_height);
+
+	const int SMAP_WIDTH = 1000;
+	const int SMAP_HEIGHT = 1000;
+	
+	Framebuffer depthFramebuffer = createNewFramebuffer(SMAP_WIDTH, SMAP_HEIGHT);
+	depthFramebuffer.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { SMAP_WIDTH, SMAP_HEIGHT }, 0,
+		GL_RG, GL_RG32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0);
+	depthFramebuffer.addTexture(createDepthTexture(SMAP_WIDTH, SMAP_HEIGHT, &tm), GL_DEPTH_ATTACHMENT);
+
+	Framebuffer gaussianFramebuffer = createNewFramebuffer(SMAP_WIDTH, SMAP_HEIGHT);
+	gaussianFramebuffer.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { SMAP_WIDTH, SMAP_HEIGHT }, 0,
+		GL_RG, GL_RG32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0);
+	gaussianFramebuffer.addTexture(createDepthTexture(SMAP_WIDTH, SMAP_HEIGHT, &tm), GL_DEPTH_ATTACHMENT);
+
+	Drawable blurPlaneHorizontal(createPlaneGeometry(Orientation::PositiveZ),
+		make<TextureMat>(depthFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
+
+	Drawable blurPlaneVertical(createPlaneGeometry(Orientation::PositiveZ),
+		make<TextureMat>(gaussianFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
+
+	//Dragon
+	Drawable dragon(
+		objToElementGeometry("models/dragon.obj"),
+		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)));
+	dragon.addMaterial(make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	//Plane
+	Drawable plane(createPlaneGeometry(),
+		make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	plane.addMaterial(make<ColorMat>(vec3(1.f, 0, 0)));
+	plane.position = vec3(0, -0.3, 0);
+
+	vec3 lightPos(10, 10, 10);
+
+	const int N = 5;
+	const float SIGMA = 0.4f*float(N + 1);
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	while (!glfwWindowShouldClose(window)) {
+
+		if (reloadShaders) {
+			shadowShader = ShadowShader<ColorMat>();
+			reloadShaders = false;
+		}
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		depthFramebuffer.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		depthShader.draw(shadowCam, dragon);
+		depthShader.draw(shadowCam, plane);
+
+		gaussianFramebuffer.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		blurShader.draw(SIGMA, N, GaussianBlurShader::Direction::X, blurPlaneHorizontal);
+
+		depthFramebuffer.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		blurShader.draw(SIGMA, N, GaussianBlurShader::Direction::Y, blurPlaneVertical);
+
+		fbWindow.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shadowShader.draw(cam, lightPos, shadowCam, depthFramebuffer.getTexture(GL_COLOR_ATTACHMENT0), dragon);
+		shadowShader.draw(cam, lightPos, shadowCam, depthFramebuffer.getTexture(GL_COLOR_ATTACHMENT0), plane);
+		//bpShader.draw(cam, lightPos, dragon);
+		//bpShader.draw(cam, lightPos, plane);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
@@ -1959,34 +2115,50 @@ void WindowManager::glowTest() {
 		|| !gaussianFramebuffer.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT)) {
 		printf("Failed to initialize gaussianFramebuffer\n");
 	}
+
+	Framebuffer gaussianFramebuffer2 = createNewFramebuffer(window_width, window_height);
+	if (!gaussianFramebuffer2.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { window_width, window_height }, 0,
+		GL_RGBA, GL_RGB32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0)
+		|| !gaussianFramebuffer2.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT)) {
+		printf("Failed to initialize gaussianFramebuffer\n");
+	}
 	
 	Framebuffer fbWindow(window_width, window_height);
+
+	Camera identityCam;
 
 	FlatColorShader flatShader;
 	GaussianBlurShader gaussianShader;
 
 	Drawable texSquareHorizontal(
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
-		new TextureMat(lightFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
+		make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<TextureMat>(lightFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
 
 	Drawable texSquareVertical(
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
-		new TextureMat(gaussianFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
+		make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<TextureMat>(gaussianFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
+
+	Drawable texSquareFinal(
+		make < GeometryT < attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<TextureMat>(gaussianFramebuffer2.getTexture(GL_COLOR_ATTACHMENT0))
+	);
 
 
 	BlinnPhongShader bpShader;
+	SimpleTexShader texShader;
 
 	//Dragon
 	Drawable dragon(
 		objToElementGeometry("models/dragon.obj"),
-		new ColorMat(vec3(0.75f, 0.1f, 0.3f)));
+		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)));
 
 	Drawable glowDragon(
 		objToElementGeometry("models/dragon.obj"),
-		new ColorMat(vec3(0.75f, 0.1f, 0.3f)*40.f));
-	//dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
+		//make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)*5.f));
+		//make<ColorMat>(vec3(0.2f, 0.4f, 1.f)*5.f));
+		make<ColorMat>(vec3(1.f, 0.2f, 0.6f)*5.f));
 
-	const int N = 301;
+	const int N = 100;
 	const float SIGMA = 0.4f*float(N + 1);
 
 	glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -1999,6 +2171,13 @@ void WindowManager::glowTest() {
 			glViewport(0, 0, window_width, window_height);
 		}
 
+		int texelOffsetMin;
+		glGetIntegerv(GL_MIN_PROGRAM_TEXEL_OFFSET, &texelOffsetMin);
+		int texelOffsetMax;
+		glGetIntegerv(GL_MAX_PROGRAM_TEXEL_OFFSET, &texelOffsetMax);
+
+		printf("Min = %d Max = %d\n", texelOffsetMin, texelOffsetMax);
+
 		lightFramebuffer.use();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		flatShader.draw(cam, glowDragon);
@@ -2007,13 +2186,16 @@ void WindowManager::glowTest() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		gaussianShader.draw(SIGMA, N, GaussianBlurShader::Direction::X, texSquareHorizontal);
 
-		fbWindow.use();
+		gaussianFramebuffer2.use();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		gaussianShader.draw(SIGMA, N, GaussianBlurShader::Direction::Y, texSquareVertical);
 
-		glClear(GL_DEPTH_BUFFER_BIT);
-		bpShader.draw(cam, vec3(10, 10, 10), dragon);
+		fbWindow.use();
+		texShader.draw(identityCam, texSquareFinal);
 
+		glClear(GL_DEPTH_BUFFER_BIT);
+		//bpShader.draw(cam, vec3(10, 10, 10), dragon);
+		flatShader.draw(cam, glowDragon);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
@@ -2046,18 +2228,19 @@ void WindowManager::rigidBodyTest() {
 	};
 
 	unsigned int planeIndices[6] = { 0, 1, 2, 0, 2, 3 };
-
-	Drawable plane(new ElementGeometry(planePoints, planeNormals, nullptr, planeIndices, 4, 6), 
-		new ShadedMat(0.2, 0.4f, 0.4f, 1.f));
-	plane.addMaterial(new ColorMat(vec3(1.f, 0, 0)));
-
+	//NormalIndexGeometry testGeom (GL_TRIANGLES, planeIndices, 6, planePoints, planeNormals, 4, 1);
+	Drawable plane(make<NormalIndexGeometry>(GL_TRIANGLES, planeIndices, 6, planePoints, planeNormals, 4, 1),
+		make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	plane.addMaterial(make<ColorMat>(vec3(1.f, 0, 0)));
+	
 	SimpleTexManager tm;
 	MeshInfoLoader minfo("models/coryPrism.obj");
 
-	Drawable rectPrism(new ElementGeometry(
-		minfo.vertices.data(), minfo.normals.data(), minfo.uvs.data(), minfo.indices.data(),
-		minfo.vertices.size(), minfo.indices.size()), 
-		new ShadedMat(0.2f, 0.4f, 0.4f, 10.f));
+	Drawable rectPrism(make<TexNormalIndexGeometry>(GL_TRIANGLES,
+		minfo.indices.data(), minfo.indices.size(),
+		minfo.vertices.data(), minfo.normals.data(), minfo.uvs.data(), 
+		minfo.vertices.size()), 
+		make<ShadedMat>(0.2f, 0.4f, 0.4f, 10.f));
 	rectPrism.addMaterial(new ColorMat(vec3(1.f)));
 
 	BlinnPhongShader bpShader;
@@ -2119,10 +2302,6 @@ void WindowManager::rigidBodyTest() {
 		bpShader.draw(cam, lightPos, rectPrism);
 		bpShader.draw(cam, lightPos, plane);
 
-//		static int count = 0;
-//		printf("count %d\n", count);
-//		count++;
-
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -2177,9 +2356,9 @@ void WindowManager::adaptiveNoiseLoop() {
 			image[y*DIMENSION + x] = vec3(1.f)*simpNoise.evaluateAt(glm::vec2(float(x) / float(DIMENSION - 1), float(y) / float(DIMENSION - 1)));
 		}
 	}
-	GeometryT<vec3, vec4, float> testGeometry;
+	//GeometryT<vec3, vec4, float> testGeometry;
 	SimpleTexShader texShader;	
-	auto texGeometry = std::make_shared<SimpleTexGeometry>(points, coords, 6, GL_TRIANGLES);
+	auto texGeometry = make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6);
 	Texture noiseTex = createTexture2DFromData(TexInfo(GL_TEXTURE_2D, { int(DIMENSION), int(DIMENSION) }, 0, GL_RGB, GL_RGB16F, GL_FLOAT), &tm, image);
 	Drawable texDrawable(texGeometry, std::make_shared<TextureMat>(noiseTex));
 	
@@ -2292,15 +2471,15 @@ void WindowManager::mainLoop() {
 	//Dragon
 	Drawable dragon(
 		objToElementGeometry("models/dragon.obj"),
-		new ColorMat(vec3(0.75f, 0.1f, 0.3f)));
+		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)));
 	dragon.addMaterial(new ShadedMat(0.2f, 0.5f, 0.3f, 10.f));
 
 	Drawable texSquare(
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
-		new TextureMat(fbTex.getTexture(GL_COLOR_ATTACHMENT0)));
+		make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<TextureMat>(fbTex.getTexture(GL_COLOR_ATTACHMENT0)));
 
-	texSquare.addMaterial(new TextureMat(pnFbo.getTexture(GL_COLOR_ATTACHMENT0), TextureMat::POSITION));
-	texSquare.addMaterial(new TextureMat(pnFbo.getTexture(GL_COLOR_ATTACHMENT1), TextureMat::NORMAL));
+	texSquare.addMaterial(make<TextureMat>(pnFbo.getTexture(GL_COLOR_ATTACHMENT0), TextureMat::POSITION));
+	texSquare.addMaterial(make<TextureMat>(pnFbo.getTexture(GL_COLOR_ATTACHMENT1), TextureMat::NORMAL));
 
 	SimpleTexShader texShader;
 	SimpleShader shader;
@@ -2385,8 +2564,8 @@ void WindowManager::mainLoop() {
 void WindowManager::treeGrowthTest() {
 	SimpleShader shader;
 	
-	auto pointGeometry = make<GeometryT<vec3>>(GL_POINTS);
-	auto lineGeometry = make<GeometryT<vec3>>(GL_LINES);
+	auto pointGeometry = make<GeometryT<attrib::Position>>(GL_POINTS);
+	auto lineGeometry = make<GeometryT<attrib::Position>>(GL_LINES);
 
 	Drawable pointDrawable(pointGeometry, make<ColorMat>(vec3(1, 0, 0)));
 	Drawable lineDrawable(lineGeometry, make<ColorMat>(vec3(0, 1, 0)));
@@ -2408,8 +2587,8 @@ void WindowManager::particleLoop() {
 	HeatParticleShader pShader;
 
 	HeatParticleSystem pSystem;
-	shared_ptr<HeatParticleGeometry> pGeometry (new HeatParticleGeometry());
-	shared_ptr<HeatParticleMat> pMat(new HeatParticleMat(0.07f));
+	auto pGeometry = make<HeatParticleGeometry>(GL_TRIANGLE_FAN);
+	auto pMat = make<HeatParticleMat>(0.07f);
 
 	Drawable pDrawable(pGeometry, pMat);
 
@@ -2459,7 +2638,8 @@ void WindowManager::particleLoop() {
 
 		pSystem.runSimulation((currentTime - timeElapsed)*0.5f);
 
-		pGeometry->loadParticles(pSystem.particles.data(), pSystem.particles.size());
+		//pGeometry->loadParticles(pSystem.particles.data(), pSystem.particles.size());
+		updateHeatParticleGeometry(*pGeometry, pSystem.particles.data(), pSystem.particles.size());
 
 		pShader.draw(cam, pDrawable);
 
@@ -2469,7 +2649,7 @@ void WindowManager::particleLoop() {
 		glfwPollEvents();
 	}
 }
-
+/*
 const float TROPISM = 0.0f;
 const float SEARCH_RADIUS = 0.2f;
 const float SEARCH_FALLOFF = 0.f;
@@ -2736,12 +2916,6 @@ void WindowManager::testLoop() {
 		vec3(2.f, 4.f, 2.f)
 	};
 
-	/*vector<vec3> normals{
-		vec3(2.f, 0.f, 0.f),
-		normalize(normalize(points[1] - points[0]) + normalize(points[1] - points[2])),
-		normalize(vec3(0, 1, -1))*0.5f
-	};*/
-
 	vector<vec3> normals;
 
 	normals.push_back(vec3(1, 0, 0));
@@ -2769,20 +2943,7 @@ void WindowManager::testLoop() {
 
 	//Space colonization visualization
 	vector<vec3> spacePoints = generateSpacePoints(50000);
-	/*vec3 meanPoint(0);
-	for (vec3 point : spacePoints) {
-		meanPoint += point;
-	}
-	meanPoint /= float(spacePoints.size());
-
-	vector<vec3> nearbyPoints = getDirectionVectors(spacePoints, meanPoint, 2.f, 0.f);
-	mat3 covariance = calculateCovariance(nearbyPoints);
-	vec3 axis0 = powerIteration(covariance, vec3(1, 0, 0), {}, 30);
-	vec3 axis1 = powerIteration(covariance, vec3(0, 1, 0), { axis0 }, 30);
-	vec3 axis2 = powerIteration(covariance, vec3(0, 0, 1), { axis0, axis1 }, 30);
-
-	vector<vec3> lines = { meanPoint, axis0, meanPoint, axis1, meanPoint, axis2 };*/
-
+	
 	float START_RADIUS = 0.05f;
 	vector<vec3> treePoints = { vec3(0, -1.2, 0), vec3(0, -1, 0) };
 	vector<vec3> treeNormals = { vec3(1, 0, 0), vec3(1, 0, 0) };
@@ -2885,7 +3046,9 @@ void WindowManager::testLoop() {
 
 	glfwTerminate();
 }
+*/
 
+/*
 void WindowManager::objLoadingLoop() {
 
 	glfwSetKeyCallback(window, keyCallback);
@@ -3008,7 +3171,7 @@ void WindowManager::objLoadingLoop() {
 
 	glfwTerminate();
 }
-
+*/
 
 void initGLExtensions() {
 #ifndef USING_GLEW

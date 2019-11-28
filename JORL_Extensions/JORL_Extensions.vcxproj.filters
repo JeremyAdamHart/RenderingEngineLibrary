@@ -7,7 +7,6 @@
     <ClCompile Include="BlendShader.cpp" />
     <ClCompile Include="ColorMat.cpp" />
     <ClCompile Include="ColorShader.cpp" />
-    <ClCompile Include="ElementGeometry.cpp" />
     <ClCompile Include="MeshInfoLoader.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="MultiBuffer.cpp" />
@@ -15,7 +14,6 @@
     <ClCompile Include="PosNormalShader.cpp" />
     <ClCompile Include="ProcessingShader.cpp" />
     <ClCompile Include="ShadedMat.cpp" />
-    <ClCompile Include="SimpleGeometry.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
     <ClCompile Include="SimpleTexManager.cpp" />
     <ClCompile Include="simpleTexShader.cpp" />
@@ -25,11 +23,11 @@
     <ClCompile Include="BlinnPhongShader.cpp" />
     <ClCompile Include="TrackballCamera.cpp" />
     <ClCompile Include="TrackerCamera.cpp" />
-    <ClCompile Include="VertexBufferTemplates.cpp" />
     <ClCompile Include="GlowShader.cpp" />
     <ClCompile Include="NormalDisplayShader.cpp" />
     <ClCompile Include="TemplatedGeometry.cpp" />
     <ClCompile Include="CommonGeometry.cpp" />
+    <ClCompile Include="ShadowShader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tinyply\source\tinyply.h" />
@@ -39,9 +37,6 @@
     <ClInclude Include="ColorMat.h" />
     <ClInclude Include="ColorSetMat.h" />
     <ClInclude Include="ColorShader.h" />
-    <ClInclude Include="DrawResourceHandler.h" />
-    <ClInclude Include="ElementGeometry.h" />
-    <ClInclude Include="Light.h" />
     <ClInclude Include="MeshInfoLoader.h" />
     <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="MultiBuffer.h" />
@@ -49,7 +44,6 @@
     <ClInclude Include="PosNormalShader.h" />
     <ClInclude Include="ProcessingShader.h" />
     <ClInclude Include="ShadedMat.h" />
-    <ClInclude Include="SimpleGeometry.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="SimpleTexManager.h" />
     <ClInclude Include="simpleTexShader.h" />
@@ -61,12 +55,12 @@
     <ClInclude Include="BlinnPhongShader.h" />
     <ClInclude Include="TrackballCamera.h" />
     <ClInclude Include="TrackerCamera.h" />
-    <ClInclude Include="VertexBufferTemplates.h" />
     <ClInclude Include="GlowShader.h" />
     <ClInclude Include="NormalDisplayShader.h" />
     <ClInclude Include="TemplatedGeometry.h" />
     <ClInclude Include="CommonGeometry.h" />
     <ClInclude Include="ShaderCompiler.h" />
+    <ClInclude Include="ShadowShader.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

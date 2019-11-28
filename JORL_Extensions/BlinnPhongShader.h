@@ -25,6 +25,7 @@ public:
 	BlinnPhongShaderT();
 	
 	void draw(const Camera &cam, glm::vec3 lightPos, Drawable &obj);
+	void drawVertexBinding(const Camera& cam, glm::vec3 lightPos, Drawable &obj);
 };
 
 

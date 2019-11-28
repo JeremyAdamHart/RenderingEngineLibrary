@@ -10,8 +10,6 @@
 #include "SimpleTexManager.h"
 #include "TextureCreation.h"
 #include "TextureMat.h"
-#include "SimpleGeometry.h"
-#include "ElementGeometry.h"
 #include "simpleTexShader.h"
 #include "BlinnPhongShader.h"
 #include "MeshInfoLoader.h"
@@ -181,12 +179,12 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 
 	//Squares for left and right views
 	Drawable leftSquare(
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
-		new TextureMat(vrContext.getTexture(vr::Eye_Left)));
+		make<TextureGeometry>(GL_TRIANGLES, points, coords, 6),
+		make<TextureMat>(vrContext.getTexture(vr::Eye_Left)));
 
 	Drawable rightSquare(
-		new SimpleTexGeometry(points, coords, 6, GL_TRIANGLES),
-		new TextureMat(vrContext.getTexture(vr::Eye_Right)));
+		make<TextureGeometry>(GL_TRIANGLES, points, coords, 6),
+		make<TextureMat>(vrContext.getTexture(vr::Eye_Right)));
 
 	SimpleTexShader texShader;
 	BlinnPhongShader bpTexShader(BPTextureUsage::TEXTURE);
@@ -197,7 +195,7 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 	fbWindow.use();
 
 	vector<Drawable> drawables;
-	drawables.push_back(Drawable(shared_ptr<ElementGeometry>(objToElementGeometry("models/dragon.obj")), make_shared<ShadedMat>(0.3, 0.4, 0.4, 10.0)));
+	drawables.push_back(Drawable(objToElementGeometry("models/dragon.obj"), make_shared<ShadedMat>(0.3, 0.4, 0.4, 10.0)));
 	drawables.back().addMaterial(new ColorMat(vec3(1, 0, 0)));
 
 	//@TODO Encapsulate this in something

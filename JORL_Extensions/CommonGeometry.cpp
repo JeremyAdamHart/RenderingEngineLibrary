@@ -52,16 +52,12 @@ sptr<SphereGeometry::Type> createSphereGeometry(unsigned int azimuthDivisions, u
 		}
 		u += uStep;
 	}
-	//SphereGeometry::Type();
+
 	return make<SphereGeometry::Type>(
 		GL_TRIANGLES,
 		indices.data(), indices.size(),
 		positions.data(), normals.data(), uvs.data(), positions.size()
-		);//*/
-	//ElementGeometry();
-	//return make<ElementGeometry>(positions.data(), normals.data(), uvs.data(), indices.data(), positions.size(), indices.size(), GL_TRIANGLES);
-
-	//return geom;
+		);
 }
 
 sptr<PlaneGeometry::Type> createPlaneGeometry(Orientation orientation) {
@@ -93,6 +89,7 @@ sptr<PlaneGeometry::Type> createPlaneGeometry(Orientation orientation) {
 		positions.size());
 }
 
-sptr<CubeGeometry::Type> createCubeGeometry();
+sptr<CubeGeometry::Type> createCubeGeometry() {
+}
 	
 }

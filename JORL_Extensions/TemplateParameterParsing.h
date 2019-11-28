@@ -23,6 +23,30 @@ struct nth_element_impl<0, T, Ts...> {
 template <std::size_t N, typename ...Ts>
 using nth_type = typename nth_element_impl<N, Ts...>::type;
 
+//^^^ Below is me again
+template<size_t I, typename X, typename T>
+constexpr size_t indexOfImp() {
+	if constexpr (std::is_same<T, X>::value) {
+		return I;
+	}
+	else {
+		static_assert(std::is_same<T, X>::value, "Type not present in list of indexOf()");
+	}
+}
+
+template<size_t I, typename X, typename T1, typename T2, typename ...Ts>
+constexpr size_t indexOfImp() {
+	if constexpr (std::is_same<T1, X>::value)
+		return I;
+	else
+		return indexOfImp<I + 1, X, T2, Ts...>();
+}
+
+template<typename X, typename ...Ts>
+constexpr size_t indexOf() { return  indexOfImp<0, X, Ts...>(); }
+
+
+
 //PARAMETER PACK WRAPPER
 //Wraps parameter pack inside other class
 //template<class C, class T, class ...Ts>

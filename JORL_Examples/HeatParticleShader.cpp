@@ -57,7 +57,7 @@ void HeatParticleShader::draw(const Camera &cam, Drawable &obj) {
 
 	checkGLErrors("HeatParticleShader::draw->loadUniforms");
 
-	obj.getGeometry().drawGeometry();
+	obj.getGeometry().drawGeometry(programID);
 	glUseProgram(0);
 
 	checkGLErrors("HeatParticleShader::draw");
