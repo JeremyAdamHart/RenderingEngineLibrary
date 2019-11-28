@@ -52,6 +52,8 @@ using namespace std;
 #include "FontToTexture.h"
 #include "TextShader.h"
 
+#include "ShadowShader.h"
+
 //Random
 #include <random>
 #include <ctime>
@@ -1921,6 +1923,140 @@ void WindowManager::noiseLoop() {
 	glfwTerminate();
 }
 
+void WindowManager::simpleModelLoop() {
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+
+	BlinnPhongShader bpShader;
+
+	//Dragon
+	Drawable dragon(
+		objToElementGeometry("models/dragon.obj"),
+		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)));
+	dragon.addMaterial(make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	//Plane
+	Drawable plane(createPlaneGeometry(),
+		make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	plane.addMaterial(make<ColorMat>(vec3(1.f, 0, 0)));
+	plane.position = vec3(0, -0.3, 0);
+
+	vec3 lightPos(10, 10, 10);
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		bpShader.draw(cam, lightPos, dragon);
+		bpShader.draw(cam, lightPos, plane);
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
+void WindowManager::shadowLoop() {
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+
+	BlinnPhongShader bpShader;
+	ShadowShader<ColorMat> shadowShader;
+	DepthVarianceShader depthShader;
+	GaussianBlurShader blurShader;
+
+	TrackballCamera shadowCam(
+		normalize(vec3(-1, -1, -1)), vec3(2, 2, 2),
+		glm::perspective(70.f*3.14159f / 180.f, 1.f, 0.1f, 100.f));
+
+	Framebuffer fbWindow(window_width, window_height);
+
+	const int SMAP_WIDTH = 1000;
+	const int SMAP_HEIGHT = 1000;
+	
+	Framebuffer depthFramebuffer = createNewFramebuffer(SMAP_WIDTH, SMAP_HEIGHT);
+	depthFramebuffer.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { SMAP_WIDTH, SMAP_HEIGHT }, 0,
+		GL_RG, GL_RG32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0);
+	depthFramebuffer.addTexture(createDepthTexture(SMAP_WIDTH, SMAP_HEIGHT, &tm), GL_DEPTH_ATTACHMENT);
+
+	Framebuffer gaussianFramebuffer = createNewFramebuffer(SMAP_WIDTH, SMAP_HEIGHT);
+	gaussianFramebuffer.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { SMAP_WIDTH, SMAP_HEIGHT }, 0,
+		GL_RG, GL_RG32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0);
+	gaussianFramebuffer.addTexture(createDepthTexture(SMAP_WIDTH, SMAP_HEIGHT, &tm), GL_DEPTH_ATTACHMENT);
+
+	Drawable blurPlaneHorizontal(createPlaneGeometry(Orientation::PositiveZ),
+		make<TextureMat>(depthFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
+
+	Drawable blurPlaneVertical(createPlaneGeometry(Orientation::PositiveZ),
+		make<TextureMat>(gaussianFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
+
+	//Dragon
+	Drawable dragon(
+		objToElementGeometry("models/dragon.obj"),
+		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)));
+	dragon.addMaterial(make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	//Plane
+	Drawable plane(createPlaneGeometry(),
+		make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	plane.addMaterial(make<ColorMat>(vec3(1.f, 0, 0)));
+	plane.position = vec3(0, -0.3, 0);
+
+	vec3 lightPos(10, 10, 10);
+
+	const int N = 5;
+	const float SIGMA = 0.4f*float(N + 1);
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	while (!glfwWindowShouldClose(window)) {
+
+		if (reloadShaders) {
+			shadowShader = ShadowShader<ColorMat>();
+			reloadShaders = false;
+		}
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		depthFramebuffer.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		depthShader.draw(shadowCam, dragon);
+		depthShader.draw(shadowCam, plane);
+
+		gaussianFramebuffer.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		blurShader.draw(SIGMA, N, GaussianBlurShader::Direction::X, blurPlaneHorizontal);
+
+		depthFramebuffer.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		blurShader.draw(SIGMA, N, GaussianBlurShader::Direction::Y, blurPlaneVertical);
+
+		fbWindow.use();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shadowShader.draw(cam, lightPos, shadowCam, depthFramebuffer.getTexture(GL_COLOR_ATTACHMENT0), dragon);
+		shadowShader.draw(cam, lightPos, shadowCam, depthFramebuffer.getTexture(GL_COLOR_ATTACHMENT0), plane);
+		//bpShader.draw(cam, lightPos, dragon);
+		//bpShader.draw(cam, lightPos, plane);
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
 void WindowManager::glowTest() {
 	vec3 points[6] = {
 		//First triangle
@@ -1964,8 +2100,17 @@ void WindowManager::glowTest() {
 		|| !gaussianFramebuffer.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT)) {
 		printf("Failed to initialize gaussianFramebuffer\n");
 	}
+
+	Framebuffer gaussianFramebuffer2 = createNewFramebuffer(window_width, window_height);
+	if (!gaussianFramebuffer2.addTexture(createTexture2D(TexInfo(GL_TEXTURE_2D, { window_width, window_height }, 0,
+		GL_RGBA, GL_RGB32F, GL_FLOAT), &tm), GL_COLOR_ATTACHMENT0)
+		|| !gaussianFramebuffer2.addTexture(createDepthTexture(window_width, window_height, &tm), GL_DEPTH_ATTACHMENT)) {
+		printf("Failed to initialize gaussianFramebuffer\n");
+	}
 	
 	Framebuffer fbWindow(window_width, window_height);
+
+	Camera identityCam;
 
 	FlatColorShader flatShader;
 	GaussianBlurShader gaussianShader;
@@ -1978,8 +2123,14 @@ void WindowManager::glowTest() {
 		make<GeometryT<attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
 		make<TextureMat>(gaussianFramebuffer.getTexture(GL_COLOR_ATTACHMENT0)));
 
+	Drawable texSquareFinal(
+		make < GeometryT < attrib::Position, attrib::TexCoord>>(GL_TRIANGLES, points, coords, 6),
+		make<TextureMat>(gaussianFramebuffer2.getTexture(GL_COLOR_ATTACHMENT0))
+	);
+
 
 	BlinnPhongShader bpShader;
+	SimpleTexShader texShader;
 
 	//Dragon
 	Drawable dragon(
@@ -1988,9 +2139,11 @@ void WindowManager::glowTest() {
 
 	Drawable glowDragon(
 		objToElementGeometry("models/dragon.obj"),
-		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)*2.f));
+		//make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)*5.f));
+		//make<ColorMat>(vec3(0.2f, 0.4f, 1.f)*5.f));
+		make<ColorMat>(vec3(1.f, 0.2f, 0.6f)*5.f));
 
-	const int N = 301;
+	const int N = 100;
 	const float SIGMA = 0.4f*float(N + 1);
 
 	glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -2003,6 +2156,13 @@ void WindowManager::glowTest() {
 			glViewport(0, 0, window_width, window_height);
 		}
 
+		int texelOffsetMin;
+		glGetIntegerv(GL_MIN_PROGRAM_TEXEL_OFFSET, &texelOffsetMin);
+		int texelOffsetMax;
+		glGetIntegerv(GL_MAX_PROGRAM_TEXEL_OFFSET, &texelOffsetMax);
+
+		printf("Min = %d Max = %d\n", texelOffsetMin, texelOffsetMax);
+
 		lightFramebuffer.use();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		flatShader.draw(cam, glowDragon);
@@ -2011,13 +2171,16 @@ void WindowManager::glowTest() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		gaussianShader.draw(SIGMA, N, GaussianBlurShader::Direction::X, texSquareHorizontal);
 
-		fbWindow.use();
+		gaussianFramebuffer2.use();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		gaussianShader.draw(SIGMA, N, GaussianBlurShader::Direction::Y, texSquareVertical);
 
-		glClear(GL_DEPTH_BUFFER_BIT);
-		bpShader.draw(cam, vec3(10, 10, 10), dragon);
+		fbWindow.use();
+		texShader.draw(identityCam, texSquareFinal);
 
+		glClear(GL_DEPTH_BUFFER_BIT);
+		//bpShader.draw(cam, vec3(10, 10, 10), dragon);
+		flatShader.draw(cam, glowDragon);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

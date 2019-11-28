@@ -27,6 +27,7 @@
     <ClCompile Include="NormalDisplayShader.cpp" />
     <ClCompile Include="TemplatedGeometry.cpp" />
     <ClCompile Include="CommonGeometry.cpp" />
+    <ClCompile Include="ShadowShader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tinyply\source\tinyply.h" />
@@ -59,6 +60,7 @@
     <ClInclude Include="TemplatedGeometry.h" />
     <ClInclude Include="CommonGeometry.h" />
     <ClInclude Include="ShaderCompiler.h" />
+    <ClInclude Include="ShadowShader.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

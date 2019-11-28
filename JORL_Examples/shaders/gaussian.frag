@@ -12,10 +12,15 @@ uniform sampler2D colorTex;
 in vec2 FragmentTexCoord;
 
 float gaussian(float x){
-	return 1.0/(sqrt(2.0*M_PI)*sigma)*exp(-x*x/(2.0*sigma*sigma));
+	return exp(-x*x/(2.0*sigma*sigma))/(sqrt(2.0*M_PI)*sigma);
 }
 
 vec4 applyGaussian(){
+	ivec2 dimensions = textureSize(colorTex, 0);
+	vec2 step = vec2(
+		1.0/float(dimensions.x-1), 
+		1.0/float(dimensions.y-1));
+
 	int start = -n/2;
 	ivec2 direction = ivec2(1, 1);
 	if(blurDirection == 0)
@@ -28,9 +33,11 @@ vec4 applyGaussian(){
 
 	for(int i=0; i<n; i++){
 		ivec2 offset = (start+i)*direction;
+		vec2 sampleCoord = vec2(offset)*step + FragmentTexCoord;
 		float gaussianResult = gaussian(float(start+i));
 		totalWeight += gaussianResult;
-		totalColor += gaussianResult*textureOffset(colorTex, FragmentTexCoord, offset);
+		//totalColor += gaussianResult*textureOffset(colorTex, FragmentTexCoord, offset);
+		totalColor += gaussianResult*texture(colorTex, sampleCoord);
 		//return textureOffset(colorTex, FragmentTexCoord, offset);
 	}
 

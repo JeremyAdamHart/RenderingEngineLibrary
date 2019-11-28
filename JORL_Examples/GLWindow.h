@@ -45,6 +45,8 @@ public:
 	void growthLoop2D();
 	void laplacianSmoothing();
 	void laplacianSmoothingMeshLoop();
+	void simpleModelLoop();
+	void shadowLoop();
 
 	void waveSimulationLoop(int numSegments, float dt);
 	void convexTestLoop();

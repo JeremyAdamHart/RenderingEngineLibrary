@@ -325,6 +325,7 @@
     <ClInclude Include="ColorSetMat.h" />
     <ClInclude Include="ColorShader.h" />
     <ClInclude Include="CommonGeometry.h" />
+    <ClInclude Include="ShadowShader.h" />
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="TemplatedGeometry.h" />
     <ClInclude Include="GlowShader.h" />
@@ -365,6 +366,7 @@
     <ClCompile Include="PosNormalShader.cpp" />
     <ClCompile Include="ProcessingShader.cpp" />
     <ClCompile Include="ShadedMat.cpp" />
+    <ClCompile Include="ShadowShader.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
     <ClCompile Include="SimpleTexManager.cpp" />
     <ClCompile Include="simpleTexShader.cpp" />

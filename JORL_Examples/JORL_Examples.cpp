@@ -23,10 +23,12 @@ int main()
 
 	//runAdaptiveNoiseTests();
 
+	wm.shadowLoop();
+//	wm.simpleModelLoop();
 //	wm.treeGrowthTest();
 //	wm.testLoop();
 //	wm.waveSimulationLoop(1000, 0.0001f);
-	wm.glowTest();
+//	wm.glowTest();
 //	wm.testLoop();
 //	wm.rigidBodyTest();
 //	wm.mainLoop();
