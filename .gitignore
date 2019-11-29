@@ -48,7 +48,6 @@ Temporary Items
 
 #Excluded file types
 *.pdb
-*.lib
 *.idb
 *.tlog
 *.db
