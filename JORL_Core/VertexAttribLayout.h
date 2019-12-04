@@ -41,8 +41,16 @@ namespace attrib {
 		static inline std::string name() { return "VertexTexCoord"; }
 	};
 
-	struct VertexModelMatrix : public Attribute<glm::mat4> {
-		static inline std::string name() { return "VertexModelMatrix"; }	//VertexModelMatrix?
+	struct Color :public Attribute<glm::vec4> {
+		static inline std::string name() { return "VertexColor"; }
+	};
+
+	struct PointSize :public Attribute<float> {
+		static inline std::string name() { return "PointSize"; }
+	};
+
+	struct Offset :public Attribute<glm::vec3> {
+		static inline std::string name() { return "VertexOffset"; }
 	};
 
 	template<typename T, int N>
@@ -50,6 +58,12 @@ namespace attrib {
 		static constexpr int Divisor = N;
 	};
 
+	template<int N>
+	struct InstanceModelMatrix : public Instanced<Attribute<glm::mat4>, N> {
+		using Instanced<Attribute<glm::mat4>, N>::Divisor;
+		using Instanced<Attribute<glm::mat4>, N>::Type;
+		static inline std::string name() { return "InstanceModelMatrix"; }	//VertexModelMatrix?
+	};
 
 }
 

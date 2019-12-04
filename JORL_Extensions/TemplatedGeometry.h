@@ -120,7 +120,6 @@ public:
 	virtual void drawGeometry(GLProgram program) override {
 		
 		vaoMap.requestVAO<Ts...>(program, &vbo);
-		glDrawArrays(mode, 0, bufferSize);
 		
 		if constexpr (!usingInstanced<Ts...>::value)
 			glDrawArrays(mode, 0, bufferSize);
@@ -183,7 +182,8 @@ template<typename... Args>
 using IndexGeometryUint = IndexGeometryT<unsigned int, Args...>;
 using TexNormalGeometry = GeometryT<attrib::Position, attrib::Normal, attrib::TexCoord>;
 using TextureGeometry = GeometryT<attrib::Position, attrib::TexCoord>;
-using NormalGeometry = GeometryT < attrib::Position, attrib::TexCoord>;
+using NormalGeometry = GeometryT < attrib::Position, attrib::Normal>;
+using PositionGeometry = GeometryT<attrib::Position>;
 using TexNormalIndexGeometry = IndexGeometryUint<attrib::Position, attrib::Normal, attrib::TexCoord>;
 using TextureIndexGeometry = IndexGeometryUint<attrib::Position, attrib::TexCoord>;
 using NormalIndexGeometry = IndexGeometryUint<attrib::Position, attrib::Normal>;

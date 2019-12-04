@@ -90,6 +90,7 @@ sptr<PlaneGeometry::Type> createPlaneGeometry(Orientation orientation) {
 }
 
 sptr<CubeGeometry::Type> createCubeGeometry() {
+	return nullptr;
 }
 	
 }
