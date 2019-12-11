@@ -33,6 +33,10 @@ private:
 		LIGHT_MV_MATRIX_LOCATION,
 		COUNT
 	};
+
+	static std::vector<std::pair<GLenum, std::string>> defaultShaders () {
+		return  {{GL_VERTEX_SHADER, "shaders/bpShaded.vert"}, {GL_FRAGMENT_SHADER, "shaders/shadowShader.frag"}};
+	}
 public:
 /*	ShadowShader():
 		ShaderT<ShadedMat, ColorSrc>(
@@ -43,11 +47,23 @@ public:
 			"light_matrix", "depthTexture"})
 	{}
 */	
-	ShadowShader() :
-		ShaderT<ShadedMat, ColorSrc>(
-			{ {GL_VERTEX_SHADER, "shaders/bpShaded.vert"}, {GL_FRAGMENT_SHADER, "shaders/shadowShader.frag"} },
-			{},
-			{ "ka", "kd", "ks", "alpha", "color",
+	template<typename ColorSrc>
+	constexpr const char* uniformName() {
+		return "";
+	}
+
+	template<>
+	constexpr const char* uniformName<ColorMat>() { return "color"; }
+
+	template<>
+	constexpr const char* uniformName<TextureMat>() { return "colorTexture"; }
+
+	ShadowShader(std::vector<std::pair<GLenum, std::string>> shaders=defaultShaders(), 
+		std::map<GLenum, std::string> defines = {}) 
+		: ShaderT<ShadedMat, ColorSrc>(
+			shaders,
+			defines,
+			{ "ka", "kd", "ks", "alpha", uniformName<ColorSrc>(),
 			"view_projection_matrix", "model_matrix", "camera_position", "lightPos",
 			"light_matrix", "depthTexture", "light_mv_matrix" })
 	{}

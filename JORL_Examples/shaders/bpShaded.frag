@@ -16,7 +16,6 @@ uniform vec3 camera_position;
 	uniform vec4 color;
 #endif
 
-
 uniform vec3 lightPos;
 uniform float ks = 0.5;
 uniform float kd = 0.4;

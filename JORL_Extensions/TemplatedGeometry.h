@@ -172,7 +172,7 @@ public:
 		if constexpr (!usingInstanced<Ts...>::value)
 			glDrawElements(mode, indexSize, toGLenum<IndexT>(), 0);
 		else
-			glDrawElementsInstanced(mode, 0, toGLenum<IndexT>(), 0, instanceCount);
+			glDrawElementsInstanced(mode, indexSize, toGLenum<IndexT>(), 0, instanceCount);
 		glBindVertexArray(0);
 	}
 };
