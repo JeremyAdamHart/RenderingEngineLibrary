@@ -23,7 +23,7 @@ int main()
 
 	//runAdaptiveNoiseTests();
 
-	wm.shadowLoop();
+//	wm.shadowLoop();
 //	wm.simpleModelLoop();
 //	wm.treeGrowthTest();
 //	wm.testLoop();
@@ -31,7 +31,7 @@ int main()
 //	wm.glowTest();
 //	wm.testLoop();
 //	wm.rigidBodyTest();
-//	wm.mainLoop();
+	wm.mainLoop();
 //	wm.noiseLoop();
 //	wm.particleLoop();
 //	wm.convexTestLoop();
