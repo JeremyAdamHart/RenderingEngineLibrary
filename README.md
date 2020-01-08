@@ -18,4 +18,4 @@ VR contains some useful functionality for incorporating the JORL library with a 
 
 The examples project contains several sample application that demonstrate how to use the JORL library.
 
-![Ambient Occlusion and Perlin Noise on Stanford Dragon](RenderingEngineLibrary\screenshots)
+![Ambient Occlusion and Perlin Noise on Stanford Dragon](screenshots/AmbientOcclusionPerlinNoise.png)
