@@ -34,6 +34,7 @@ public:
 	WindowManager(int width, int height, std::string name,
 		glm::vec4 color = glm::vec4(1.f));
 
+	void petioleAlignmentLoop();
 	void mainLoop();
 	void noiseLoop();
 	void adaptiveNoiseLoop();

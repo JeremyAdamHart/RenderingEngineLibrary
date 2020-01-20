@@ -28,6 +28,7 @@
     <ClCompile Include="TemplatedGeometry.cpp" />
     <ClCompile Include="CommonGeometry.cpp" />
     <ClCompile Include="ShadowShader.cpp" />
+    <ClCompile Include="SphericalCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tinyply\source\tinyply.h" />
@@ -61,6 +62,7 @@
     <ClInclude Include="CommonGeometry.h" />
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="ShadowShader.h" />
+    <ClInclude Include="SphericalCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

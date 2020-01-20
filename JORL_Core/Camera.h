@@ -5,11 +5,12 @@
 namespace renderlib {
 
 class Camera{
-protected:
+public:
 	glm::mat4 projection;
 
 public:
 	Camera();
+	Camera(glm::mat4 projection);
 	virtual glm::mat4 getCameraMatrix() const;
 	virtual glm::mat4 getRotationMatrix() const;
 	virtual glm::mat4 getProjectionMatrix() const;

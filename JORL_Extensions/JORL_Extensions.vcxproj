@@ -321,6 +321,7 @@
     <ClInclude Include="AOShader.h" />
     <ClInclude Include="BlendShader.h" />
     <ClInclude Include="BufferQueue.h" />
+    <ClInclude Include="SphericalCamera.h" />
     <ClInclude Include="ColorMat.h" />
     <ClInclude Include="ColorSetMat.h" />
     <ClInclude Include="ColorShader.h" />
@@ -370,6 +371,7 @@
     <ClCompile Include="SimpleShader.cpp" />
     <ClCompile Include="SimpleTexManager.cpp" />
     <ClCompile Include="simpleTexShader.cpp" />
+    <ClCompile Include="SphericalCamera.cpp" />
     <ClCompile Include="StreamGeometry.cpp" />
     <ClCompile Include="TemplatedGeometry.cpp" />
     <ClCompile Include="TextureCreation.cpp" />

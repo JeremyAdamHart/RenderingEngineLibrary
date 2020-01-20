@@ -318,6 +318,7 @@
     <ClInclude Include="HeatParticleShader.h" />
     <ClInclude Include="HeatParticleSystem.h" />
     <ClInclude Include="noiseTest.h" />
+    <ClInclude Include="PetioleAlignment.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Quadtree.h" />
     <ClInclude Include="VertexVertex.h" />
@@ -330,6 +331,7 @@
     <ClCompile Include="HeatParticleShader.cpp" />
     <ClCompile Include="HeatParticleSystem.cpp" />
     <ClCompile Include="noiseTest.cpp" />
+    <ClCompile Include="PetioleAlignment.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="JORL_Examples.cpp" />
     <ClCompile Include="VertexVertex.cpp" />

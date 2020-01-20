@@ -10,6 +10,7 @@ using namespace std;
 #include "SimpleShader.h"
 #include "ColorMat.h"
 #include "TrackballCamera.h"
+#include "SphericalCamera.h"
 #include "SimpleTexManager.h"
 #include "simpleTexShader.h"
 #include "TextureCreation.h"
@@ -64,6 +65,7 @@ using namespace std;
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "PetioleAlignment.h"
 
 using namespace renderlib;
 
@@ -71,9 +73,13 @@ using PositionGeometry = GeometryT<attrib::Position>;
 using PositionNormalGeometry = GeometryT<attrib::Position, attrib::Normal>;
 
 
-TrackballCamera cam(
+/*TrackballCamera cam(
 	vec3(0, 0, -1), vec3(0, 0, 2),
 	glm::perspective(90.f*3.14159f/180.f, 1.f, 0.1f, 100.f));
+	*/
+SphericalCamera cam(
+	glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 100.f),
+	0.f, 0.f, 1.f);
 
 bool reloadShaders = false;
 bool windowResized = false;
@@ -90,8 +96,8 @@ void cursorPositionCallback(GLFWwindow *window, double xpos, double ypos) {
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 		vec2 diff = mousePos - lastPos;
-		cam.trackballRight(-diff.x*3.14159f);
-		cam.trackballUp(-diff.y*3.14159f);
+		cam.right(-diff.x*3.14159f);
+		cam.up(-diff.y*3.14159f);
 	}
 	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
 		vec2 diff = mousePos - lastPos;
@@ -100,7 +106,7 @@ void cursorPositionCallback(GLFWwindow *window, double xpos, double ypos) {
 
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
 		vec2 diff = mousePos - lastPos;
-		cam.center -= diff.x*cam.right + diff.y*cam.up;
+		cam.center -= diff.x*cam.right() + diff.y*cam.up();
 	}
 
 	lastPos = mousePos;
@@ -447,9 +453,15 @@ void WindowManager::convexTestLoop() {
 
 	std::vector<int>::iterator it;
 
+	/*
 	cam = TrackballCamera(
 		vec3(0, 0, -1), vec3(0, 0, 5),
 		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 1000.f));
+		*/
+
+	cam.projection = glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 1000.f),
+	cam.center = glm::vec3(0, 0, -1);
+	cam.zoom(5.f);
 
 	//Find starting tetrahedron for model
 	vec3 tetPoints[4];
@@ -2245,10 +2257,14 @@ void WindowManager::rigidBodyTest() {
 
 	BlinnPhongShader bpShader;
 
+	/*
 	cam = TrackballCamera(
 		vec3(0, 0, -1), vec3(0, 0, 5),
 		glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 20.f));
-
+		*/
+	cam.projection = glm::perspective(90.f*3.14159f / 180.f, 1.f, 0.1f, 1000.f),
+		cam.center = glm::vec3(0, 0, -1);
+	cam.zoom(5.f);
 
 	//Dimensions 0.5 x 2 x 0.5
 //	RigidBody body(1.f, glm::mat3(0.354167f, 0, 0, 0, 0.0416667, 0, 0, 0, 0.354167));	//Cory's values
@@ -2398,6 +2414,107 @@ void WindowManager::adaptiveNoiseLoop() {
 		}
 
 		texShader.draw(cam, texDrawable);
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
+void WindowManager::petioleAlignmentLoop()
+{
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	SimpleTexManager tm;
+
+	BlinnPhongShader bpShader;
+	SimpleShader colorShader;
+
+	//Plane
+	Drawable plane(createPlaneGeometry(),
+		make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	plane.addMaterial(make<ColorMat>(vec3(0, 1, 0)));
+	plane.position = vec3(0, -0.3, 0);
+	
+	auto lineGeometry = make<PositionGeometry>(GL_LINES);
+	Drawable lineDrawable(lineGeometry, make<ColorMat>(vec3(1, 0, 0)));
+
+	vec3 lightPos(10, 10, 10);
+
+	//Tangent angle
+	float azimuth = 0.f;
+	float altitude = 0.f;
+	float roll = 0.f;
+	
+	bool update = true;
+
+	PetioleInfo pinfo = { vec3(0.f), vec3(1, 0, 0), vec3(2, 0, 0), quat() };
+	quat initialOrientation = quat();
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+			roll += 0.01f;
+			update = true;
+		}
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+			roll -= 0.01f;
+			update = true;
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+			altitude = glm::clamp(altitude + 0.01f, -0.9f*glm::quarter_pi<float>(), 0.9f*glm::quarter_pi<float>());
+			update = true;
+		}
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+			altitude = glm::clamp(altitude - 0.01f, -0.9f*glm::quarter_pi<float>(), 0.9f*glm::quarter_pi<float>());
+			update = true;
+		}
+		/*if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+			azimuth += 0.01f;
+			update = true;
+		}
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+			azimuth -= 0.01f;
+			update = true;
+		}*/
+
+		if (update) {
+			vec3 tangent(cos(altitude)*cos(azimuth), sin(altitude), cos(altitude)*sin(azimuth));
+			vec3 normal = angleAxis(roll, tangent)*normalize(cross(tangent, vec3(0, 1, 0)));
+			initialOrientation = mat3(cross(tangent, normal), normal, -tangent);
+			pinfo = petioleRotation(vec3(0.f), tangent, normal, 0.0f, 0.f);
+			std::vector<vec3> points = {
+				vec3(0), vec3(0, 2, 0),
+				pinfo.start, pinfo.middle,
+				pinfo.middle, pinfo.end,
+				pinfo.start, pinfo.start + normal,
+				pinfo.end, pinfo.end + pinfo.endOrientation*vec3(0, 1, 0)
+			};
+			lineGeometry->loadBuffers(points.data(), points.size());
+
+			update = false;
+		}
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		plane.setScale(vec3(0.3f));
+
+		colorShader.draw(cam, lineDrawable);
+		plane.position = pinfo.start;
+		plane.orientation = initialOrientation;
+		bpShader.draw(cam, lightPos, plane);
+
+		plane.position = pinfo.end;
+		plane.orientation = pinfo.endOrientation;
+		bpShader.draw(cam, lightPos, plane);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

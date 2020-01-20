@@ -3,6 +3,7 @@
 namespace renderlib {
 
 Camera::Camera() :projection(1.f){}
+Camera::Camera(glm::mat4 projection) : projection(projection) {}
 
 glm::mat4 Camera::getCameraMatrix() const { return glm::mat4(1.f); }
 glm::mat4 Camera::getProjectionMatrix() const { return projection; }
