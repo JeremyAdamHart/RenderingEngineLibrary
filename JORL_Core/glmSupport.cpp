@@ -42,11 +42,11 @@ glm::mat3 toMat3(mat4 m){
 }
 
 glm::vec3 project(glm::vec3 v, glm::vec3 p) {
-	return dot(p, v) / dot(v, v)*v;
+	return (dot(p, v) / dot(v, v))*v;
 }
 
 glm::vec3 projectToPlane(glm::vec3 normal, glm::vec3 point) {
-	return point - project(point, normal);
+	return point - project(normal, point);
 }
 
 }

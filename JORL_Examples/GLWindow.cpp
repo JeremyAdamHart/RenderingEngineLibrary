@@ -2486,7 +2486,7 @@ void WindowManager::petioleAlignmentLoop()
 			vec3 tangent(cos(altitude)*cos(azimuth), sin(altitude), cos(altitude)*sin(azimuth));
 			vec3 normal = angleAxis(roll, tangent)*normalize(cross(tangent, vec3(0, 1, 0)));
 			initialOrientation = mat3(cross(tangent, normal), normal, -tangent);
-			pinfo = petioleRotation(vec3(0.f), tangent, normal, 0.0f, 0.f);
+			pinfo = petioleRotation(vec3(0.f), tangent, normal, 0.1f, 0.f);
 			std::vector<vec3> points = {
 				vec3(0), vec3(0, 2, 0),
 				pinfo.start, pinfo.middle,

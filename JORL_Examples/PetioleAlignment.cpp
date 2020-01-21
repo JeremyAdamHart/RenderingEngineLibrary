@@ -16,16 +16,17 @@ PetioleInfo petioleRotation(glm::vec3 location, glm::vec3 tangent, glm::vec3 nor
 	vec3 tangentPlaneStart = normal;
 	vec3 tangentPlaneFinish = renderlib::projectToPlane(tangent, targetVector);
 
+	printf("tangentPlaneStart dot tangent = %f\n", dot(tangentPlaneStart, tangent));
+	printf("tangentPlaneFinish dot tangent = %f\n", dot(tangentPlaneFinish, tangent));
+
 	vec3 rotationVector = normalize(cross(tangentPlaneFinish - tangentPlaneStart, tangent));
-	vec3 rotationPlaneStart = normalize(renderlib::projectToPlane(rotationVector, normal));
-	vec3 rotationPlaneFinish = normalize(renderlib::projectToPlane(rotationVector, targetVector));
+	vec3 rotationPlaneStart = renderlib::projectToPlane(rotationVector, normal);
+	vec3 rotationPlaneFinish =renderlib::projectToPlane(rotationVector, targetVector);
 
-	float rotationCos = (2.f - dot(
-		rotationPlaneStart - rotationPlaneFinish,
-		rotationPlaneStart - rotationPlaneFinish))*0.5f;
-	float rotationSin = sqrt(1.f - rotationCos * rotationCos);
+	printf("rotationPlaneStart dot rotationVector = %f\n", dot(rotationPlaneStart, rotationVector));
+	printf("rotationPlaneFinish dot rotationVector = %f\n", dot(rotationPlaneFinish, rotationVector));
 
-	printf("rotationCos = %f\n", rotationCos);
+	printf("Length start = %f, Length finish = %f\n", length(rotationPlaneStart), length(rotationPlaneFinish));
 
 	vec3 rotationVectorPerpendicular = cross(rotationVector, rotationPlaneStart);
 
@@ -34,7 +35,8 @@ PetioleInfo petioleRotation(glm::vec3 location, glm::vec3 tangent, glm::vec3 nor
 		1.f :
 		-1.f;
 
-	float halfAngleCos = cos(acos(rotationCos)*0.5f);
+	float rotationCos = dot(rotationPlaneStart, rotationPlaneFinish)/ dot(rotationPlaneStart, rotationPlaneStart);
+	float halfAngleCos = glm::sign(rotationCos)*sqrt(0.5f + rotationCos*0.5f);	//cos(acos(rotationCos)*0.5f);
 	float halfAngleSin = sqrt(1.f - halfAngleCos * halfAngleCos);
 	//quat rotation(rotationCos, sign*rotationSin*rotationVector);
 	quat rotation(halfAngleCos, sign*halfAngleSin*rotationVector);
@@ -42,10 +44,9 @@ PetioleInfo petioleRotation(glm::vec3 location, glm::vec3 tangent, glm::vec3 nor
 	quat finalOrientation = rotation*initialOrientation;
 
 	printf("angle from vertical = %f\n",
-		acos(dot(normalize(finalOrientation*vec3(0, 1, 0)*inverse(finalOrientation)), vec3(0, 1, 0))));
+		acos(dot(normalize(finalOrientation*vec3(0, 1, 0)), vec3(0, 1, 0))));
 
-	return { location, location + tangent, location + tangent + rotation * tangent*inverse(rotation), finalOrientation };
-
+	return { location, location + tangent, location + tangent + rotation * tangent, finalOrientation };
 
 	/*glm::vec3 targetVector =
 		normalize(vec3(normal.x, 0, normal.z))*sin(targetAngleFromVertical) +
