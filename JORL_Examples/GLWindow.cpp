@@ -2453,9 +2453,20 @@ void WindowManager::petioleAlignmentLoop()
 	PetioleInfo pinfo = { vec3(0.f), vec3(1, 0, 0), vec3(2, 0, 0), quat() };
 	quat initialOrientation = quat();
 
+	auto targetLineGeometry = make<PositionGeometry>(GL_LINE_LOOP);
+	Drawable targetLineDrawable(targetLineGeometry, make<ColorMat>(vec3(0, 1, 0)));
+
+	auto yellowGeometry = make<PositionGeometry>(GL_LINES);
+	Drawable yellowDrawable(yellowGeometry, make<ColorMat>(vec3(1, 0.8, 0.6)));
+
+	auto blueGeometry = make<PositionGeometry>(GL_LINE_LOOP);
+	Drawable blueDrawable(blueGeometry, make<ColorMat>(vec3(0.2, 0.5, 0.8)));
+
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		static float targetRotation = 0.f;
 
 		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
 			roll += 0.01f;
@@ -2466,27 +2477,44 @@ void WindowManager::petioleAlignmentLoop()
 			update = true;
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-			altitude = glm::clamp(altitude + 0.01f, -0.9f*glm::quarter_pi<float>(), 0.9f*glm::quarter_pi<float>());
+			altitude = glm::clamp(altitude + 0.01f, -0.9f*glm::half_pi<float>(), 0.9f*glm::half_pi<float>());
 			update = true;
 		}
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-			altitude = glm::clamp(altitude - 0.01f, -0.9f*glm::quarter_pi<float>(), 0.9f*glm::quarter_pi<float>());
+			altitude = glm::clamp(altitude - 0.01f, -0.9f*glm::half_pi<float>(), 0.9f*glm::half_pi<float>());
 			update = true;
 		}
-		/*if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-			azimuth += 0.01f;
+		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+			targetRotation += 0.01f;
 			update = true;
 		}
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-			azimuth -= 0.01f;
+			targetRotation -= 0.01f;
 			update = true;
-		}*/
+		}
+
+		const float angleFromVertical = (1.f/6.f)*M_PI;
 
 		if (update) {
+
+			std::vector<vec3> targetLinePoints;
+			for (float azi = 0.f; azi < 2.f*M_PI; azi += M_PI / 10.f) {
+				targetLinePoints.push_back(vec3(
+					cos(0.5f*M_PI - angleFromVertical)*cos(azi),
+					sin(0.5f*M_PI - angleFromVertical),
+					cos(0.5f*M_PI - angleFromVertical)*sin(azi)));
+			}
+
+			targetLineGeometry->loadBuffers(targetLinePoints.data(), targetLinePoints.size());
+
 			vec3 tangent(cos(altitude)*cos(azimuth), sin(altitude), cos(altitude)*sin(azimuth));
 			vec3 normal = angleAxis(roll, tangent)*normalize(cross(tangent, vec3(0, 1, 0)));
 			initialOrientation = mat3(cross(tangent, normal), normal, -tangent);
-			pinfo = petioleRotation(vec3(0.f), tangent, normal, 0.1f, 0.f);
+			pinfo = petioleRotation(vec3(0.f), tangent, normal, angleFromVertical, targetRotation);
+			/*float u = std::max(pinfo.originalLambertion, 0.f);
+			quat endOrientation = normalize(
+				u * initialOrientation +
+				(1-u) * pinfo.endOrientation);*/
 			std::vector<vec3> points = {
 				vec3(0), vec3(0, 2, 0),
 				pinfo.start, pinfo.middle,
@@ -2496,6 +2524,46 @@ void WindowManager::petioleAlignmentLoop()
 			};
 			lineGeometry->loadBuffers(points.data(), points.size());
 
+			vector<vec3> yellowPoints = { vec3(0), pinfo.endOrientation*vec3(0, 1, 0) };
+			for (float u = 0; u < 1.f; u += 0.01f) {
+				quat orientation = normalize(u * initialOrientation + (1 - u)*pinfo.endOrientation);
+				yellowPoints.push_back(yellowPoints.back());
+				yellowPoints.push_back(orientation*vec3(0, 1, 0));
+			}
+
+
+			yellowPoints.push_back(initialOrientation*vec3(0, 0, -1));
+			yellowPoints.push_back(initialOrientation*vec3(0, 0, -1));
+			/*
+			for (float u = 0; u < 1.f; u += 0.01f) {
+				quat orientation = normalize(u * initialOrientation + (1 - u)*pinfo.endOrientation);
+				yellowPoints.push_back(yellowPoints.back());
+				yellowPoints.push_back(orientation*vec3(0, 0, -1));
+			}*/
+			vec3 peak = normalize(tangent.y*tangent + normal.y*normal);
+			if (peak.y < cos(angleFromVertical)) {
+				yellowPoints.push_back(peak);
+				yellowPoints.push_back(1.2f*yellowPoints.back());
+			}
+			else {
+				float height = cos(angleFromVertical);
+				vec3 center = peak * (height / peak.y);
+				vec2 toCenter = vec2(center.x, center.z);
+				float dist = sqrt(1.f - height*height - dot(toCenter, toCenter)); 
+				vec3 toEdge = normalize(vec3(-center.z, 0, center.x))*dist;
+				yellowPoints.push_back(center + toEdge);
+				yellowPoints.push_back(yellowPoints.back()*1.2f);
+
+				yellowPoints.push_back(center - toEdge);
+				yellowPoints.push_back(yellowPoints.back()*1.2f);
+			}
+			yellowGeometry->loadBuffers(yellowPoints.data(), yellowPoints.size());
+
+			vector<vec3> bluePoints;
+			for (float u = 0; u < M_PI*2.f; u += 0.01f) {
+				bluePoints.push_back(tangent*sin(u) + normal * cos(u));
+			}
+			blueGeometry->loadBuffers(bluePoints.data(), bluePoints.size());
 			update = false;
 		}
 
@@ -2508,6 +2576,9 @@ void WindowManager::petioleAlignmentLoop()
 		plane.setScale(vec3(0.3f));
 
 		colorShader.draw(cam, lineDrawable);
+		colorShader.draw(cam, targetLineDrawable);
+		colorShader.draw(cam, yellowDrawable);
+		colorShader.draw(cam, blueDrawable);
 		plane.position = pinfo.start;
 		plane.orientation = initialOrientation;
 		bpShader.draw(cam, lightPos, plane);

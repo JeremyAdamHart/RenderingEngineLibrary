@@ -41,6 +41,22 @@ glm::mat3 toMat3(mat4 m){
 		);
 }
 
+struct project {
+	glm::vec3 p;
+	project(glm::vec3 p) :p(p) {}
+	glm::vec3 onto(glm::vec3 v) { return (dot(p, v) / dot(v, v))*v; }
+};
+
+/*
+duplicating A = B;
+
+using Axis = glm::vec3;
+
+project(Axis(v), Point(p));
+
+auto a = projectAontoB(v, a)
+auto a = project(v).onto(a);
+*/
 glm::vec3 project(glm::vec3 v, glm::vec3 p) {
 	return (dot(p, v) / dot(v, v))*v;
 }
