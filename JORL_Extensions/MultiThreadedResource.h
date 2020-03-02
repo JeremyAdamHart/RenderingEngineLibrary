@@ -93,13 +93,19 @@ public:
 template<typename T, size_t N>
 class Resource{
 public:
-	T resource[N];
+	std::vector<T> resource;
 	std::shared_mutex locks [N];
 	std::atomic_int lastWritten;
 
+	Resource():resource(N), lastWritten(0){}
+
+	Resource(T& value) :resource(N, value), lastWritten(0) {
+	}
+
 	class Read {
 		friend Resource;
-		Read(T* data, std::shared_lock<std::shared_mutex> lock, int id): lock(lock), data(data), id(id){}
+		Read(T& data, std::shared_lock<std::shared_mutex> lock, int id)
+			:lock(std::move(lock)), data(data), id(id){}
 		std::shared_lock<std::shared_mutex> lock;
 	public:
 		const T& data;
@@ -109,12 +115,13 @@ public:
 			return data;
 		}
 
-		bool hasLock() { return lock; }
+		bool hasLock() { return bool(lock); }
 	};
 
 	class Write {
 		friend Resource;
-		Write(T& data, std::unique_lock<std::shared_mutex> lock, int id, std::atomic_int* lastWritten) :lock(lock), lastWritten(lastWritten), data(data), id(id) { }
+		Write(T& data, std::unique_lock<std::shared_mutex> lock, int id, std::atomic_int* lastWritten) 
+			:lock(std::move(lock)), lastWritten(lastWritten), data(data), id(id) { }
 		std::unique_lock<std::shared_mutex> lock;
 		std::atomic_int* lastWritten;
 	public:
@@ -122,32 +129,38 @@ public:
 		const int id;
 
 		T& operator*() { return data; }
-		const T& operator*() { return data; }
+		const T& operator*() const { return data; }
 
-		bool hasLock() { return lock; }
+		bool hasLock() { return bool(lock); }
+
+		Write(Write&& w) = default;
 
 		~Write() {
 			lastWritten->store(id);
 		}
 	};
 
-	Resource::Read getRead(std::chrono::milliseconds pollrate = 0) {
+	Resource::Read getRead(std::chrono::milliseconds pollrate = std::chrono::milliseconds(0)) {
 		do {
 			int index = lastWritten;
-			Resource::Read readView(resource[index], std::shared_lock(locks[index]), index, &lastWritten);
+			Resource::Read readView(resource[index], std::shared_lock<std::shared_mutex>(locks[index], std::try_to_lock), index);
 			if (readView.hasLock())
 				return readView;
+			//else
+				//printf("Read couldn't get lock %d\n", index);
 			std::this_thread::sleep_for(pollrate);
 		} while (true);		
 	}
-	Resource::Write getWrite(std::chrono::milliseconds pollrate = 0) {
+	Resource::Write getWrite(std::chrono::milliseconds pollrate = std::chrono::milliseconds(0)) {
 		int baseIndex = (lastWritten + 1) % N;
 		do {
 			for (int i = 0; i < N - 1; i++) {
-				int index = baseIndex + i % max(N - 1, 0);
-				Resource::Write writeView(resource[index], std::unique_lock(locks[index]), index, &lastWritten);
+				int index = (baseIndex + i) % std::max(int(N - 1), int(0));
+				Resource::Write writeView(resource[index], std::unique_lock(locks[index], std::try_to_lock), index, &lastWritten);
 				if (writeView.hasLock())
-					return writeView;
+					return std::move(writeView);
+				//else
+					//printf("Write couldn't get lock %d\n", index);
 			}
 
 			std::this_thread::sleep_for(pollrate);

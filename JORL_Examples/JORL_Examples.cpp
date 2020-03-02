@@ -96,10 +96,58 @@ void testMultiBufferStager() {
 			printf("\t%d\n", v);
 	}
 }
+///*
+void resourceTest() {
+	const size_t N = 3;
+	Resource<int, N> rm;
+
+	std::thread writer = std::thread([](Resource<int, N>& rm) {
+		for (int i = 0; i < 1000; i++) {
+			auto value = rm.getWrite();
+			*value = i;
+			std::printf("Write %d\n", *value);
+			std::this_thread::sleep_for(std::chrono::microseconds(100));
+		}
+	}, std::ref(rm));
+
+	int value = -1;
+	while (value < 999) {
+		auto reader = rm.getRead();
+		value = *reader;
+		std::printf("\tRead %d\n", value);
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+
+	writer.join();
+}
+//*/
+
+class Locked{
+public:
+	std::unique_lock<std::shared_mutex> lock;
+	Locked(std::unique_lock<std::shared_mutex> lock) :lock(std::move(lock)) {}
+
+};
+
+class LockedShared {
+public:
+	std::shared_lock<std::shared_mutex> lock;
+	LockedShared(std::shared_lock<std::shared_mutex> lock) :lock(std::move(lock)) {}
+};
 
 int main()
 {	
 	testMultiBufferStager();
+
+	std::shared_mutex m;
+	//auto lock = std::unique_lock(m);
+	{
+		Locked l(std::unique_lock<std::shared_mutex>(m));
+	}
+
+	LockedShared l(std::shared_lock<std::shared_mutex>(m));
+
+	resourceTest();
 
 	srand(time(0));
 
