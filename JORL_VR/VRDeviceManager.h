@@ -44,6 +44,7 @@ public:
 
 	void updatePose() {
 		vr::VRCompositor()->WaitGetPoses(poses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+		//vr::VRCompositor()->GetLastPoses(poses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
 		hmd.updatePose(poses[hmdIndex]);
 		for (auto pair : handDeviceMap) {

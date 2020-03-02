@@ -319,8 +319,11 @@
   <ItemGroup>
     <ClInclude Include="..\tinyply\source\tinyply.h" />
     <ClInclude Include="AOShader.h" />
+    <ClInclude Include="Bitmask.h" />
     <ClInclude Include="BlendShader.h" />
     <ClInclude Include="BufferQueue.h" />
+    <ClInclude Include="MTGeometry.h" />
+    <ClInclude Include="MultiThreadedResource.h" />
     <ClInclude Include="SphericalCamera.h" />
     <ClInclude Include="ColorMat.h" />
     <ClInclude Include="ColorSetMat.h" />
@@ -352,6 +355,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\tinyply\source\tinyply.cpp" />
+    <ClCompile Include="Bitmask.cpp" />
     <ClCompile Include="ColorSetMat.cpp" />
     <ClCompile Include="CommonGeometry.cpp" />
     <ClCompile Include="NormalDisplayShader.cpp" />

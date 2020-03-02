@@ -27,8 +27,8 @@ public:
 
 	glm::vec3 right() const;
 	glm::vec3 up() const;
-private:
 	float azimuth, altitude, radius;
+private:
 };
 
 }

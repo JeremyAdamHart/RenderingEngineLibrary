@@ -17,6 +17,9 @@
 #include "VRContext.h"
 #include "VRController.h"
 #include "VRDeviceManager.h"
+#include <stb/stb_image_write.h>
+
+#include <glm/gtc/matrix_transform.hpp>
 
 int gWindowWidth, gWindowHeight;
 
@@ -59,12 +62,17 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
 #include <assert.h>
 
+enum {
+	SCREENSHOT_CONTROL=VRSceneTransform::ACTION_COUNT
+};
+
 void setControllerBindingsOculusTouch(VRControllerInterface *input, VRControllerHand hand) {
 	input->assignButton(VRSceneTransform::TRANSFORM_CONTROL, vr::k_EButton_Grip);
 }
 
 void setControllerBindingsVive(VRControllerInterface *input, VRControllerHand hand) {
 	input->assignButton(VRSceneTransform::TRANSFORM_CONTROL, vr::k_EButton_Grip);
+	input->assignButton(SCREENSHOT_CONTROL, vr::k_EButton_SteamVR_Trigger);
 }
 
 void setControllerBindingsWindows(VRControllerInterface *input, VRControllerHand hand) {
@@ -113,6 +121,29 @@ struct ControllerReferenceFilepaths {
 		}
 	}
 };
+
+//Changes filename if file exists with that name
+string findFilenameVariation(string filepath) {
+	int counter = 1;
+	size_t splitPos = filepath.find_last_of('.');
+	if (splitPos > filepath.size()) {
+		splitPos = filepath.size() - 1;
+	}
+	FILE *f;
+	errno_t err = fopen_s(&f, filepath.c_str(), "r");
+	while (f != nullptr) {
+		if (counter == 1)
+			filepath.insert(splitPos, to_string(counter));
+		else {
+			filepath.erase(splitPos, to_string(counter - 1).size());
+			filepath.insert(splitPos, to_string(counter));
+		}
+		errno_t err = fopen_s(&f, filepath.c_str(), "r");
+		counter++;
+	}
+
+	return filepath;
+}
 
 void modelLoop(WindowManager *wm, int sampleNumber) {
 	glfwSetCursorPosCallback(wm->window, cursorPositionCallback);
@@ -196,7 +227,7 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 
 	vector<Drawable> drawables;
 	drawables.push_back(Drawable(objToElementGeometry("models/dragon.obj"), make_shared<ShadedMat>(0.3, 0.4, 0.4, 10.0)));
-	drawables.back().addMaterial(new ColorMat(vec3(1, 0, 0)));
+	drawables.back().addMaterial(new ColorMat(vec4(1, 0, 0, 1)));
 
 	//@TODO Encapsulate this in something
 	//Trackpad frame
@@ -217,6 +248,13 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 
 	VRSceneTransform sceneTransform;
 	sceneTransform.setPosition(vec3(0.f, 1.f, -1.f));
+
+	//Screenshots
+	const int SCREENSHOT_WIDTH = 4000;
+	const int SCREENSHOT_HEIGHT = 3000;
+	Framebuffer fbScreenshotDraw = createFramebufferWithColorAndDepth(SCREENSHOT_WIDTH, SCREENSHOT_HEIGHT, &tm, 8);
+	Framebuffer fbScreenshotRead = createFramebufferWithColorAndDepth(SCREENSHOT_WIDTH, SCREENSHOT_HEIGHT, &tm);
+	bool screenshotPressed = false;
 
 	while (!glfwWindowShouldClose(wm->window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -290,7 +328,6 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 
 		glEnable(GL_BLEND);
 
-
 		if (frameTimeSamples > 30) {
 			double currentTime = glfwGetTime();
 			frameTime = currentTime - lastTime;
@@ -300,6 +337,43 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 		else {
 			frameTimeSamples++;
 		}
+
+		//Write screenshot to file
+		if (!screenshotPressed && controllers[VRControllerHand::LEFT].input.getActivation(SCREENSHOT_CONTROL)) {
+
+			float aspectRatio = float(SCREENSHOT_WIDTH) / float(SCREENSHOT_HEIGHT);
+			static mat4 screenshotProjection = glm::perspective(radians(80.f), aspectRatio, 0.01f, 10.f);
+
+			glDisable(GL_BLEND);
+			mat4 savedProjection = devices.hmd.leftEye.projection;
+			devices.hmd.leftEye.projection = screenshotProjection;
+			fbScreenshotDraw.use();
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			for (int i = 0; i < 2; i++)
+				bpTexShader.draw(devices.hmd.leftEye, lightPos, devices.controllers[i]);
+			for (int i = 0; i < drawables.size(); i++) {
+				bpShader.draw(devices.hmd.leftEye, lightPos, drawables[i]);		//Add lightPos and colorMat checking
+			}
+
+			blit(fbScreenshotDraw, fbScreenshotRead);
+			Texture screenshotTex = fbScreenshotRead.getTexture(GL_COLOR_ATTACHMENT0);
+
+			string filename = findFilenameVariation("Screenshot.png");
+
+			size_t imageSize = screenshotTex.getWidth()*screenshotTex.getHeight() * 4;
+			unsigned char *data = new unsigned char[imageSize];
+			glGetTextureImage(screenshotTex.getID(), 0, GL_RGBA, GL_UNSIGNED_BYTE, imageSize, data);
+			stbi_flip_vertically_on_write(true);
+			stbi_write_png(filename.c_str(), screenshotTex.getWidth(), screenshotTex.getHeight(), 4, data, 0);
+
+			printf("Saved %s\n", filename.c_str());
+
+			delete[] data;
+			screenshotPressed = true;
+			devices.hmd.leftEye.projection = savedProjection;
+		}
+		else if (!controllers[VRControllerHand::LEFT].input.getActivation(SCREENSHOT_CONTROL))
+			screenshotPressed = false;
 
 		glfwSwapBuffers(wm->window);
 		glfwPollEvents();

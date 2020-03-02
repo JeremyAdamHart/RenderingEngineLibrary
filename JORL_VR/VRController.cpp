@@ -271,7 +271,6 @@ void VRSceneTransform::updateTransform(float deltaTime, const VRController& cont
 		grabPositions.push_back(grabPosition);
 
 		if(controllers[i].input.getActivation(TRANSFORM_CONTROL))
-//		if (controllers->at(i).buttons[VRController::GRIP_BUTTON])
 			gripsPressed.push_back(i);
 	}
 

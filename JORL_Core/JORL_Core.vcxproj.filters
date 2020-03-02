@@ -63,6 +63,9 @@
     <ClInclude Include="VertexBufferTemplates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Angles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -109,6 +112,9 @@
     </ClCompile>
     <ClCompile Include="VertexBufferTemplates.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Angles.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

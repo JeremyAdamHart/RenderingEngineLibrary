@@ -2424,18 +2424,21 @@ void WindowManager::adaptiveNoiseLoop() {
 
 void WindowManager::petioleAlignmentLoop()
 {
+
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 
 	SimpleTexManager tm;
 
 	BlinnPhongShader bpShader;
+	BlinnPhongShader bpTexShader(BPTextureUsage::TEXTURE);
 	SimpleShader colorShader;
 
 	//Plane
 	Drawable plane(createPlaneGeometry(),
-		make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
-	plane.addMaterial(make<ColorMat>(vec3(0, 1, 0)));
+		make<ShadedMat>(0.5, 0.4f, 0.4f, 1.f));
+	//plane.addMaterial(make<ColorMat>(vec3(0, 1, 0)));
+	plane.addMaterial(make<TextureMat>(createTexture2D("textures/green_teardrop_leaf_front.png", &tm)));
 	plane.position = vec3(0, -0.3, 0);
 	
 	auto lineGeometry = make<PositionGeometry>(GL_LINES);
@@ -2449,7 +2452,7 @@ void WindowManager::petioleAlignmentLoop()
 	float roll = 0.f;
 	
 	bool update = true;
-
+	
 	PetioleInfo pinfo = { vec3(0.f), vec3(1, 0, 0), vec3(2, 0, 0), quat() };
 	quat initialOrientation = quat();
 
@@ -2461,6 +2464,20 @@ void WindowManager::petioleAlignmentLoop()
 
 	auto blueGeometry = make<PositionGeometry>(GL_LINE_LOOP);
 	Drawable blueDrawable(blueGeometry, make<ColorMat>(vec3(0.2, 0.5, 0.8)));
+
+	auto purpleGeometry = make<PositionGeometry>(GL_LINES);
+	Drawable purpleDrawable(purpleGeometry, make<ColorMat>(vec3(0.9, 0.9, 0.6)));
+
+	windowResized = true;
+	glfwGetWindowSize(window, &windowWidth, &windowHeight);
+
+	altitude = -0.310;
+	azimuth = 0;
+	roll = -0.66;
+	cam.altitude = 0.220463f;
+	cam.azimuth = 0.753396f;
+
+	glLineWidth(2.f);
 
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	while (!glfwWindowShouldClose(window)) {
@@ -2478,10 +2495,13 @@ void WindowManager::petioleAlignmentLoop()
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
 			altitude = glm::clamp(altitude + 0.01f, -0.9f*glm::half_pi<float>(), 0.9f*glm::half_pi<float>());
+			printf("Altitude = %f, Azimuth = %f, Roll = %f\n", altitude, azimuth, roll);
 			update = true;
 		}
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 			altitude = glm::clamp(altitude - 0.01f, -0.9f*glm::half_pi<float>(), 0.9f*glm::half_pi<float>());
+			printf("Altitude = %f, Azimuth = %f, Roll = %f\n", altitude, azimuth, roll);
+			printf("Camera alt = %f, Camera azi = %f\n", cam.altitude, cam.azimuth);
 			update = true;
 		}
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
@@ -2510,19 +2530,23 @@ void WindowManager::petioleAlignmentLoop()
 			vec3 tangent(cos(altitude)*cos(azimuth), sin(altitude), cos(altitude)*sin(azimuth));
 			vec3 normal = angleAxis(roll, tangent)*normalize(cross(tangent, vec3(0, 1, 0)));
 			initialOrientation = mat3(cross(tangent, normal), normal, -tangent);
-			pinfo = petioleRotation(vec3(0.f), tangent, normal, angleFromVertical, targetRotation);
+			pinfo = petioleRotation(vec3(0.f), tangent, normal, 0.5f, angleFromVertical, glm::half_pi<float>(), glm::pi<float>()*0.1f);
 			/*float u = std::max(pinfo.originalLambertion, 0.f);
 			quat endOrientation = normalize(
 				u * initialOrientation +
 				(1-u) * pinfo.endOrientation);*/
 			std::vector<vec3> points = {
-				vec3(0), vec3(0, 2, 0),
+				vec3(0), vec3(0, 1.5f, 0),
+				pinfo.start, pinfo.start + normal
+			};
+			std::vector<vec3> purplePoints = {
 				pinfo.start, pinfo.middle,
 				pinfo.middle, pinfo.end,
 				pinfo.start, pinfo.start + normal,
 				pinfo.end, pinfo.end + pinfo.endOrientation*vec3(0, 1, 0)
-			};
+			};//*/
 			lineGeometry->loadBuffers(points.data(), points.size());
+			purpleGeometry->loadBuffers(purplePoints.data(), purplePoints.size());
 
 			vector<vec3> yellowPoints = { vec3(0), pinfo.endOrientation*vec3(0, 1, 0) };
 			for (float u = 0; u < 1.f; u += 0.01f) {
@@ -2571,21 +2595,26 @@ void WindowManager::petioleAlignmentLoop()
 			window_width = windowWidth;
 			window_height = windowHeight;
 			glViewport(0, 0, window_width, window_height);
+
+			float windowRatio = float(window_width) / float(window_height);
+			float windowSize = 2.f;
+			cam.projection = glm::ortho(-windowRatio*windowSize, windowRatio*windowSize, -windowSize, windowSize, 0.001f, 100.f);
 		}
 
 		plane.setScale(vec3(0.3f));
 
 		colorShader.draw(cam, lineDrawable);
 		colorShader.draw(cam, targetLineDrawable);
+		colorShader.draw(cam, purpleDrawable);
 		colorShader.draw(cam, yellowDrawable);
 		colorShader.draw(cam, blueDrawable);
 		plane.position = pinfo.start;
 		plane.orientation = initialOrientation;
-		bpShader.draw(cam, lightPos, plane);
+		bpTexShader.draw(cam, lightPos, plane);
 
 		plane.position = pinfo.end;
 		plane.orientation = pinfo.endOrientation;
-		bpShader.draw(cam, lightPos, plane);
+		bpTexShader.draw(cam, lightPos, plane);
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

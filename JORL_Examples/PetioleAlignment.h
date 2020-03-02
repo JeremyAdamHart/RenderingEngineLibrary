@@ -8,4 +8,4 @@ struct PetioleInfo {
 	glm::quat endOrientation;
 };
 
-PetioleInfo petioleRotation(glm::vec3 location, glm::vec3 tangent, glm::vec3 normal, float targetAngleFromVertical, float maxPetioleAngle);
+PetioleInfo petioleRotation(glm::vec3 location, glm::vec3 tangent, glm::vec3 normal, float segmentLength, float targetAngleFromVertical, float maxBendAngle, float maxTwistAngle);

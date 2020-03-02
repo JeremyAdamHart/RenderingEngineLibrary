@@ -53,6 +53,26 @@ namespace attrib {
 		static inline std::string name() { return "VertexOffset"; }
 	};
 
+	struct ColorIndex :public Attribute<unsigned char> {
+		static inline std::string name() { return "VertexColorIndex"; }
+	};
+
+	template<typename T>
+	struct Pinned : public T {
+		using T::name;
+		
+		using Pinned_Type = void;
+	};
+
+	template <typename... Ts>
+	using void_t = void;
+
+	template <typename T, typename = void>
+	struct usingPinned : std::false_type {};
+
+	template <typename T>
+	struct usingPinned <T, void_t<typename T::Pinned_Type>> : std::true_type {};
+
 	template<typename T, int N>
 	struct Instanced : public T {
 		static constexpr int Divisor = N;

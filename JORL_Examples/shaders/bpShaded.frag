@@ -46,9 +46,12 @@ float blinnPhongLighting(vec3 normal, vec3 position, vec3 viewPosition)
 void main(void)
 {	
 	#ifdef USING_TEXTURE
-		vec3 baseColor = texture(colorTexture, vec2(FragmentTexCoord.x, FragmentTexCoord.y)).rgb;
-		float alpha = 1.0;
+		vec4 rawColor = texture(colorTexture, vec2(FragmentTexCoord.x, FragmentTexCoord.y)).rgba;
+		vec3 baseColor = rawColor.rgb;
+		float alpha = rawColor.a;
 	//	baseColor = vec3(0.0, 1-FragmentTexCoord.y, 0.0);
+		if(rawColor.a < 0.01)
+			discard;
 	#else
 		vec3 baseColor = color.xyz;
 		float alpha = color.a;

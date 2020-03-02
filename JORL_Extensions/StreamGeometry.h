@@ -133,6 +133,7 @@ public:
 		}
 		else {
 			glBindBuffer(GL_ARRAY_BUFFER, vbo[N]);
+			///*
 			std::vector<nth_type<N, Ts...>> buffer;
 
 			for (int i = 0; i < MultiBufferSwitch::BUFFER_COPIES; i++) {
@@ -141,6 +142,33 @@ public:
 				}
 			}
 			glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(nth_type<N, Ts...>), buffer.data(), GL_DYNAMIC_DRAW);
+			//*/
+			//glBufferSubData(GL_ARRAY_BUFFER, bufferSize * sizeof(nth_type<N, Ts...>)*buffManager.getWrite(), bufferSize * sizeof(nth_type<N, Ts...>), data);
+			//glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(nth_type<N, Ts...>), data, GL_DYNAMIC_DRAW);
+		}
+
+		checkGLErrors("StreamGeometry::loadBuffer()");
+	}
+	template<size_t N>
+	void loadHalfBuffer(nth_type<N, Ts...>* data) {
+		if (streamed[N]) {
+			size_t byteSize = bufferSize/2 * sizeof(nth_type<N, Ts...>);
+			for (int i = 0; i < MultiBufferSwitch::BUFFER_COPIES; i++) {
+				std::memcpy((char*)voidVboPointers[N] + i * byteSize, data, byteSize);
+			}
+		}
+		else {
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[N]);
+			/*std::vector<nth_type<N, Ts...>> buffer;
+
+			for (int i = 0; i < MultiBufferSwitch::BUFFER_COPIES; i++) {
+				for (int j = 0; j < bufferSize/2; j++) {
+					buffer.push_back(data[j]);
+				}
+			}
+			glBufferData(GL_ARRAY_BUFFER, buffer.size()/2 * sizeof(nth_type<N, Ts...>), buffer.data(), GL_DYNAMIC_DRAW);
+			*/
+			glBufferData(GL_ARRAY_BUFFER, bufferSize*sizeof(nth_type<N, Ts...>), data, GL_DYNAMIC_DRAW)
 		}
 
 		checkGLErrors("StreamGeometry::loadBuffer()");

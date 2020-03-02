@@ -315,6 +315,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Angles.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Drawable.h" />
     <ClInclude Include="Framebuffer.h" />
@@ -332,6 +333,7 @@
     <ClInclude Include="VertexBufferTemplates.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Angles.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Drawable.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
