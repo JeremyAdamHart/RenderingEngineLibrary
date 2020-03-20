@@ -122,6 +122,10 @@ void resourceTest() {
 }
 //*/
 
+void resourceAndMultiBufferTest() {
+
+}
+
 class Locked{
 public:
 	std::unique_lock<std::shared_mutex> lock;

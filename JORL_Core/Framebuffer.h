@@ -56,5 +56,6 @@ public:
 };
 
 void blit(const Framebuffer& read, const Framebuffer& write);
+void blit(const Framebuffer& read, const Framebuffer& write, int minX, int minY, int maxX, int maxY);
 
 }

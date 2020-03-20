@@ -190,6 +190,18 @@ map<GLenum, Texture>::iterator Framebuffer::textureEnd() {
 	return tex.end();
 }
 
+void blit(const Framebuffer& read, const Framebuffer& write, int minX, int minY, int maxX, int maxY) {
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, read.getID());
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, write.getID());
+
+	glBlitFramebuffer(minX, minY, maxX, maxY,
+		minX, minY, maxX, maxY,
+		GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
 void blit(const Framebuffer& read, const Framebuffer& write) {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, read.getID());
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, write.getID());

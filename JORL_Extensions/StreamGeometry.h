@@ -124,7 +124,7 @@ public:
 	}
 
 	template<size_t N>
-	void loadBuffer(nth_type<N, Ts...>* data) {
+	void loadBuffer(const nth_type<N, Ts...>* data) {
 		if (streamed[N]) {
 			size_t byteSize = bufferSize * sizeof(nth_type<N, Ts...>);
 			for (int i = 0; i < MultiBufferSwitch::BUFFER_COPIES; i++) {

@@ -243,11 +243,18 @@ vec3 makePerpendicular(vec3 vector, vec3 perpendicularTo) {
 
 vec3 toVec3(quat q) { return vec3(q.x, q.y, q.z); }
 
-quat projectedQuaternionDiff(quat a, quat b, vec3 projAxis) {
+quat projectedQuaternionDiffOriginal(quat a, quat b, vec3 projAxis) {
 	quat diffQuat = normalize(b)*inverse(normalize(a));
 	float sinTheta = dot(normalize(projAxis), toVec3(diffQuat));
 	float w = sqrt(1 - sinTheta*sinTheta);
 	return quat(w, float(sinTheta)*normalize(projAxis));
+}
+
+quat projectedQuaternionDiff(quat a, quat b, vec3 projAxis) {
+	quat diffQuat = normalize(b)*inverse(normalize(a));
+	float theta = asin(length(toVec3(diffQuat)));	//acos(diffQuat.w);
+	float w = dot(normalize(projAxis), normalize(toVec3(diffQuat)));
+	return quat(cos(w*theta), sin(w*theta)*normalize(projAxis));
 }
 
 quat quaternionDiff(quat a, quat b) {

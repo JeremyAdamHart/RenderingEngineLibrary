@@ -105,15 +105,15 @@ public:
 	class Read {
 		friend Resource;
 		Read(T& data, std::shared_lock<std::shared_mutex> lock, int id)
-			:lock(std::move(lock)), data(data), id(id){}
+			:lock(std::move(lock)), data(data), id(id) {}
 		std::shared_lock<std::shared_mutex> lock;
 	public:
 		const T& data;
 		const int id;
 
-		const T& operator*() {
-			return data;
-		}
+		const T& operator*() const { return data; }
+
+		const T* operator->() const { return &data; }
 
 		bool hasLock() { return bool(lock); }
 	};
@@ -131,6 +131,14 @@ public:
 		T& operator*() { return data; }
 		const T& operator*() const { return data; }
 
+		T* operator->() {
+			return &data;
+		}
+
+		const T* operator->() const{
+			return &data;
+		}
+
 		bool hasLock() { return bool(lock); }
 
 		Write(Write&& w) = default;
@@ -139,6 +147,16 @@ public:
 			lastWritten->store(id);
 		}
 	};
+
+	Resource::Read getReadSpecific(unsigned int buffer, std::chrono::microseconds pollrate = std::chrono::microseconds(0)) {
+		do {
+			int index = buffer;
+			Resource::Read readView(resource[index], std::shared_lock<std::shared_mutex>(locks[index], std::try_to_lock), index);
+			if (readView.hasLock())
+				return readView;
+			std::this_thread::sleep_for(pollrate);
+		} while (true);
+	}
 
 	Resource::Read getRead(std::chrono::milliseconds pollrate = std::chrono::milliseconds(0)) {
 		do {
@@ -159,9 +177,18 @@ public:
 				Resource::Write writeView(resource[index], std::unique_lock(locks[index], std::try_to_lock), index, &lastWritten);
 				if (writeView.hasLock())
 					return std::move(writeView);
-				//else
-					//printf("Write couldn't get lock %d\n", index);
 			}
+
+			std::this_thread::sleep_for(pollrate);
+		} while (true);
+	}
+
+	Resource::Write getWriteSpecific(unsigned int buffer, std::chrono::microseconds pollrate = std::chrono::microseconds(0)) {
+		do {
+			int index = buffer;
+			Resource::Write writeView(resource[index], std::unique_lock(locks[index], std::try_to_lock), index, &lastWritten);
+			if (writeView.hasLock())
+				return std::move(writeView);
 
 			std::this_thread::sleep_for(pollrate);
 		} while (true);
@@ -172,7 +199,8 @@ public:
 		Resource* manager;
 		ReadOnly(Resource* manager) :manager(manager) {}
 	public:
-		Resource::Read getRead(std::chrono::milliseconds pollrate = 0) { return manager->getRead(time); }
+		Resource::Read getRead(std::chrono::milliseconds pollrate = std::chrono::milliseconds(0)) { return manager->getRead(pollrate); }
+		Resource::Read getReadSpecific(unsigned int buffer, std::chrono::microseconds pollrate = std::chrono::microseconds(0)) { return manager->getReadSpecific(buffer, pollrate); }
 	};
 
 	ReadOnly createReader() { return ReadOnly(this); }

@@ -29,6 +29,13 @@ void Bitmask::toggle(int bitNumber)
 
 }
 
+bool Bitmask::test(int bitNumber) const {
+	if (bitNumber / 32 < bits.size())
+		return bits[bitNumber / 32] & (1 << (bitNumber % 32));
+	else
+		return false;
+}
+
 uint32_t Bitmask::getWord(int wordNumber) const
 {
 	return (wordNumber < bits.size()) ? bits[wordNumber] : 0;
