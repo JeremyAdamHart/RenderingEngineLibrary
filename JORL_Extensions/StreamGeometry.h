@@ -36,6 +36,22 @@ public:
 	};
 
 protected:
+
+	struct SyncPair {
+		GLsync sync;
+		typename Resource<AttributePointers, 3>::Read ptrs;
+		SyncPair(GLsync sync, typename Resource<AttributePointers, 3>::Read&& ptrs) :
+			sync(sync), ptrs(std::move(ptrs)) {}
+		void update(GLsync newSync) {
+			glDeleteSync(sync);
+			sync = newSync;
+		}
+		bool triggered() {
+			GLenum result = glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
+			return result == GL_CONDITION_SATISFIED || result == GL_ALREADY_SIGNALED;
+		}
+	};
+
 	VertexBindingMapping vaoMap;
 	GLenum mode;
 	std::vector<GLBuffer> vbo;
@@ -43,7 +59,7 @@ protected:
 	size_t indexSize;
 
 	//Synchronization
-	std::map<int, GLsync> drawFences;
+	std::map<int, SyncPair> drawFences;
 public:
 	Resource<AttributePointers, 3> pinnedData;
 	PinnedGeometry(size_t size, unsigned int* indices, size_t indexSize, GLenum mode = GL_TRIANGLES)
@@ -124,27 +140,12 @@ public:
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	struct SyncPair {
-		GLsync sync;
-		Resource<AttributePointers, 3>::Read ptrs;
-		SyncPair(GLsync sync, Resource<AttributePointers, 3>::Read&& ptrs) :
-			sync(sync), ptrs(ptrs) {}
-		void update(GLsync newSync) { 
-			glDeleteSync(sync);
-			sync = newSync; 
-		}
-	};
-
 	virtual void drawGeometry(GLProgram program) override {
 		//Release any other locks held for rendering if finished
 		//printf("Start draw------\n");
-		for (auto fence = drawFences.begin(); fence != drawFences.end();) {
-			GLenum result = glClientWaitSync(fence->second, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
-			printf("\t[Draw]fence %d is...\n", fence->first);
-			if (result == GL_CONDITION_SATISFIED || result == GL_ALREADY_SIGNALED) {
+		for (auto& fence = drawFences.begin(); fence != drawFences.end();) {
+			if (fence->second.triggered()) {
 				printf("\t\tunlocked %d\n", fence->first);
-				//pinnedData.locks[fence->first].unlock_shared();
-				glDeleteSync(fence->second);
 				fence = drawFences.erase(fence);
 			}
 			else
@@ -155,19 +156,26 @@ public:
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
 
 		int drawIndex = pinnedData.lastWritten;
-		if (true){	//pinnedData.locks[drawIndex].try_lock_shared()){
+		if (drawFences.find(drawIndex) == drawFences.end())
+			drawFences.emplace(
+				std::make_pair(
+					std::move(drawIndex), 
+					std::move(SyncPair(
+						0, 
+						std::move(pinnedData.getReadSpecific(drawIndex)
+						))
+					)
+				)
+			);
+
+		if (drawFences.find(drawIndex)->second.ptrs.hasLock()){
 			printf("\t[Draw]Drawing index %d\n", drawIndex);
-			static bool startedDrawing = false;
-			if (drawIndex != 2) startedDrawing = true;
-			if(!startedDrawing)
-				glDrawElementsBaseVertex(mode, indexSize, GL_UNSIGNED_INT, 0,  bufferSize*drawIndex);
-			if (drawFences.find(drawIndex) != drawFences.end())
-				glDeleteSync(drawFences[drawIndex]);	
-			drawFences[drawIndex] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+			glDrawElementsBaseVertex(mode, indexSize, GL_UNSIGNED_INT, 0,  bufferSize*drawIndex);
+			drawFences.find(drawIndex)->second.update(glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
 		}
 		else {
 			printf("////////FAILED TO OBTAIN LOCK %d/////////\n", drawIndex);
-			for (auto fence : drawFences) {
+			for (auto& fence : drawFences) {
 				printf("[Draw]draw fence %d\n", fence.first);
 			}
 		}
