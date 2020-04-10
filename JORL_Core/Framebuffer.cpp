@@ -24,7 +24,7 @@ bool Framebuffer::addTexture(Texture newTex, GLenum attachment) {
 	tex[attachment] = newTex;
 
 
-	glBindTexture(GL_TEXTURE_2D, newTex.getID());
+	glBindTexture(newTex.getTarget(), newTex.getID());
 	glBindFramebuffer(GL_FRAMEBUFFER, id);
 	glFramebufferTexture2D(GL_FRAMEBUFFER,
 		attachment,

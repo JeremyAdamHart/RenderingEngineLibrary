@@ -1,4 +1,4 @@
-#version 410
+#version 450
 
 // first output is mapped to the framebuffer's colour index by default
 out vec4 OutputColor;

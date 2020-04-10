@@ -41,6 +41,7 @@ public:
 	void objLoadingLoop();
 	void rigidBodyTest();
 	void testLoop();
+	void colorUpdatingLoop();
 	void velocitySpringLoop();
 	void treeGrowthTest();
 	void growthLoop2D();

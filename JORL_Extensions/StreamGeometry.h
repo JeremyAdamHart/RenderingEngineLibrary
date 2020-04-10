@@ -10,9 +10,171 @@
 #include "MultiBuffer.h"
 #include "BufferQueue.h"
 
+#include<MultiThreadedResource.h>
+#include <VertexAttribLayout.h>
+
 namespace renderlib {
 
 using namespace glm;
+
+template<class... Ts>
+class PinnedGeometry : public GLGeometryContainer {
+public:
+	class AttributePointers {
+	friend PinnedGeometry;
+	private:
+		std::vector<void*> pointers;
+		size_t offset;
+
+	public:
+		AttributePointers(std::vector<void*> pointers = {}, size_t offset=0) 
+			: pointers(pointers), offset(offset) {}
+		template<typename T>
+		typename T::Type* get() { return static_cast<typename T::Type*>(pointers[indexOf<T, Ts...>()])+offset; }
+		template<typename T>
+		const typename T::Type* get() const { return static_cast<typename T::Type*>(pointers[indexOf<T, Ts...>()])+offset; }
+	};
+
+protected:
+	VertexBindingMapping vaoMap;
+	GLenum mode;
+	std::vector<GLBuffer> vbo;
+	size_t bufferSize;
+	size_t indexSize;
+
+	//Synchronization
+	std::map<int, GLsync> drawFences;
+public:
+	Resource<AttributePointers, 3> pinnedData;
+	PinnedGeometry(size_t size, unsigned int* indices, size_t indexSize, GLenum mode = GL_TRIANGLES)
+		: bufferSize(size), indexSize(indexSize), mode(mode)
+	{
+		for (int i = 0; i < sizeof...(Ts); i++) {
+			vbo.push_back(createBufferID());
+			glBindBuffer(GL_ARRAY_BUFFER, vbo.back());
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		vbo.push_back(createBufferID());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*indexSize, indices, GL_STATIC_DRAW);
+		
+		std::vector<void*> voidPointers(sizeof...(Ts));
+		allocateBufferStorage<Ts...>(vbo.data(), bufferSize*3, voidPointers.data());
+
+		*pinnedData.getWriteSpecific(0, std::chrono::milliseconds(1)) =
+			AttributePointers(voidPointers, 0);
+		*pinnedData.getWriteSpecific(1, std::chrono::milliseconds(1)) =
+			AttributePointers(voidPointers, bufferSize);
+		*pinnedData.getWriteSpecific(2, std::chrono::milliseconds(1)) =
+			AttributePointers(voidPointers, 2*bufferSize);
+	}
+
+	PinnedGeometry(size_t size, GLenum mode = GL_TRIANGLES)
+		: bufferSize(size), indexSize(0), mode(mode)
+	{
+		for (int i = 0; i < sizeof...(Ts); i++) {
+			vbo.push_back(createBufferID());
+			glBindBuffer(GL_ARRAY_BUFFER, vbo.back());
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		vbo.push_back(createBufferID());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+
+		std::vector<void*> voidPointers(sizeof...(Ts));
+		allocateBufferStorage<Ts...>(vbo.data(), bufferSize * 3, voidPointers.data());
+
+		*pinnedData.getWriteSpecific(0, std::chrono::milliseconds(1)) =
+			AttributePointers(voidPointers, 0);
+		*pinnedData.getWriteSpecific(1, std::chrono::milliseconds(1)) =
+			AttributePointers(voidPointers, bufferSize);
+		*pinnedData.getWriteSpecific(2, std::chrono::milliseconds(1)) =
+			AttributePointers(voidPointers, 2 * bufferSize);
+	}
+
+	template<typename A>
+	void loadBuffer(typename A::Type* data) {
+		if constexpr (!attrib::usingPinned<A>()) {
+			glBindBuffer(GL_ARRAY_BUFFER, vbo[indexOf<A, Ts...>()]);
+			size_t bufferSizeBytes = bufferSize * sizeof(typename A::Type);
+			glBufferData(GL_ARRAY_BUFFER, bufferSizeBytes*3, nullptr, GL_DYNAMIC_DRAW);
+			for (int i = 0; i < 3; i++)
+				glBufferSubData(GL_ARRAY_BUFFER, i*bufferSizeBytes, bufferSizeBytes, data);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+		else {
+			for (int i = 0; i < 3; i++) {
+				auto buffer = pinnedData.getWriteSpecific(i, std::chrono::microseconds(100));
+				for (int d = 0; d < bufferSize; d++) {
+					buffer->get<A>()[d] = data[d];
+				}
+			}
+		}
+	}
+	
+	void loadBuffers(typename Ts::Type*... data) {
+		loadBuffers_rec<PinnedGeometry<Ts...>, Ts...>(this, data...);
+	}
+
+	void loadIndices(unsigned int* indices, size_t newIndexSize) {
+		indexSize = newIndexSize;
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize * sizeof(unsigned int), indices, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+
+	struct SyncPair {
+		GLsync sync;
+		Resource<AttributePointers, 3>::Read ptrs;
+		SyncPair(GLsync sync, Resource<AttributePointers, 3>::Read&& ptrs) :
+			sync(sync), ptrs(ptrs) {}
+		void update(GLsync newSync) { 
+			glDeleteSync(sync);
+			sync = newSync; 
+		}
+	};
+
+	virtual void drawGeometry(GLProgram program) override {
+		//Release any other locks held for rendering if finished
+		//printf("Start draw------\n");
+		for (auto fence = drawFences.begin(); fence != drawFences.end();) {
+			GLenum result = glClientWaitSync(fence->second, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
+			printf("\t[Draw]fence %d is...\n", fence->first);
+			if (result == GL_CONDITION_SATISFIED || result == GL_ALREADY_SIGNALED) {
+				printf("\t\tunlocked %d\n", fence->first);
+				//pinnedData.locks[fence->first].unlock_shared();
+				glDeleteSync(fence->second);
+				fence = drawFences.erase(fence);
+			}
+			else
+				fence++;
+		}
+
+		vaoMap.requestVAO<Ts...>(program, &vbo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+
+		int drawIndex = pinnedData.lastWritten;
+		if (true){	//pinnedData.locks[drawIndex].try_lock_shared()){
+			printf("\t[Draw]Drawing index %d\n", drawIndex);
+			static bool startedDrawing = false;
+			if (drawIndex != 2) startedDrawing = true;
+			if(!startedDrawing)
+				glDrawElementsBaseVertex(mode, indexSize, GL_UNSIGNED_INT, 0,  bufferSize*drawIndex);
+			if (drawFences.find(drawIndex) != drawFences.end())
+				glDeleteSync(drawFences[drawIndex]);	
+			drawFences[drawIndex] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+		}
+		else {
+			printf("////////FAILED TO OBTAIN LOCK %d/////////\n", drawIndex);
+			for (auto fence : drawFences) {
+				printf("[Draw]draw fence %d\n", fence.first);
+			}
+		}
+
+		glBindVertexArray(0);
+	}
+};
 
 /**
 * STREAM GEOMETRY CLASS

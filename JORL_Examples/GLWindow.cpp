@@ -1954,6 +1954,10 @@ void WindowManager::simpleModelLoop() {
 	glfwSetKeyCallback(window, keyCallback);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 
+	unsigned int indices[6] = { 0, 1, 2, 1, 2, 3 };
+
+	PinnedGeometry<attrib::Position, attrib::Pinned<attrib::Normal>> testGeometry(100, indices, 6);
+
 	SimpleTexManager tm;
 
 	BlinnPhongShader bpShader;
@@ -2080,6 +2084,103 @@ void WindowManager::shadowLoop() {
 		glfwSwapBuffers(window);
 		glfwWaitEvents();
 	}
+
+	glfwTerminate();
+}
+
+using PinnedColorGeometry = PinnedGeometry<
+	attrib::Position,
+	attrib::Normal,
+	attrib::Pinned<attrib::ColorIndex>>;
+
+void meshUpdateThread(
+	Resource<PinnedColorGeometry::AttributePointers, 3>* attribResource,
+	std::atomic_bool* shouldClose, size_t meshSize) 
+{
+	using namespace attrib;
+
+	while (!(*shouldClose)) {
+		static char color = 0;
+		static int iteration = 0;
+		color = (color + 1) % 4;
+	
+		auto attribWrite = attribResource->getWrite();
+		printf("Color = %d    iteration = %d    id = %d\n", color, iteration, attribWrite.id);
+		//for (int i = (iteration%3)*meshSize/3; i < meshSize / 3; i++) {
+		for(int i=0; i<meshSize; i++){
+			attribWrite->get<Pinned<ColorIndex>>()[i] = color;
+		}
+		iteration++;
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	}
+
+	printf("CLOSED------------------------\n");
+}
+
+void WindowManager::colorUpdatingLoop() {
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	using namespace attrib;
+
+	SimpleTexManager tm;
+
+	BlinnPhongShader bpShader;
+
+	//Dragon
+	/*Drawable dragon(
+		objToElementGeometry("models/dragon.obj"),
+		make<ColorMat>(vec3(0.75f, 0.1f, 0.3f)));
+	*/
+
+	MeshInfoLoader minfo("models/dragon.obj");
+	std::vector<unsigned char> colors;
+	colors.resize(minfo.vertices.size(), 2);
+
+	auto csMat = make<ColorSetMat>(std::vector<glm::vec3>{ 
+		glm::vec3(1, 1, 1), 
+		glm::vec3(1, 0, 0), 
+		glm::vec3(0, 1, 0), 
+		glm::vec3(0, 0, 1) });
+	ColorShader colorShader(4);
+	sptr<PinnedColorGeometry> dragonGeometry = make<PinnedColorGeometry>(minfo.vertices.size());
+	dragonGeometry->loadIndices(minfo.indices.data(), minfo.indices.size());
+	dragonGeometry->loadBuffers(minfo.vertices.data(), minfo.normals.data(), colors.data());
+	Drawable dragon(dragonGeometry, csMat);
+	dragon.addMaterial(make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	//Plane
+	Drawable plane(createPlaneGeometry(),
+		make<ShadedMat>(0.2, 0.4f, 0.4f, 1.f));
+	plane.addMaterial(make<ColorMat>(vec3(1.f, 0, 0)));
+	plane.position = vec3(0, -0.3, 0);
+
+	vec3 lightPos(10, 10, 10);
+
+	std::atomic_bool shouldClose = false;
+
+	std::thread paintingThread (meshUpdateThread,
+		&dragonGeometry->pinnedData, &shouldClose, colors.size());
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+		}
+
+		colorShader.draw(cam, lightPos, dragon);
+		bpShader.draw(cam, lightPos, plane);
+
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+	}
+
+	shouldClose = true;
+
+	paintingThread.join();
 
 	glfwTerminate();
 }

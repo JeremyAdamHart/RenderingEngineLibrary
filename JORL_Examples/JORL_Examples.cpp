@@ -7,6 +7,7 @@
 #include "AdaptiveNoise.h"
 #include "noiseTest.h"
 #include <unordered_map>
+#include <sstream>
 #include <cctype>
 
 #include <iostream>
@@ -100,21 +101,27 @@ void testMultiBufferStager() {
 void resourceTest() {
 	const size_t N = 3;
 	Resource<int, N> rm;
+	
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
-	std::thread writer = std::thread([](Resource<int, N>& rm) {
+
+
+	std::thread writer = std::thread([](Resource<int, N>& rm, std::chrono::system_clock::time_point start) {
 		for (int i = 0; i < 1000; i++) {
 			auto value = rm.getWrite();
 			*value = i;
-			std::printf("Write %d\n", *value);
+			std::chrono::duration<double> timediff = std::chrono::system_clock::now() - start;
+			std::printf("Write %d from %d, at %f\n", *value, value.id, timediff);
 			std::this_thread::sleep_for(std::chrono::microseconds(100));
 		}
-	}, std::ref(rm));
+	}, std::ref(rm), start);
 
 	int value = -1;
 	while (value < 999) {
 		auto reader = rm.getRead();
 		value = *reader;
-		std::printf("\tRead %d\n", value);
+		std::chrono::duration<double> timediff = std::chrono::system_clock::now() - start;
+		std::printf("\t\tRead %d from %d, at %f\n", value, reader.id, timediff);
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
@@ -141,6 +148,10 @@ public:
 
 int main()
 {	
+	Resource<int, 3> intResource(0);
+
+	intResource.getWrite().data = 7;
+
 	testMultiBufferStager();
 
 	std::shared_mutex m;
@@ -163,7 +174,8 @@ int main()
 
 	//runAdaptiveNoiseTests();
 
-	wm.petioleAlignmentLoop();
+	wm.colorUpdatingLoop();
+//	wm.petioleAlignmentLoop();
 //	wm.shadowLoop();
 //	wm.simpleModelLoop();
 //	wm.treeGrowthTest();
