@@ -6,6 +6,7 @@
 namespace renderlib {
 
 struct ColorTag {};
+struct NormalMapTag {};
 
 template<typename T>
 class TextureMatT : public Material {
@@ -40,5 +41,6 @@ template<typename T>
 const int TextureMatT<T>::id = Material::getNextID();
 
 using TextureMat = TextureMatT<ColorTag>;
+using NormalMapMat = TextureMatT<NormalMapTag>;
 
 }

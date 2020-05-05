@@ -39,7 +39,7 @@ void SphericalCamera::zoom(float factor){
 }
 
 mat4 SphericalCamera::getCameraMatrix() const {
-	return getRotationMatrix()*translateMatrix(-getPosition());
+	return transpose(getRotationMatrix())*translateMatrix(-getPosition());
 }
 
 mat4 SphericalCamera::getProjectionMatrix() const {
@@ -52,11 +52,18 @@ mat4 SphericalCamera::getRotationMatrix() const {
 	glm::vec3 y = normalize(cross(z, x));
 	glm::vec3 up = normalize(cross(z, right()));
 	//printf("z (%f %f %f)\n", z.x, z.y, z.z);
-	return glm::transpose(mat4(
+	/*return glm::transpose(mat4(
 		x.x, x.y, x.z, 0,
 		y.x, y.y, y.z, 0,
 		z.x, z.y, z.z, 0,
 		0, 0, 0, 1));
+		*/
+	return mat4(
+		vec4(x, 0),
+		vec4(y, 0),
+		vec4(z, 0),
+		vec4(0, 0, 0, 1)
+	);
 	/*
 	return glm::transpose(mat4(
 		cos(azimuth), 0, -sin(azimuth), 0,
@@ -77,7 +84,11 @@ glm::vec3 SphericalCamera::right() const
 
 glm::vec3 SphericalCamera::up() const
 {
-	return glm::vec3(sin(altitude)*sin(azimuth), cos(altitude), sin(altitude)*cos(azimuth));
+	glm::vec3 z = normalize(getPosition() - center);
+	glm::vec3 x = normalize(cross(vec3(0, 1, 0), z));
+	glm::vec3 y = normalize(cross(z, x));
+	glm::vec3 up = normalize(cross(z, right()));
+	return up;	// glm::vec3(sin(altitude)*sin(azimuth), cos(altitude), sin(altitude)*cos(azimuth));
 }
 
 

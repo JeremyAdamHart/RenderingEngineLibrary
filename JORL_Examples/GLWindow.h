@@ -49,6 +49,7 @@ public:
 	void laplacianSmoothingMeshLoop();
 	void simpleModelLoop();
 	void shadowLoop();
+	void rationalBezierLoop();
 
 	void waveSimulationLoop(int numSegments, float dt);
 	void convexTestLoop();

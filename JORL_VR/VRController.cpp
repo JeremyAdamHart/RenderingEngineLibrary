@@ -48,6 +48,8 @@ void VRAxis::update(const vr::VRControllerState_t &state) {
 		state.rAxis[button - vr::k_EButton_Axis0].y);
 }
 
+void VRAxis::set(glm::vec2 value) { v = value; }
+
 VRButton::VRButton() :mask(0){}
 VRButton::VRButton(vr::EVRButtonId button) :mask(vr::ButtonMaskFromId(button)) {}
 bool VRButton::value() { return v; }
@@ -55,6 +57,8 @@ void VRButton::add(vr::EVRButtonId button) { mask |= vr::ButtonMaskFromId(button
 void VRButton::update(const vr::VRControllerState_t &state) {
 	v = mask & state.ulButtonPressed;
 }
+
+void VRButton::set(bool value) { v = value; }
 
 VRTouch::VRTouch() :mask(0){}
 VRTouch::VRTouch(vr::EVRButtonId button) :mask(vr::ButtonMaskFromId(button)) {}
@@ -64,6 +68,8 @@ void VRTouch::update(const vr::VRControllerState_t &state) {
 	uint64_t bitMask = mask & state.ulButtonTouched;
 	v = (mask & state.ulButtonTouched) != 0;
 }
+
+void VRTouch::set(bool value) { v = value; }
 
 void VRControllerInterface::assignAxis(int action, vr::EVRButtonId button) {
 //	buttons.erase(action);
@@ -110,6 +116,23 @@ bool VRControllerInterface::getActivation(int action) {
 	bool touchValue = (touched.find(action) != touched.end()) ? touched[action].value() : false;
 
 	return buttonValue || touchValue;
+}
+
+void VRControllerInterface::setScalar(int action, float value){
+	axes[action].set(vec2(value, 0));
+}
+
+void VRControllerInterface::setAxis(int action, vec2 value)
+{
+	axes[action].set(value);
+}
+
+void VRControllerInterface::setActivation(int action, bool value)
+{
+	auto buttonLoc = buttons.find(action);
+	if (buttonLoc != buttons.end()) buttonLoc->second.set(value);
+	auto touchLoc = touched.find(action);
+	if (touchLoc != touched.end()) touchLoc->second.set(value);
 }
 
 void VRControllerInterface::updateState(const vr::VRControllerState_t &state) {

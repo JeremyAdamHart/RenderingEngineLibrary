@@ -55,6 +55,8 @@ using namespace std;
 
 #include "ShadowShader.h"
 
+#include "glmSupport.h"
+
 //Random
 #include <random>
 #include <ctime>
@@ -132,6 +134,7 @@ GLFWwindow* glfwSetup(int window_width, int window_height, string window_name) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 //	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);	
+	glfwWindowHint(GLFW_SAMPLES, 8);
 
 	GLFWwindow *window = glfwCreateWindow(
 		window_width, window_height, window_name.c_str(), nullptr, nullptr);
@@ -1942,6 +1945,199 @@ void WindowManager::noiseLoop() {
 
 		perlinShader.draw(cam, texSquare);
 
+
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
+	}
+
+	glfwTerminate();
+}
+
+vec3 rationalBezierSpline(float u, vec3 p0, float w0, vec3 p1, float w1, vec3 p2, float w2) {
+	u = glm::clamp(u, 0.f, 1.f);
+
+	return ((1 - u)*(1 - u)*w0*p0 + 2.f*(1 - u)*u*w1*p1 + u * u*w2*p2) /
+		((1 - u)*(1 - u)*w0 + 2.f*(1 - u)*u*w1 + u * u*w2);
+}
+
+float arcLengthApprox(vec4 p0, vec4 p1, vec4 p2, float u) {
+	float w = p1.w;
+	float l1 = length(vec3(p0) - vec3(p1)/w);
+	float l2 = length(vec3(p2) - vec3(p1)/w);
+	l1 = l1 / (l1 + l2);
+	l2 = 1.f - l1;
+	//printf("l1 = %f\n", l1);
+	//Use approximation of 1D quadratic nurbs curve with control points 0, 1 and 2
+	return (2.f*l1*u*(1 - u)*w + u * u) / ((1 - u)*(1 - u) + 2.f*(1 - u)*u*w + u * u); //(1 + (w - 1) * 2 * u*(1 - u));
+}
+
+vec3 getCursorPos(GLFWwindow* window, unsigned int width, unsigned int height, glm::mat4 projectionMatrix) {
+	//glfwGetCursorPos
+	double x, y;
+	float w = float(width);
+	float h = float(height);
+	glfwGetCursorPos(window, &x, &y);
+	vec4 mousePos(2.f*x / w - 1.f, -(2.f*y / h - 1.f), 0, 1.f);
+	vec4 unprojected = glm::inverse(projectionMatrix)*mousePos;
+	return vec3(unprojected);
+}
+
+void WindowManager::rationalBezierLoop() {
+	glfwSetKeyCallback(window, keyCallback);
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+
+	vec3 controlPoints[3] = {
+		vec3(-0.5, 0.5, 0),
+		vec3(-0.5, -0.5, 0),
+		vec3(-0.5, -0.75, 0)
+	};
+
+	float radius = 0.02f;
+
+	SimpleTexManager tm;
+
+	Texture checkerTexture = createTexture2D("./textures/Checkerboard.jpg", &tm);
+
+	glActiveTexture(NO_ACTIVE_TEXTURE);
+	glBindTexture(GL_TEXTURE_2D, checkerTexture.getID());
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	//glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	BlinnPhongShader bpShader;
+	auto controlGeometry = make<PositionGeometry>(GL_LINE_STRIP);
+	Drawable controlDrawable(controlGeometry, make<ColorMat>(vec3(0, 0, 0)));
+	auto curveGeometry = make<TextureGeometry>(GL_LINE_STRIP);
+	Drawable curveDrawable(curveGeometry, make<TextureMat>(checkerTexture));
+	auto normalSpacingCurveGeometry = make<TextureGeometry>(GL_LINE_STRIP);
+	Drawable normalSpacingDrawable(normalSpacingCurveGeometry, make<TextureMat>(checkerTexture));
+	auto controlPointGeometry = createSphereGeometry(40, 20);
+	Drawable controlPointDrawable(controlPointGeometry, make<ColorMat>(vec3(0, 0, 0)));
+	controlPointDrawable.setScale(glm::vec3(radius));
+	
+	vec3 offset(1, 0, 0);
+
+	curveDrawable.position += offset;
+
+	FlatColorShader shader;
+	SimpleTexShader texShader;
+
+	glLineWidth(3.f);
+	glPointSize(6.f);
+
+	bool updated = true;
+
+	Camera cam;
+	cam.projection = createAspectRatioMatrix(window_width, window_height);
+
+	glClearColor(1.f, 1.f, 1.f, 1.f);
+	while (!glfwWindowShouldClose(window)) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (windowResized) {
+			window_width = windowWidth;
+			window_height = windowHeight;
+			glViewport(0, 0, window_width, window_height);
+			cam.projection = createAspectRatioMatrix(window_width, window_height);
+		}
+	
+		vec3 cursorPos = getCursorPos(window, window_width, window_height, cam.projection);
+		
+		static bool upPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && !upPressed) {
+			vec3 v = normalize(controlPoints[1] - controlPoints[0]);
+			vec3 v_perp = vec3(-v.y, v.x, 0.f);
+			vec3 rotated = cos(glm::pi<float>()/4.f)*v + sin(glm::pi<float>() / 4.f)*v_perp;
+			controlPoints[0] = length(controlPoints[1] - controlPoints[0])*rotated + controlPoints[1];
+			upPressed = true;
+			updated = true;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE)
+			upPressed = false;
+
+		static bool downPressed = false;
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && !downPressed) {
+			vec3 v = normalize(controlPoints[1] - controlPoints[0]);
+			vec3 v_perp = vec3(-v.y, v.x, 0.f);
+			vec3 rotated = cos(-glm::pi<float>() / 4.f)*v + sin(-glm::pi<float>() / 4.f)*v_perp;
+			controlPoints[0] = length(controlPoints[1] - controlPoints[0])*rotated + controlPoints[1];
+			downPressed = true;
+			updated = true;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE)
+			downPressed = false;
+
+
+		static int grabIndex = -1;
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+			if (distance(cursorPos, controlPoints[0]) < 2.f*radius)
+				grabIndex = 0;
+			else if (distance(cursorPos, controlPoints[2]) < 2.f*radius)
+				grabIndex = 2;
+			if (grabIndex >= 0) {
+				float l = length(controlPoints[grabIndex] - controlPoints[1]);
+				controlPoints[grabIndex] = normalize(cursorPos - controlPoints[1])*l + controlPoints[1];
+				updated = true;
+			}
+		}
+		else
+			grabIndex = -1;
+
+		if (updated) {
+			controlGeometry->loadBuffers(controlPoints, 3);
+			const int CURVE_RESOLUTION = 50;
+			float depth = -0.0f;
+			float weight = 3.f;
+			std::vector<vec3> curvePoints;
+			std::vector<vec2> curveCoords;
+			std::vector<vec2> nsCurveCoords;
+			for (int i = 0; i < CURVE_RESOLUTION; i++) {
+				float u = float(i) / float(CURVE_RESOLUTION - 1);
+				curvePoints.push_back(
+					rationalBezierSpline(u, 
+						controlPoints[0], 1.f,
+						controlPoints[1], weight,
+						controlPoints[2], 1.f) + vec3(0, 0, depth));
+				curveCoords.push_back(vec2(
+					2.f*arcLengthApprox(
+						vec4(controlPoints[0], 1.f), 
+						vec4(controlPoints[1], 1.f)*weight, 
+						vec4(controlPoints[2], 1.f), 
+						u), 0.51f));
+				nsCurveCoords.push_back(vec2(2.f*u, 0.51f));
+			}
+			curveGeometry->loadBuffers(curvePoints.data(), curveCoords.data(), curvePoints.size());
+			normalSpacingCurveGeometry->loadBuffers(curvePoints.data(), nsCurveCoords.data(), curvePoints.size());
+			updated = false;
+
+			auto b = [&](float u) { return rationalBezierSpline(u,
+				controlPoints[0], 1.f,
+				controlPoints[1], weight,
+				controlPoints[2], 1.f); };
+
+			float step = 0.00001f;
+			vec3 tangentBeginning = (b(step) - b(0))/step;
+			vec3 tangentMiddle = (b(0.5f + step) - b(0.5f - step)) / (2.f*step);
+
+			printf("T(0) = %f\tT(0.5) = %f\n", length(tangentBeginning), length(tangentMiddle));
+		}
+
+	
+		texShader.draw(cam, curveDrawable);
+		texShader.draw(cam, normalSpacingDrawable);
+		//shader.draw(cam, controlDrawable);
+		for (int i = 0; i < 3; i++) {
+			controlPointDrawable.position = controlPoints[i];
+			shader.draw(cam, controlPointDrawable);
+		}
+
+		for (int i = 0; i < 3; i++) {
+			controlPointDrawable.position = controlPoints[i]+offset;
+			shader.draw(cam, controlPointDrawable);
+		}
 
 		glfwSwapBuffers(window);
 		glfwWaitEvents();

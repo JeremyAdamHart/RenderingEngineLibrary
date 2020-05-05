@@ -107,6 +107,20 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
+	template<typename A>
+	void loadSubBuffer(typename A::Type* data, size_t offset, size_t size) {
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[indexOf<A, Ts...>()]);
+
+		unsigned int dataSize;
+		if constexpr (A::Divisor > 0) dataSize = instanceCount;
+		else
+			dataSize = bufferSize;
+
+		glBufferSubData(GL_ARRAY_BUFFER, offset *sizeof(typename A::Type), size * sizeof(typename A::Type), data);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
 	virtual void loadBuffers(typename Ts::Type*... data, size_t dataSize) {
 		loadBuffers(data..., dataSize, 1);
 	}

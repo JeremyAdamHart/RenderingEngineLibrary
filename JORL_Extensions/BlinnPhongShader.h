@@ -28,8 +28,6 @@ public:
 	void drawVertexBinding(const Camera& cam, glm::vec3 lightPos, Drawable &obj);
 };
 
-
-
 class BlinnPhongShader : public Shader {
 protected:
 

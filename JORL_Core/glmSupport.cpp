@@ -41,6 +41,12 @@ glm::mat3 toMat3(mat4 m){
 		);
 }
 
+glm::mat4 createAspectRatioMatrix(unsigned int width, unsigned int height) {
+	mat4 m = mat4(1.f);
+	m[0][0] = float(height) / float(width);
+	return m;
+}
+
 struct project {
 	glm::vec3 p;
 	project(glm::vec3 p) :p(p) {}

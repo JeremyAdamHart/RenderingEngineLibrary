@@ -217,10 +217,10 @@ public:
 	}
 	Resource::Write getWrite(std::chrono::milliseconds pollrate = std::chrono::milliseconds(0)) {
 		int baseIndex = (lastWritten + 1) % N;
-		std::cout << "<" << typeid(*this).name() << ">::getWrite()" << std::endl;
+		//std::cout << "<" << typeid(*this).name() << ">::getWrite()" << std::endl;
 		do {
 			for (int i = 0; i < N - 1; i++) {
-				std::cout << "\tTesting " << (baseIndex + i) % N << std::endl;
+				//std::cout << "\tTesting " << (baseIndex + i) % N << std::endl;
 				int index = (baseIndex + i) % N;	//std::max(int(N - 1), int(0));
 				Resource::Write writeView(resource[index], std::unique_lock(locks[index], std::try_to_lock), index, &lastWritten);
 				if (writeView.hasLock())

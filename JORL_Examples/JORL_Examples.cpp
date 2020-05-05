@@ -104,8 +104,6 @@ void resourceTest() {
 	
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
-
-
 	std::thread writer = std::thread([](Resource<int, N>& rm, std::chrono::system_clock::time_point start) {
 		for (int i = 0; i < 1000; i++) {
 			auto value = rm.getWrite();
@@ -152,7 +150,7 @@ int main()
 
 	intResource.getWrite().data = 7;
 
-	testMultiBufferStager();
+	//testMultiBufferStager();
 
 	std::shared_mutex m;
 	//auto lock = std::unique_lock(m);
@@ -162,7 +160,7 @@ int main()
 
 	LockedShared l(std::shared_lock<std::shared_mutex>(m));
 
-	resourceTest();
+	//resourceTest();
 
 	srand(time(0));
 
@@ -174,7 +172,8 @@ int main()
 
 	//runAdaptiveNoiseTests();
 
-	wm.colorUpdatingLoop();
+//	wm.rationalBezierLoop();
+//	wm.colorUpdatingLoop();
 //	wm.petioleAlignmentLoop();
 //	wm.shadowLoop();
 //	wm.simpleModelLoop();
@@ -187,7 +186,7 @@ int main()
 //	wm.mainLoop();
 //	wm.noiseLoop();
 //	wm.particleLoop();
-//	wm.convexTestLoop();
+	wm.convexTestLoop();
 //	wm.velocitySpringLoop();
 //	wm.growthLoop2D();
 //	wm.adaptiveNoiseLoop();

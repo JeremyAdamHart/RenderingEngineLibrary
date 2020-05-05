@@ -34,6 +34,7 @@ public:
 	VRAxis(vr::EVRButtonId);
 	glm::vec2 value();
 	void update(const vr::VRControllerState_t &state);
+	void set(glm::vec2 value);
 };
 
 class VRButton {
@@ -45,6 +46,7 @@ public:
 	bool value();
 	void add(vr::EVRButtonId button);
 	void update(const vr::VRControllerState_t &state);
+	void set(bool value);
 };
 
 class VRTouch {
@@ -56,6 +58,7 @@ public:
 	bool value();
 	void add(vr::EVRButtonId button);
 	void update(const vr::VRControllerState_t &state);
+	void set(bool value);
 };
 
 class VRControllerInterface {
@@ -72,6 +75,10 @@ public:
 	float getScalar(int action);	//0 or 1 if BUTTON or TOUCHED, 0 to 1 if AXIS
 	glm::vec2 getAxis(int action);	//Always returns {0, 0} if not AXIS
 	bool getActivation(int action);		//True if activated
+
+	void setScalar(int action, float value);
+	void setAxis(int action, vec2 value);
+	void setActivation(int action, bool value);
 
 	void updateState(const vr::VRControllerState_t &state);
 };

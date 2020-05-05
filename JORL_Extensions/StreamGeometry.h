@@ -47,7 +47,7 @@ protected:
 			sync = newSync;
 		}
 		bool triggered() {
-			GLenum result = glClientWaitSync(sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
+			GLenum result = glClientWaitSync(sync, 0, 0);
 			return result == GL_CONDITION_SATISFIED || result == GL_ALREADY_SIGNALED;
 		}
 	};
@@ -145,7 +145,7 @@ public:
 		//printf("Start draw------\n");
 		for (auto& fence = drawFences.begin(); fence != drawFences.end();) {
 			if (fence->second.triggered()) {
-				printf("\t\tunlocked %d\n", fence->first);
+				//printf("\t\tunlocked %d\n", fence->first);
 				fence = drawFences.erase(fence);
 			}
 			else
@@ -169,7 +169,7 @@ public:
 			);
 
 		if (drawFences.find(drawIndex)->second.ptrs.hasLock()){
-			printf("\t[Draw]Drawing index %d\n", drawIndex);
+			//printf("\t[Draw]Drawing index %d\n", drawIndex);
 			glDrawElementsBaseVertex(mode, indexSize, GL_UNSIGNED_INT, 0,  bufferSize*drawIndex);
 			drawFences.find(drawIndex)->second.update(glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
 		}
@@ -275,6 +275,29 @@ public:
 				numMilliseconds++;
 			}
 		}*/
+		buffManager.endRead();	//Free buffer to be written to
+		int bufferNum = buffManager.getRead();
+
+		glBindVertexArray(vao);
+		glDrawElementsBaseVertex(mode, elementNum, GL_UNSIGNED_INT, 0, bufferSize*bufferNum);
+		//Syncronize
+//		glDeleteSync(drawSync);
+	//	drawSync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+
+		firstDraw = false;
+	}
+
+	virtual void drawGeometry(GLProgram programID) {
+		static bool firstDraw = true;
+
+		/*		if (!firstDraw) {
+					GLenum syncStatus = GL_UNSIGNALED;
+					int numMilliseconds = 0;
+					while (syncStatus != GL_ALREADY_SIGNALED && syncStatus != GL_CONDITION_SATISFIED) {
+						syncStatus = glClientWaitSync(drawSync, GL_SYNC_FLUSH_COMMANDS_BIT, 1000);
+						numMilliseconds++;
+					}
+				}*/
 		buffManager.endRead();	//Free buffer to be written to
 		int bufferNum = buffManager.getRead();
 
