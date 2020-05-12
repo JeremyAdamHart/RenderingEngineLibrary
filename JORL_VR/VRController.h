@@ -122,7 +122,7 @@ public:
 class VRSceneTransform :public renderlib::Object {
 public:
 	VRSceneTransform();
-	VRSceneTransform(std::vector<VRController> *controllers);
+	VRSceneTransform(std::vector<VRController> *controllers);	//@TODO Get rid of this constructor
 
 	//Rotation modes
 	enum {
@@ -150,9 +150,9 @@ public:
 	void updateTransform(float deltaTime, const VRController& controllerA, const VRController& controllerB, glm::vec3 grabPositionModelspace);
 	bool multMatrixPreviewTransform(float modelScale);
 	void multMatrixOldOpenGL();
-	void linkControllers(std::vector<VRController> *newControllers);
+	//void linkControllers(std::vector<VRController> *newControllers);
 private:
-	std::vector<VRController> *controllers;
+	//std::vector<VRController> *controllers;
 	std::vector<glm::vec3> lastPosition;
 	std::vector<glm::quat> lastOrientation;
 };

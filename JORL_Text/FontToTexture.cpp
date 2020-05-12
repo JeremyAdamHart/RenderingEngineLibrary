@@ -24,6 +24,9 @@ Font createFont(FT_Library* ft, const char* fontFilename, TextureManager* texMan
 	unsigned int maxBitmapWidth = 0;
 	unsigned int maxBitmapHeight = 0;
 
+	font.ascend = face->size->metrics.ascender / (64.f*float(resolutionY));
+	font.descend = face->size->metrics.descender / (64.f*float(resolutionY));
+	
 	for (unsigned char i = 32; i < 127; i++) {
 		FT_Load_Char(face, i, FT_LOAD_DEFAULT);	//FT_LOAD_MONOCHROME);
 		FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);

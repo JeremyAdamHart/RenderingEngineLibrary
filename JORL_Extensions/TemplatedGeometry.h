@@ -198,6 +198,7 @@ using TexNormalGeometry = GeometryT<attrib::Position, attrib::Normal, attrib::Te
 using TextureGeometry = GeometryT<attrib::Position, attrib::TexCoord>;
 using NormalGeometry = GeometryT < attrib::Position, attrib::Normal>;
 using PositionGeometry = GeometryT<attrib::Position>;
+using PositionIndexGeometry = IndexGeometryUint<attrib::Position>;
 using TexNormalIndexGeometry = IndexGeometryUint<attrib::Position, attrib::Normal, attrib::TexCoord>;
 using TextureIndexGeometry = IndexGeometryUint<attrib::Position, attrib::TexCoord>;
 using NormalIndexGeometry = IndexGeometryUint<attrib::Position, attrib::Normal>;

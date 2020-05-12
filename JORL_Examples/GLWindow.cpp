@@ -442,8 +442,10 @@ void WindowManager::convexTestLoop() {
 	auto last = testMap.add(5);
 	testMap.remove(last);
 
-	MeshInfoLoader modelMinfo("models/dragon.obj");
+	//MeshInfoLoader modelMinfo("models/dragon.obj");
 	//MeshInfoLoader modelMinfo("untrackedmodels/181203_kale_01_use.obj");
+	MeshInfoLoader modelMinfo;
+	modelMinfo.loadModelPly("untrackedmodels/Helianthus.ply");
 	auto modelGeom = make<IndexGeometryUint<attrib::Position, attrib::Normal>>(GL_TRIANGLES, modelMinfo.indices.data(), modelMinfo.indices.size(), modelMinfo.vertices.data(), modelMinfo.normals.data(), modelMinfo.vertices.size());
 
 	Drawable modelDrawable(modelGeom, make_shared<ColorMat>(vec3(0, 1, 0)));

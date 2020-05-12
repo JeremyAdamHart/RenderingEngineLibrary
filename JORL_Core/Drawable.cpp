@@ -56,6 +56,11 @@ bool Drawable::removeMaterial(int type) {
 	return material.erase(type) > 0;
 }
 
+void Drawable::setGeometryContainer(sptr<GLGeometryContainer> newGeometry)
+{
+	geometry = newGeometry;
+}
+
 bool Drawable::loadUniforms(int type, GLint *uniformLocations) const {
 	try {
 		material.at(type)->loadUniforms(uniformLocations);

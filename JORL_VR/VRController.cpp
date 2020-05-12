@@ -204,12 +204,12 @@ void VRController::loadModelMatrixOldOpenGL() const {
 
 VRSceneTransform::VRSceneTransform() :
 	Object(vec3(0.f), quat()), scale(1.f),
-	velocity(0.f), angularVelocity(), controllers(nullptr), 
+	velocity(0.f), angularVelocity(), //controllers(nullptr), 
 	rotationMode(HANDLEBAR), rotationOrigin(ORIGIN_CONTROLLER),
 	lastPosition(2, vec3(0.f)), lastOrientation(2, quat()) {}
 
-
-VRSceneTransform::VRSceneTransform(vector<VRController> *controllers) :
+VRSceneTransform::VRSceneTransform(vector<VRController> *controllers) : VRSceneTransform() {}
+/*
 	Object(vec3(0.f), quat()), scale(1.f),
 	velocity(0.f), angularVelocity(), controllers(controllers), rotationMode(HANDLEBAR), rotationOrigin(ORIGIN_CONTROLLER)
 	{
@@ -226,7 +226,7 @@ void VRSceneTransform::linkControllers(vector<VRController> *newControllers) {
 		lastOrientation[i] = controllers->at(i).getOrientationQuat();
 	}
 }
-
+*/
 void VRSceneTransform::setPosition(glm::vec3 newPos) { position = newPos; }
 
 mat4 VRSceneTransform::getTransform() const {
@@ -402,6 +402,7 @@ void VRSceneTransform::updateTransform(float deltaTime, const VRController& cont
 	lastGripsPressed = gripsPressed.size();
 }
 
+/*
 bool VRSceneTransform::multMatrixPreviewTransform(float modelScale) {
 	std::vector<int> gripsPressed;
 	for (int i = 0; i < controllers->size(); i++) {
@@ -429,4 +430,5 @@ bool VRSceneTransform::multMatrixPreviewTransform(float modelScale) {
 
 	return true;
 }
+*/
 

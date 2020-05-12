@@ -43,8 +43,13 @@ struct CubeGeometry {
 	using Type = GeometryT<attrib::Position, attrib::Normal, attrib::TexCoord>;
 };
 
+struct CylinderGeometry {
+	using Type = IndexGeometryUint<attrib::Position, attrib::Normal, attrib::TexCoord>;
+};
+
 sptr<SphereGeometry::Type> createSphereGeometry(unsigned int azimuthResolution = 40, unsigned int altitudeResolution = 20, float orientation=1.f);
 sptr<PlaneGeometry::Type> createPlaneGeometry(Orientation orientation=Orientation::PositiveY);
+sptr<CylinderGeometry::Type> createCylinderGeometry(glm::vec3 start, glm::vec3 end, float radius, unsigned int resolution);
 sptr<CubeGeometry::Type> createCubeGeometry();
 
 class LineDrawable : public Drawable {

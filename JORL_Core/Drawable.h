@@ -48,6 +48,7 @@ public:
 
 	void deleteMaterialsAndGeometry();
 	void setGeometryContainer(GLGeometryContainer* newGeometry) { geometry = std::shared_ptr<GLGeometryContainer>(newGeometry); }
+	void setGeometryContainer(sptr<GLGeometryContainer> newGeometry);
 	GLGeometryContainer &getGeometry()  { return *geometry; }
 };
 

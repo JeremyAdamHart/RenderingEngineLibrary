@@ -40,6 +40,9 @@ public:
 	Texture tex;
 	std::map<char, Character> charInfo;
 
+	float ascend;
+	float descend;
+
 	Character& character(unsigned char c);
 	const Character& character(unsigned char c) const;
 };

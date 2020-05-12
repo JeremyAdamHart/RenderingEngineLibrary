@@ -89,6 +89,17 @@ sptr<PlaneGeometry::Type> createPlaneGeometry(Orientation orientation) {
 		positions.size());
 }
 
+sptr<CylinderGeometry::Type> createCylinderGeometry(glm::vec3 start, glm::vec3 end, float radius, unsigned int resolution)
+{
+	float cylinderLength = length(start - end);
+	vec3 by = (start - end)/cylinderLength;
+
+
+	
+
+	return sptr<CylinderGeometry::Type>();
+}
+
 sptr<CubeGeometry::Type> createCubeGeometry() {
 	return nullptr;
 }
