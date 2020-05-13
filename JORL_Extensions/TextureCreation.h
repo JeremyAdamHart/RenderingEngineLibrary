@@ -45,4 +45,6 @@ Framebuffer createFramebufferWithColorAndDepth(int width, int height, TextureMan
 IndexedFramebuffer createIndexedFramebufferWithColorAndDepth(int width, int height, TextureManager *manager, size_t num_samples);
 IndexedFramebuffer createIndexedFramebufferWithColorAndDepth(int width, int height, TextureManager *manager);
 
+void setTextureWrappingAndMipMaps(Texture tex);
+
 }
