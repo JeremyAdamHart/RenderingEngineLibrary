@@ -93,11 +93,68 @@ sptr<CylinderGeometry::Type> createCylinderGeometry(glm::vec3 start, glm::vec3 e
 {
 	float cylinderLength = length(start - end);
 	vec3 by = (start - end)/cylinderLength;
+	vec3 bx = cross(by, vec3(0, 0, 1));
+	if (length(bx) < 0.1)
+		bx = cross(by, vec3(1, 0, 0));
+	vec3 bz = normalize(cross(bx, by));
+	bx = normalize(cross(by, bz));
 
+	std::vector<vec3> vertices;
+	std::vector<vec3> normals;
+	std::vector<vec2> uvs;
+	//Side faces
+	for (int i = 0; i < resolution; i++) {
+		float u0 = float(i) / float(resolution);
+		float u1 = float(i+1) / float(resolution);
+		vec3 circleVec0 = radius*(std::cosf(u0*2.f*glm::pi<float>())*bz + sin(u0*2.f*glm::pi<float>())*bx);
+		vec3 circleVec1 = radius*(std::cosf(u1*2.f*glm::pi<float>())*bz + sin(u1*2.f*glm::pi<float>())*bx);
+		vec3 p00 = start + circleVec0;
+		vec3 p10 = start + circleVec1;
+		vec3 p01 = start + circleVec0;
+		vec3 p11 = start + circleVec1;
 
-	
+		vertices.push_back(p00);
+		vertices.push_back(p10);
+		vertices.push_back(p11);
+		normals.push_back(normalize(circleVec0));
+		normals.push_back(normalize(circleVec1));
+		normals.push_back(normalize(circleVec1));
+		uvs.push_back(vec2(u0, 0.f));
+		uvs.push_back(vec2(u1, 0.f));
+		uvs.push_back(vec2(u1, 1.f));
+		
+		vertices.push_back(p00);
+		vertices.push_back(p11);
+		vertices.push_back(p01);
+		normals.push_back(normalize(circleVec0));
+		normals.push_back(normalize(circleVec1));
+		normals.push_back(normalize(circleVec0));
+		uvs.push_back(vec2(u0, 0.f));
+		uvs.push_back(vec2(u1, 1.f));
+		uvs.push_back(vec2(u0, 1.f));
 
-	return sptr<CylinderGeometry::Type>();
+		vertices.push_back(start);
+		vertices.push_back(p10);
+		vertices.push_back(p00);
+		normals.push_back(-by);
+		normals.push_back(-by);
+		normals.push_back(-by);
+		uvs.push_back(vec2(u0, 0.f));
+		uvs.push_back(vec2(u1, 0.f));
+		uvs.push_back(vec2(u0, 0.f));
+
+		vertices.push_back(end);
+		vertices.push_back(p01);
+		vertices.push_back(p11);
+		normals.push_back(by);
+		normals.push_back(by);
+		normals.push_back(by);
+		uvs.push_back(vec2(u0, 1.f));
+		uvs.push_back(vec2(u1, 1.f));
+		uvs.push_back(vec2(u1, 1.f));
+	}
+
+	return make<CylinderGeometry::Type>(GL_TRIANGLES, vertices.data(), normals.data(), uvs.data(), vertices.size());
 }
 
 sptr<CubeGeometry::Type> createCubeGeometry() {

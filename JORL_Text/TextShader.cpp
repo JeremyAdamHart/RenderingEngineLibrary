@@ -3,7 +3,7 @@
 namespace renderlib {
 
 enum {
-	MODEL_VIEW_PROJECTION=TextureMat::COUNT + ColorMat::COUNT,
+	MODEL_VIEW_PROJECTION = TextureMat::COUNT + ColorMat::COUNT,
 	INVERSE_ROTATION_MATRIX
 };
 
@@ -51,10 +51,41 @@ void TextShader::drawVertexBinding(Camera& cam, Drawable& obj) {
 
 
 
+struct STSEnums {
+	enum {
+		VIEW_PROJECTION = TextureMat::COUNT + ColorMat::COUNT,
+		MODEL
+	};
+};
 
+SimpleTextShader::SimpleTextShader() :ShaderT<TextureMat, ColorMat>(
+	{{ GL_VERTEX_SHADER, "shaders/simpleTex.vert" }, { GL_FRAGMENT_SHADER, "shaders/simpleText.frag"}}, {}, 
+	{ "colorTexture", "textColor", "view_projection_matrix", "model_matrix" })
+{}
 
+void SimpleTextShader::draw(Camera & cam, Drawable & obj)
+{
+	if (!programID) {
+		printf("TextShader: Shader compilation failure\n");
+		return;
+	}
 
+	glUseProgram(programID);
 
+	loadMaterialUniforms(obj);
+	glm::mat4 viewProjectionMatrix = cam.getProjectionMatrix()*cam.getCameraMatrix();
+	glm::mat4 modelMatrix = obj.getTransform();
+	glUniformMatrix4fv(uniformLocations[STSEnums::VIEW_PROJECTION], 1, false, &viewProjectionMatrix[0][0]);
+	glm::mat4 inverseRotationMatrix = cam.getRotationMatrix();
+	glUniformMatrix4fv(uniformLocations[STSEnums::MODEL], 1, false, &modelMatrix[0][0]);
 
+	obj.getGeometry().drawGeometry(programID);
+
+	glUseProgram(0);
+}
+
+//void SimpleTextShader::drawVertexBinding(Camera & cam, Drawable & obj)
+//{
+//}
 
 }

@@ -16,5 +16,11 @@ public:
 	void drawVertexBinding(Camera& cam, Drawable& obj);
 };
 
+class SimpleTextShader : public ShaderT<TextureMat, ColorMat> {
+public:
+	SimpleTextShader();
+	void draw(Camera& cam, Drawable& obj);
+	void drawVertexBinding(Camera& cam, Drawable& obj);
+};
 
 }

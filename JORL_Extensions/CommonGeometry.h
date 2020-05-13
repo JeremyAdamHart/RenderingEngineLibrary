@@ -44,7 +44,7 @@ struct CubeGeometry {
 };
 
 struct CylinderGeometry {
-	using Type = IndexGeometryUint<attrib::Position, attrib::Normal, attrib::TexCoord>;
+	using Type = GeometryT<attrib::Position, attrib::Normal, attrib::TexCoord>;
 };
 
 sptr<SphereGeometry::Type> createSphereGeometry(unsigned int azimuthResolution = 40, unsigned int altitudeResolution = 20, float orientation=1.f);
