@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Scene.h"
 #include <vector>
+#include "TemplatedShader.h"
 
 namespace renderlib {
 
@@ -28,6 +29,12 @@ public:
 
 	void draw(const Camera &cam, glm::vec3 lightPos, Drawable &obj);
 	void draw(const Camera &cam, const Scene &scene);
+};
+
+class VertexColorShader : public ShaderT<> {
+public:
+	VertexColorShader();
+	void draw(Camera& cam, Drawable& obj);
 };
 
 }

@@ -89,4 +89,28 @@ void ColorShader::draw(const Camera &cam, glm::vec3 lightPos, Drawable &obj) {
 	glUseProgram(0);
 }
 
+VertexColorShader::VertexColorShader() : ShaderT<>(
+	{{ GL_VERTEX_SHADER, "shaders/vertexColor.vert" }, { GL_FRAGMENT_SHADER, "shaders/vertexCOlor.frag" }}, {},
+	{ "model_view_projection_matrix" })
+{}
+
+void VertexColorShader::draw(Camera & cam, Drawable & obj)
+{
+	if (!programID) {
+		printf("VertexColorShader: Shader compilation failure\n");
+		return;
+	}
+	glUseProgram(programID);
+
+	loadMaterialUniforms(obj);
+	glm::mat4 modelViewProjectionMatrix = cam.getProjectionMatrix()*cam.getCameraMatrix()*obj.getTransform();
+	glUniformMatrix4fv(uniformLocations[0], 1, false, &modelViewProjectionMatrix[0][0]);
+	
+	obj.getGeometry().drawGeometry(programID);
+
+	glUseProgram(0);
+}
+
+
+
 }
