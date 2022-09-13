@@ -110,8 +110,8 @@ sptr<CylinderGeometry::Type> createCylinderGeometry(glm::vec3 start, glm::vec3 e
 		vec3 circleVec1 = radius*(std::cosf(u1*2.f*glm::pi<float>())*bz + sin(u1*2.f*glm::pi<float>())*bx);
 		vec3 p00 = start + circleVec0;
 		vec3 p10 = start + circleVec1;
-		vec3 p01 = start + circleVec0;
-		vec3 p11 = start + circleVec1;
+		vec3 p01 = end + circleVec0;
+		vec3 p11 = end + circleVec1;
 
 		vertices.push_back(p00);
 		vertices.push_back(p10);

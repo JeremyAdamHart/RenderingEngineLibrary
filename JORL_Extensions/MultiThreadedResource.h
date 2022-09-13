@@ -203,7 +203,7 @@ public:
 	}
 
 	Resource::Read getRead(std::chrono::milliseconds pollrate = std::chrono::milliseconds(0)) {
-		do {
+		do {                         
 			int index = lastWritten;
 			Resource::Read readView(resource[index], 
 				std::shared_lock<std::shared_mutex>(
@@ -257,3 +257,17 @@ public:
 
 	ReadOnly createReader() { return ReadOnly(this); }
 };
+
+/*
+template<typename T>
+class LLNode{
+public:
+	std::unique_ptr<LLNode> prev;
+};
+
+template<typename T>
+class MTQueue {
+	std::unique_ptr<LLNode> readerHead;
+};
+
+*/

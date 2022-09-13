@@ -53,6 +53,8 @@ void sharedIndices(vector<unsigned int> &_faces, vector<unsigned int> &_nFaces, 
 	//Returned values
 	vector<vec3> &vertices, vector<vec3> &normals, vector<vec2>& uvs, vector<unsigned int> &faces)
 {
+	vector<vec3> oldVertices = vertices;
+
 	faces.clear();
 	uvs.clear();
 	normals.clear();
@@ -185,7 +187,15 @@ bool MeshInfoLoader::loadModelPly(const char *filename) {
 
 	try {
 		texcoordData = file.request_properties_from_element("vertex", { "u", "v" });
-	} catch (const std::exception e) { std::cout << "No texture coordinates in mesh - " << e.what() << std::endl; }
+	}
+	catch (const std::exception e) {
+		try {
+			texcoordData = file.request_properties_from_element("vertex", { "s", "t" });
+		}
+		catch (const std::exception e) {
+			std::cout << "No texture coordinates in mesh - " << e.what() << std::endl;
+		}
+	}
 	try {
 		colorData = file.request_properties_from_element("vertex", { "red", "green", "blue" });
 	}

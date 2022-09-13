@@ -1,0 +1,53 @@
+{
+	"bindings": {
+		"poses": [
+			{
+				"output": "/action/demo/in/Hand_Left",
+				"path": "/user/hand/left/pose/raw"
+			},
+			{
+				"output": "/action/demo/in/Hand_Right",
+				"path": "/user/hand/right/pose/raw"
+			}
+		],
+		"haptics": [
+			{
+				"output": "/actions/demo/out/Haptic_Left",
+				"path": "/user/hand/left/output/haptic"
+			},
+			{
+				"output": "/actions/demo/out/Haptic_Right",
+				"path": "/user/hand/right/output/haptic"
+			}
+		],
+		"sources": [
+			{
+				"inputs": {
+					"click": {
+						"output": "/actions/demo/in/Grab_Left"
+					}
+				},
+				"mode": "button",
+				"path": "/user/hand/left/input/grip"
+			},
+			{
+				"inputs": {
+					"click": {
+						"output": "/actions/demo/in/Grab_Right"
+					}
+				},
+				"mode": "button",
+				"path": "/user/hand/right/input/grip"
+			},
+			{
+				"inputs": {
+					"analog": {
+						"output": "/actions/demo/in/Position2D"
+					}
+				},
+				"mode": "joystick",
+				"path": "/user/hand/right/input/thumbstick"
+			}
+		]
+	}
+}

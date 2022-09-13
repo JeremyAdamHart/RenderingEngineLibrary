@@ -18,7 +18,10 @@ public:
 	Headset hmd;
 	Controller controllers [NUM_CONTROLLERS];
 
-	VRDeviceManager(vr::IVRSystem *vrSystem, renderlib::TextureManager *tm) : hmd(vrSystem) {
+	VRDeviceManager(vr::IVRSystem *vrSystem, renderlib::TextureManager *tm, 
+		            std::map<VRControllerHand, int> handDeviceMap = {})
+		: hmd(vrSystem), handDeviceMap(handDeviceMap) 
+	{
 		for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
 			vr::TrackedDeviceClass deviceClass = vrSystem->GetTrackedDeviceClass(i);
 
@@ -27,14 +30,18 @@ public:
 				hmdIndex = i;
 				break;
 			case vr::TrackedDeviceClass_Controller:
-				int32_t ovrHand = vrSystem->GetInt32TrackedDeviceProperty(i, vr::ETrackedDeviceProperty::Prop_ControllerRoleHint_Int32);
-				VRControllerHand hand = (ovrHand == vr::ETrackedControllerRole::TrackedControllerRole_LeftHand) ?
-					VRControllerHand::LEFT : VRControllerHand::RIGHT;
-
+				//int32_t ovrHand = vrSystem->GetInt32TrackedDeviceProperty(i, vr::ETrackedDeviceProperty::Prop_ControllerRoleHint_Int32);
+				//VRControllerHand hand = (ovrHand == vr::ETrackedControllerRole::TrackedControllerRole_LeftHand) ?
+				//	VRControllerHand::LEFT : VRControllerHand::RIGHT;
+				VRControllerHand hand;
+				for (auto handIndex : handDeviceMap) {
+					if (handIndex.second == i)
+						hand = handIndex.first;
+				}
 				Controller controller(i, vrSystem, tm);
-				if (handDeviceMap.find(hand) != handDeviceMap.end())
-					hand = (hand == VRControllerHand::LEFT) ? VRControllerHand::RIGHT : VRControllerHand::LEFT;
-				handDeviceMap[hand] = i;
+				//if (handDeviceMap.find(hand) != handDeviceMap.end())
+				//	hand = (hand == VRControllerHand::LEFT) ? VRControllerHand::RIGHT : VRControllerHand::LEFT;
+				//handDeviceMap[hand] = i;
 				controllers[hand] = controller;
 				
 				break;

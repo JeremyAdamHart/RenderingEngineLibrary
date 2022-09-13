@@ -59,7 +59,7 @@ struct STSEnums {
 };
 
 SimpleTextShader::SimpleTextShader() :ShaderT<TextureMat, ColorMat>(
-	{{ GL_VERTEX_SHADER, "shaders/simpleTex.vert" }, { GL_FRAGMENT_SHADER, "shaders/simpleText.frag"}}, {}, 
+	{{ GL_VERTEX_SHADER, "shaders/simpleTex.vert" }, { GL_FRAGMENT_SHADER, "shaders/basicText.frag"}}, {}, 
 	{ "colorTexture", "textColor", "view_projection_matrix", "model_matrix" })
 {}
 

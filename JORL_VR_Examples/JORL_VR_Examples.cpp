@@ -104,6 +104,8 @@ struct ControllerReferenceFilepaths {
 		switch (type) {
 		case VRControllerType::VIVE:
 		case VRControllerType::UNKNOWN:
+		case VRControllerType::INDEX:
+			printf("Detected vive controller\n");
 			trackpadFrame = "models/controllerTrackpadFrame.obj";
 			drawPosition = "models/ViveDrawPosition.obj";
 			grabPosition = "models/ViveGrabPosition.obj";
@@ -145,7 +147,50 @@ string findFilenameVariation(string filepath) {
 	return filepath;
 }
 
+struct Bindings {
+	vr::VRActionSetHandle_t actionSet;
+
+	vr::VRActionHandle_t grabLeft = 0;
+	vr::VRActionHandle_t grabRight = 0;
+	vr::VRActionHandle_t position2D = 0;
+	vr::VRActionHandle_t button = 0;
+	vr::VRActionHandle_t trigger = 0;
+	vr::VRActionHandle_t hapticLeft = 0;
+	vr::VRActionHandle_t hapticRight = 0;
+	vr::VRActionHandle_t poseLeft = 0;
+	vr::VRActionHandle_t poseRight = 0;
+};
+
+Bindings setBindings(const char* filePath) {
+	Bindings b;
+
+	setActionPath(filePath);
+	b.actionSet = getActionSetHandle("/actions/demo");
+	b.grabLeft = getActionHandle("/actions/demo/in/Grab_Left");
+	b.grabRight = getActionHandle("/actions/demo/in/Grab_Right");
+	b.button = getActionHandle("/actions/demo/in/Button");
+	b.trigger = getActionHandle("/actions/demo/in/Trigger");
+	b.position2D = getActionHandle("/actions/demo/in/Position2D");
+	b.hapticLeft = getActionHandle("/actions/demo/out/Haptic_Left");
+	b.hapticRight = getActionHandle("/actions/demo/out/Haptic_Right");
+	b.poseLeft = getActionHandle("/actions/demo/in/Hand_Left");
+	b.poseRight = getActionHandle("/actions/demo/in/Hand_Right");
+	//getActionHandle("DefinitelyFake");
+	/*
+	//vr::VRInput()->GetActionSetHandle("/actions/demo", &b.actionSet);
+	vr::VRInput()->GetActionHandle("/actions/demo/in/Grab_Left", &b.grabLeft);
+	vr::VRInput()->GetActionHandle("/actions/demo/in/Grab_Right", &b.grabRight);
+	vr::VRInput()->GetActionHandle("/actions/demo/in/Position2D", &b.position2D);
+	vr::VRInput()->GetActionHandle("/actions/demo/out/Haptic_Left", &b.hapticLeft);
+	vr::VRInput()->GetActionHandle("/actions/demo/out/Haptic_Right", &b.hapticRight);
+	vr::VRInput()->GetActionHandle("/actions/demo/in/Hand_Left", &b.poseLeft);
+	vr::VRInput()->GetActionHandle("/actions/demo/in/Hand_Right", &b.poseRight);
+	*/
+	return b;
+}
+
 void modelLoop(WindowManager *wm, int sampleNumber) {
+	printf("Model loop\n");
 	glfwSetCursorPosCallback(wm->window, cursorPositionCallback);
 	glfwSetWindowSizeCallback(wm->window, windowResizeCallback);
 
@@ -205,8 +250,8 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 
 	VRControllerType controllerType = controllers[0].type;
 
-	setBindings(controllerType, &controllers[VRControllerHand::LEFT].input, VRControllerHand::LEFT);
-	setBindings(controllerType, &controllers[VRControllerHand::RIGHT].input, VRControllerHand::RIGHT);
+	//setBindings(controllerType, &controllers[VRControllerHand::LEFT].input, VRControllerHand::LEFT);
+	//setBindings(controllerType, &controllers[VRControllerHand::RIGHT].input, VRControllerHand::RIGHT);
 
 	//Squares for left and right views
 	Drawable leftSquare(
@@ -256,8 +301,26 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 	Framebuffer fbScreenshotRead = createFramebufferWithColorAndDepth(SCREENSHOT_WIDTH, SCREENSHOT_HEIGHT, &tm);
 	bool screenshotPressed = false;
 
+	//Setup input
+	Bindings b = setBindings("./sample_action.json");
+
 	while (!glfwWindowShouldClose(wm->window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//Input
+		updateActionSet(b.actionSet);
+
+		if (getScalar(b.trigger) > 0.1f)
+			printf("Trigger = %f\n", getScalar(b.trigger));
+
+		if (getActivation(b.button))
+			printf("Button activated for first time\n");
+		if (getBool(b.button))
+			printf("Button currently pressed\n");
+
+		glm::vec2 v = getAxis(b.position2D);
+		if(length(v) > 0.01f)
+			printf("(%f, %f)\n", v.x, v.y);
 
 		if (gWindowWidth != wm->window_width || gWindowHeight != wm->window_height) {
 			wm->window_width = gWindowWidth;
@@ -276,11 +339,10 @@ void modelLoop(WindowManager *wm, int sampleNumber) {
 		//Get time
 		static double lastTime = 0.f;
 		double currentTime = glfwGetTime();
-		sceneTransform.updateTransform(
+		sceneTransform.updateTransformNew(
 			currentTime - lastTime, 
-			devices.controllers[0], 
-			devices.controllers[1], 
-			grabPositionModelspace);	//Not using time yet
+			devices.controllers[0], grabPositionModelspace, b.grabLeft,
+			devices.controllers[1], grabPositionModelspace, b.grabRight);	//Not using time yet
 		lastTime = currentTime;
 
 		//Update model transforms
@@ -414,7 +476,8 @@ int main(int argc, char** argv)
 	switch (argc) {
 	case 1:
 		//Change to ricco
-		loadFilename = "untrackedmodels/Craspedia2.ply";	// "untrackedmodels/Helianthus4.ply";	//"untrackedmodels/GRCD2RNA.ply";	//"models/Cube.obj";	//"models/icosahedron.ply";
+		loadFilename = "models/dragon.obj";
+		//loadFilename = "untrackedmodels/Craspedia2.ply";	// "untrackedmodels/Helianthus4.ply";	//"untrackedmodels/GRCD2RNA.ply";	//"models/Cube.obj";	//"models/icosahedron.ply";
 		saveFilename = "saved/default.clr";
 		break;
 	case 2:

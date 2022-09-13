@@ -39,12 +39,12 @@ struct usingInstanced {
 
 
 template<class C, class T1>
-void loadBuffers_rec(C* obj, typename T1::Type* t1) {
+void loadBuffers_rec(C* obj, typename const T1::Type* t1) {
 	obj->loadBuffer<T1>(t1);
 }
 
 template<class C, class T1, class T2, class... Ts>
-void loadBuffers_rec(C* obj, typename T1::Type* t1, typename T2::Type* t2, typename Ts::Type*... args) {
+void loadBuffers_rec(C* obj, typename const T1::Type* t1, const typename T2::Type* t2, typename const Ts::Type*... args) {
 	loadBuffers_rec<C, T1>(obj, t1);
 	loadBuffers_rec<C, T2, Ts...>(obj, t2, args...);
 }
@@ -73,7 +73,7 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	GeometryT(GLenum mode, typename Ts::Type*... data, size_t dataSize, size_t dataInstances)
+	GeometryT(GLenum mode, typename const Ts::Type*... data, size_t dataSize, size_t dataInstances)
 		: bufferSize(dataSize), instanceCount(dataInstances), mode(mode)
 	{
 		for (int i = 0; i < sizeof...(Ts); i++) {
@@ -85,7 +85,7 @@ public:
 		loadBuffers(data..., dataSize, dataInstances);
 	}
 
-	GeometryT(GLenum mode, typename Ts::Type*... data, size_t dataSize)
+	GeometryT(GLenum mode, typename const Ts::Type*... data, size_t dataSize)
 		: GeometryT(mode, data..., dataSize, 1)
 	{}
 
@@ -94,7 +94,7 @@ public:
 	///@tparam A - The Attribute to load data into
 	///@param data - Data to uploaded to the vertex buffer
 	template<typename A>
-	void loadBuffer(typename A::Type* data) {
+	void loadBuffer(typename const A::Type* data) {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[indexOf<A, Ts...>()]);
 		
 		unsigned int dataSize;
@@ -108,7 +108,7 @@ public:
 	}
 
 	template<typename A>
-	void loadSubBuffer(typename A::Type* data, size_t offset, size_t size) {
+	void loadSubBuffer(typename const A::Type* data, size_t offset, size_t size) {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[indexOf<A, Ts...>()]);
 
 		unsigned int dataSize;
@@ -121,11 +121,11 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	virtual void loadBuffers(typename Ts::Type*... data, size_t dataSize) {
+	virtual void loadBuffers(typename const Ts::Type*... data, size_t dataSize) {
 		loadBuffers(data..., dataSize, 1);
 	}
 
-	virtual void loadBuffers(typename Ts::Type*... data, size_t dataSize, size_t dataInstances) {
+	virtual void loadBuffers(typename const Ts::Type*... data, size_t dataSize, size_t dataInstances) {
 		bufferSize = dataSize;
 		instanceCount = dataInstances;
 		loadBuffers_rec<GeometryT<Ts...>, Ts...>(this, data...);
@@ -154,7 +154,7 @@ public:
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	IndexGeometryT(GLenum mode, IndexT* indices, size_t indexSize, typename Ts::Type*... data, size_t dataSize, size_t dataInstances)
+	IndexGeometryT(GLenum mode, const IndexT* indices, size_t indexSize, typename const Ts::Type*... data, size_t dataSize, size_t dataInstances)
 		: GeometryT<Ts...>(mode, data..., dataSize, dataInstances)
 	{
 		vbo.push_back(createBufferID());
@@ -164,7 +164,7 @@ public:
 		loadIndices(indices, indexSize);
 	}
 
-	IndexGeometryT(GLenum mode, IndexT* indices, size_t indexSize, typename Ts::Type*... data, size_t dataSize)
+	IndexGeometryT(GLenum mode, const IndexT* indices, size_t indexSize, typename const Ts::Type*... data, size_t dataSize)
 		: GeometryT<Ts...>(mode, data..., dataSize, 1)
 	{
 		vbo.push_back(createBufferID());
@@ -174,7 +174,7 @@ public:
 		loadIndices(indices, indexSize);
 	}
 
-	void loadIndices(IndexT* indices, size_t newIndexSize) {
+	void loadIndices(const IndexT* indices, size_t newIndexSize) {
 		indexSize = newIndexSize;
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize*sizeof(IndexT), indices, GL_DYNAMIC_DRAW);

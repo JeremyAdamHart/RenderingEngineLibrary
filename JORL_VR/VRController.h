@@ -19,7 +19,7 @@
 #define Windows_EButton_ApplicationMenu vr::k_EButton_ApplicationMenu
 
 enum VRControllerType {
-	OCULUS_TOUCH, VIVE, WINDOWS, UNKNOWN
+	OCULUS_TOUCH, VIVE, WINDOWS, INDEX, UNKNOWN
 };
 
 enum VRButtonType {
@@ -83,6 +83,31 @@ public:
 	void updateState(const vr::VRControllerState_t &state);
 };
 
+class NewVRControllerInterface {
+
+public:
+	NewVRControllerInterface(const char* actionFilename);
+
+	float getScalar(vr::VRActionHandle_t action);	  //0 or 1 if BUTTON or TOUCHED, 0 to 1 if AXIS
+	glm::vec2 getAxis(vr::VRActionHandle_t action);	  //Always returns {0, 0} if not AXIS
+	bool getBool(vr::VRActionHandle_t action);        //True if pressed
+	bool getActivation(vr::VRActionHandle_t action);  //True if just activated
+
+	void updateState();
+};
+
+
+void setActionPath(const char* actionFilename);
+
+void updateActionSet(vr::VRActionSetHandle_t actionSet);
+
+float getScalar(vr::VRActionHandle_t action);	  //0 or 1 if BUTTON or TOUCHED, 0 to 1 if AXIS
+glm::vec2 getAxis(vr::VRActionHandle_t action);	  //Always returns {0, 0} if not AXIS
+bool getBool(vr::VRActionHandle_t action);        //True if pressed
+bool getActivation(vr::VRActionHandle_t action);  //True if just activated
+vr::VRActionHandle_t getActionHandle(const char* name);
+vr::VRActionSetHandle_t getActionSetHandle(const char* name);
+
 enum VRControllerHand : int {
 	LEFT=0,
 	RIGHT
@@ -112,7 +137,7 @@ public:
 
 	VRControllerInterface input;
 	VRControllerType type;
-	VRControllerHand hand;
+	//VRControllerHand hand;
 
 	void updatePose(const vr::TrackedDevicePose_t &pose);
 	void updateState(const vr::VRControllerState_t &state);
@@ -148,6 +173,9 @@ public:
 
 	glm::mat4 getTransform() const override;
 	void updateTransform(float deltaTime, const VRController& controllerA, const VRController& controllerB, glm::vec3 grabPositionModelspace);
+	void updateTransformNew(float deltaTime, 
+		const VRController& controllerA, glm::vec3 grabPositionModelspaceA, vr::VRActionHandle_t gripA,
+		const VRController& controllerB, glm::vec3 grabPositionModelspaceB, vr::VRActionHandle_t gripB);
 	bool multMatrixPreviewTransform(float modelScale);
 	void multMatrixOldOpenGL();
 	//void linkControllers(std::vector<VRController> *newControllers);

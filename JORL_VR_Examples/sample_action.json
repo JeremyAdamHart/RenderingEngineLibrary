@@ -1,0 +1,71 @@
+{
+	"default_bindings": [
+		{
+			"controller_type": "knuckles",
+			"binding_url": "knuckles_controller.json"
+		},
+		{
+			"controller_type": "index_controller",
+			"binding_url": "knuckles_controller.json"
+		}
+	],
+  "actions": [
+    {
+      "name": "/actions/demo/in/Grab_Right",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Grab_Left",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Position2D",
+      "type": "vector2"
+    },
+    {
+      "name": "/actions/demo/in/Button",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/Trigger",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Right",
+      "type": "pose"
+    },
+    {
+      "name": "/actions/demo/in/Hand_Left",
+      "type": "pose"
+    },
+    {
+      "name": "/actions/demo/out/Haptic_Right",
+      "type": "vibration"
+    },
+    {
+      "name": "/actions/demo/out/Haptic_Left",
+      "type": "vibration"
+    }
+  ],
+  "action_sets": [
+    {
+      "name": "/actions/demo",
+      "usage":  "leftright"
+    }
+  ],
+	"localization": [
+		{
+      "language_tag": "en_US",
+      "/actions/demo/":  "Sample actions",
+			"/actions/demo/in/Grab_Left": "Grab left",
+			"/actions/demo/in/Grab_Right": "Grab right",
+      "/actions/demo/in/Position2D": "2D Position",
+      "/actions/demo/in/Button": "Button",
+      "/actions/demo/in/Trigger": "Trigger",
+			"/actions/demo/in/Hand_Right": "Right Hand Pose",
+			"/actions/demo/in/Hand_Left": "Left Hand Pose",
+			"/actions/demo/out/Haptic_Left": "Left Haptic Feedback",
+			"/actions/demo/out/Haptic_Right": "Right Haptic Feedback"
+		}
+	]
+}

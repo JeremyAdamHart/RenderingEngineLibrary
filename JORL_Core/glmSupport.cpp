@@ -47,6 +47,25 @@ glm::mat4 createAspectRatioMatrix(unsigned int width, unsigned int height) {
 	return m;
 }
 
+glm::mat3 rotationMatrix3x3(float theta, glm::vec3 u)
+{
+	float costheta = cos(theta);
+	float sintheta = sin(theta);
+	return glm::mat3(
+		vec3(
+			costheta + u.x*u.x*(1 - costheta),
+			u.x*u.y*(1-costheta) + u.z*sintheta,
+			u.z*u.x*(1-costheta) - u.y*sintheta
+		), vec3(
+			u.x*u.y*(1-costheta) - u.z*sintheta,
+			costheta + u.y*u.y*(1-costheta),
+			u.z*u.y*(1-costheta) + u.x*sintheta
+		), vec3(
+			u.x*u.z*(1-costheta) + u.y*sintheta,
+			u.y*u.z*(1-costheta) - u.x*sintheta,
+			costheta + u.z*u.z*(1-costheta)));
+}
+
 struct project {
 	glm::vec3 p;
 	project(glm::vec3 p) :p(p) {}

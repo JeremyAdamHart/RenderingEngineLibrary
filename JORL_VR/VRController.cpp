@@ -2,6 +2,7 @@
 #include <glmSupport.h>
 #include "VRTools.h"
 #include "UndoStack.h"	//Included for ring stack -- Separate?
+#include <filesystem>
 
 using namespace renderlib;
 using namespace glm;
@@ -9,6 +10,7 @@ using namespace glm;
 const char* ViveControllerName = "vr_controller_vive_1_5";
 const char* OculusTouchControllerName = "oculus_cv1_controller";	//Left and right controllers named differently
 const char* WindowsControllerName = "Microsoft/Windows/OpenVR\\controller_1627_1118";
+const char* IndexControllerName = "valve_controller_knu_1_0";
 
 string getRenderModelErrorString(vr::EVRRenderModelError error) {
 	switch (error) {
@@ -158,14 +160,17 @@ VRController::VRController(vr::TrackedDeviceIndex_t index, vr::IVRSystem *vrSyst
 	vr::EVRRenderModelError error = vr::VRRenderModels()->LoadRenderModel_Async(
 		nameBuffer, &renderModel);
 
-	int32_t whichHand = vrSystem->GetInt32TrackedDeviceProperty(index, vr::ETrackedDeviceProperty::Prop_ControllerRoleHint_Int32);
+	/*int32_t whichHand = vrSystem->GetInt32TrackedDeviceProperty(index, vr::ETrackedDeviceProperty::Prop_ControllerRoleHint_Int32);
 	hand = (whichHand == vr::ETrackedControllerRole::TrackedControllerRole_LeftHand) ? 
 		VRControllerHand::LEFT : VRControllerHand::RIGHT;
+		*/
 
 	if (strcmp(nameBuffer, ViveControllerName) == 0)
 		type = VRControllerType::VIVE;
 	else if (string(nameBuffer).find(WindowsControllerName) != string::npos)
 		type = VRControllerType::WINDOWS;
+	else if (string(nameBuffer).find(IndexControllerName) != string::npos)
+		type = VRControllerType::INDEX;
 	else
 		type = VRControllerType::OCULUS_TOUCH;
 
@@ -402,6 +407,128 @@ void VRSceneTransform::updateTransform(float deltaTime, const VRController& cont
 	lastGripsPressed = gripsPressed.size();
 }
 
+void VRSceneTransform::updateTransformNew(float deltaTime,
+	const VRController& controllerA, glm::vec3 grabPositionModelspaceA, vr::VRActionHandle_t gripButtonA,
+	const VRController& controllerB, glm::vec3 grabPositionModelspaceB, vr::VRActionHandle_t gripButtonB) 
+{
+	glm::vec3 grabPositionModelspace[2] = { grabPositionModelspaceA, grabPositionModelspaceB };
+	vr::VRActionHandle_t gripButtons[2] = { gripButtonA, gripButtonB };
+	vector<VRController> controllers = { controllerA, controllerB };
+	static RingStack<vec3> lastVelocities(5);
+	static vec3 rotationCenter = vec3(0.f, 0.f, 0.f);
+	float scaleChange = 1.f;
+	static int lastGripsPressed = 0;
+
+	vector<vec3> grabPositions;
+
+	//Get indices of controllers which have the grip pressed
+	std::vector<int> gripsPressed;
+	for (int i = 0; i < controllers.size(); i++) {
+		vec3 grabPosition = vec3(controllers[i].getTransform()*vec4(grabPositionModelspace[i], 1.f));
+		grabPositions.push_back(grabPosition);
+
+		if (getBool(gripButtons[i]))
+			gripsPressed.push_back(i);
+	}
+
+	switch (gripsPressed.size()) {
+	case 1:
+	{
+		int index = gripsPressed[0];
+		velocity = (grabPositions[index] - lastPosition[index]) / deltaTime;
+		angularVelocity = slerp(angularVelocity, quat(), 0.1f);
+		lastVelocities.push(velocity);
+		//	angularVelocity = quat();
+		break;
+	}
+	case 2:
+	{
+		int indexA = gripsPressed[0];
+		int indexB = gripsPressed[1];
+
+		velocity = vec3(0.f);
+		angularVelocity = quat();
+
+		vec3 axisA = lastPosition[indexA] - lastPosition[indexB];
+		vec3 axisB = grabPositions[indexA] //controllers->at(indexA).getPos()
+			- grabPositions[indexB];	//controllers->at(indexB).getPos();
+		float lengthA = length(axisA);
+		float lengthB = length(axisB);
+
+		quat lastOrntnA = lastOrientation[indexA];
+		quat lastOrntnB = lastOrientation[indexB];
+		quat currOrntnA = controllers[indexA].getOrientationQuat();
+		quat currOrntnB = controllers[indexB].getOrientationQuat();
+
+		if (rotationMode == HANDLEBAR) {
+			axisA = axisA / lengthA;
+			axisB = axisB / lengthB;
+
+			vec3 lastRotationCenter = rotationCenter;
+			rotationCenter = 0.5f*(grabPositions[0] + grabPositions[1]);	//0.5f*(controllers->at(0).getPos() + controllers->at(1).getPos());
+
+			if (lastGripsPressed == 2) {
+				velocity = (rotationCenter - lastRotationCenter) / deltaTime;
+			}
+
+			vec3 rotAxis = cross(axisA, axisB);
+			if (length(rotAxis) > 0.0001f) {
+				float angle = asin(length(rotAxis));
+
+				//Rolling
+				quat orntnDiffA = projectedQuaternionDiff(lastOrntnA, currOrntnA, axisB);
+				quat orntnDiffB = projectedQuaternionDiff(lastOrntnB, currOrntnB, axisB);
+
+				angularVelocity = normalize(0.5f*(orntnDiffB + orntnDiffA))*angleAxis(angle, normalize(rotAxis));
+			}
+		}
+		else if (rotationMode == ONE_HAND_PLUS_SCALE) {
+			quat orntnDiffB = quaternionDiff(lastOrntnB, currOrntnB);
+			angularVelocity = orntnDiffB;
+			rotationCenter = grabPositions[indexB];		//controllers->at(indexB).getPos();
+
+		}
+
+		scaleChange = lengthB / lengthA;
+		scale *= scaleChange;		//Rescale model
+		lastVelocities.push(velocity);
+		break;
+	}
+	default:
+	{
+		if (lastVelocities.size() > 0) {
+			vec3 averageVelocity(0.f);
+			int originalSize = lastVelocities.size();
+			for (int i = 0; i < originalSize; i++) {
+				averageVelocity += lastVelocities.last();
+				lastVelocities.pop();
+			}
+			velocity = averageVelocity / float(originalSize);
+		}
+		velocity *= 0.98f;
+		angularVelocity = quat();
+	}
+	}
+
+	//Integrate velocities
+	//Scene centered rotation
+	if (rotationOrigin == ORIGIN_CONTROLLER) {
+		position = vec3(
+			toMat4(normalize(angularVelocity))*vec4(scaleChange*(position - rotationCenter), 1))
+			+ rotationCenter;
+	}
+	position += velocity * deltaTime;
+	orientation = normalize(angularVelocity*orientation);
+
+	//Save positions
+	for (int i = 0; i < lastPosition.size(); i++) {
+		lastPosition[i] = grabPositions[i];		//controllers->at(i).getPos();
+		lastOrientation[i] = controllers[i].getOrientationQuat();
+	}
+
+	lastGripsPressed = gripsPressed.size();
+}
+
 /*
 bool VRSceneTransform::multMatrixPreviewTransform(float modelScale) {
 	std::vector<int> gripsPressed;
@@ -432,3 +559,78 @@ bool VRSceneTransform::multMatrixPreviewTransform(float modelScale) {
 }
 */
 
+void setActionPath(const char * actionFilename)
+{
+	namespace fs = std::filesystem;
+	fs::path filepath = actionFilename;
+	auto result = vr::VRInput()->SetActionManifestPath(fs::absolute(filepath).string().c_str());
+	if (result != vr::VRInputError_None) {
+		printf("Failed to set action manifest path with error: %d\n", result);
+	}
+
+}
+
+void updateActionSet(vr::VRActionSetHandle_t actionSetHandle) {
+	vr::VRActiveActionSet_t actionSet = { 0 };
+	actionSet.ulActionSet = actionSetHandle;
+	vr::VRInput()->UpdateActionState(&actionSet, sizeof(actionSet), 1);
+}
+
+float getScalar(vr::VRActionHandle_t action)
+{
+	vr::InputAnalogActionData_t actionData;
+	auto result = vr::VRInput()->GetAnalogActionData(action, &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle);
+	if (result != vr::VRInputError_None) {
+		printf("Failed to get scalar with error: %d\n", result);
+	}
+	return (actionData.bActive) ? actionData.x : 0.f;
+
+}
+
+glm::vec2 getAxis(vr::VRActionHandle_t action)
+{
+	vr::InputAnalogActionData_t actionData;
+	auto result = vr::VRInput()->GetAnalogActionData(action, &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle);
+	if (result != vr::VRInputError_None) {
+		printf("Failed to get vector with error: %d\n", result);
+	}
+	return (actionData.bActive) ? glm::vec2(actionData.x, actionData.y) : glm::vec2(0.f);
+}
+
+bool getBool(vr::VRActionHandle_t action)
+{
+	vr::InputDigitalActionData_t actionData;
+	auto result = vr::VRInput()->GetDigitalActionData(action, &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle);
+	if (result != vr::VRInputError_None) {
+		printf("Failed to get bool with error: %d\n", result);
+	}
+	return actionData.bActive && actionData.bState;
+}
+
+bool getActivation(vr::VRActionHandle_t action)
+{
+	vr::InputDigitalActionData_t actionData;
+	auto result = vr::VRInput()->GetDigitalActionData(action, &actionData, sizeof(actionData), vr::k_ulInvalidInputValueHandle);
+	if (result != vr::VRInputError_None) {
+		printf("Failed to get activation with error: %d\n", result);
+	}
+	return actionData.bActive && actionData.bState && actionData.bChanged;
+}
+
+vr::VRActionHandle_t getActionHandle(const char * name)
+{
+	vr::VRActionHandle_t handle = 0;
+	auto result = vr::VRInput()->GetActionHandle(name, &handle);
+	if (result != vr::VRInputError_None)
+		printf("Failed to get action handle with error: %d\n", result);
+	return handle;
+}
+
+vr::VRActionSetHandle_t getActionSetHandle(const char * name)
+{
+	vr::VRActionSetHandle_t handle = 0;
+	auto result = vr::VRInput()->GetActionSetHandle(name, &handle);
+	if (result != vr::VRInputError_None)
+		printf("Failed to get action set handle with error: %d\n", result);
+	return handle;
+}

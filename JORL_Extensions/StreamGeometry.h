@@ -62,7 +62,7 @@ protected:
 	std::map<int, SyncPair> drawFences;
 public:
 	Resource<AttributePointers, 3> pinnedData;
-	PinnedGeometry(size_t size, unsigned int* indices, size_t indexSize, GLenum mode = GL_TRIANGLES)
+	PinnedGeometry(size_t size, const unsigned int* indices, size_t indexSize, GLenum mode = GL_TRIANGLES)
 		: bufferSize(size), indexSize(indexSize), mode(mode)
 	{
 		for (int i = 0; i < sizeof...(Ts); i++) {
@@ -110,7 +110,7 @@ public:
 	}
 
 	template<typename A>
-	void loadBuffer(typename A::Type* data) {
+	void loadBuffer(typename const A::Type* data) {
 		if constexpr (!attrib::usingPinned<A>()) {
 			glBindBuffer(GL_ARRAY_BUFFER, vbo[indexOf<A, Ts...>()]);
 			size_t bufferSizeBytes = bufferSize * sizeof(typename A::Type);
@@ -129,11 +129,11 @@ public:
 		}
 	}
 	
-	void loadBuffers(typename Ts::Type*... data) {
+	void loadBuffers(typename const Ts::Type*... data) {
 		loadBuffers_rec<PinnedGeometry<Ts...>, Ts...>(this, data...);
 	}
 
-	void loadIndices(unsigned int* indices, size_t newIndexSize) {
+	void loadIndices(const unsigned int* indices, size_t newIndexSize) {
 		indexSize = newIndexSize;
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize * sizeof(unsigned int), indices, GL_DYNAMIC_DRAW);
