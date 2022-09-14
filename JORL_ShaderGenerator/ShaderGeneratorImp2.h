@@ -39,6 +39,7 @@ private:
 	unsigned int id;
 	ShaderStage(unsigned int id):id(id) { }
 public:
+	static ShaderStage None() {      return ShaderStage(0); }
 	static ShaderStage Vertex() {    return ShaderStage(1u << 0); }
 	static ShaderStage Tess_Eval() { return ShaderStage(1u << 1); }
 	static ShaderStage Tess_Ctrl() { return ShaderStage(1u << 2); }
@@ -53,6 +54,7 @@ public:
 	bool operator==(ShaderStage& other) const { return other.id == id; }
 	bool operator<(ShaderStage& other) const { return id < other.id; }
 	bool contains(ShaderStage& other) const { return id & other.id; }
+	bool singleStage() const { return id && !(id - 1 & id); }
 	ShaderStage operator+(ShaderStage& other) const { return ShaderStage(id | other.id); }
 	ShaderStage operator-(ShaderStage& other) const { return ShaderStage(id ^ other.id); }
 };
@@ -104,16 +106,21 @@ struct ShaderText {
 };
 
 class ShaderNode {
-	std::vector<std::tuple<ShaderStage, ShaderText>> contents;
+	//std::vector<std::tuple<ShaderStage, ShaderText>> contents;
 public:
 	std::map<std::string, Input> inputs;
 	std::map<std::string, Output> outputs;
+	
+	ShaderStage stage;
+	std::vector<ShaderText> contents;
 
 	ShaderNode(
 		std::vector<std::string> inputVars,
 		std::vector<std::string> outputVars,
-		std::vector<std::tuple<ShaderStage, ShaderText>> contents //std::string contents,
-		):contents(contents)	
+		ShaderStage stage,
+		std::vector<ShaderText> contents): stage(stage), contents(contents)
+		//std::vector<std::tuple<ShaderStage, ShaderText>> contents //std::string contents,
+		//):contents(contents)	
 	{
 		for (auto input : inputVars) {
 			auto type_name = split(input, ' ');	//[Type, Name]
@@ -163,10 +170,6 @@ public:
 	}
 };
 
-std::vector<ShaderNode*> getTotalOrdering(ShaderNode& endNode) {
-	return {};
-}
-
 class ShaderContents {
 	std::unordered_set<std::string> mainVariables;
 	int genericVariableCounter = 0;
@@ -206,14 +209,47 @@ public:
 	}
 };
 
+
+std::vector<ShaderNode*> getTotalOrdering(ShaderNode& endNode) {
+	return {};
+}
+
+std::map<ShaderStage, ShaderContents> getShaderPipeline(std::vector<ShaderNode*>& nodes) {
+	std::map<ShaderStage, ShaderContents> pipeline = {
+		{ShaderStage::Vertex(), ShaderContents()},
+		{ShaderStage::Fragment(), ShaderContents()} };
+
+	for (auto node : nodes) {
+		if (node->stage.singleStage() && pipeline.find(node->stage) == pipeline.end())
+			pipeline[node->stage] = ShaderContents();
+	}
+}
+
+bool hasInput(const ShaderNode& node) {}
+
+bool hasOutput(const ShaderNode& node) {}
+
+ShaderStage greatestInputStage(const ShaderNode& node) {}
+
+ShaderStage lowestOutputStage(const ShaderNode& node) {}
+
 renderlib::GLProgram createProgram(ShaderNode& endNode) {
 	auto nodeOrdering = getTotalOrdering(endNode);
+	auto shaderPipeline = getShaderPipeline(nodeOrdering);
 
 	//@TODO Determine if there's a tessellation or geometry shader
 	std::map<ShaderStage, ShaderContents> shaderStages;
-
+	//Determine 
 	for (auto node : nodeOrdering) {
-		node.
+		if (!node->stage.singleStage()) {
+			if (hasInput(*node))
+				node->stage = greatestInputStage(*node);
+			else if (hasOutput(*node))
+				node->stage = lowestOutputStage(*node);
+			else 
+				node->stage = ShaderStage::None();
+		}
+
 	}
 }
 
