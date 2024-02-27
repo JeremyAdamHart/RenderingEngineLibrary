@@ -9,7 +9,7 @@
 namespace renderlib {
 
 class ProcessingShader : public Shader {
-	vector<pair<GLenum, string>> shaders;
+	vector<ShaderData> shaders;
 public:
 	ProcessingShader(string fragmentShader, string defines=string());
 

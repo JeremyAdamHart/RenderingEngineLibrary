@@ -26,6 +26,8 @@ public:
 	virtual void calculateUniformLocations();
 
 	virtual void loadMaterialUniforms(const Drawable &drawable);
+
+	virtual operator bool() const;
 };
 
 template<typename T1, typename T2, typename ...Ts>

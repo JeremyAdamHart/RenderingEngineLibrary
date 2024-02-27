@@ -24,7 +24,7 @@ public:
 	ColorShader(map<GLenum, string> defines = map<GLenum, string>{});
 
 	virtual bool createProgram(map<GLenum, string> defines = map<GLenum, string>{});
-	virtual bool createNewProgram(vector<pair<GLenum, string>> shaderNames, map<GLenum, string> defines = map<GLenum, string>{});
+	virtual bool createNewProgram(vector<ShaderData> shaderNames, map<GLenum, string> defines = map<GLenum, string>{});
 
 
 	void draw(const Camera &cam, glm::vec3 lightPos, Drawable &obj);

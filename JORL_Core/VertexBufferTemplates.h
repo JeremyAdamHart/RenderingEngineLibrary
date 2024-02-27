@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 #include "glSupport.h"
 #include "GLObject.h"
-#include "VertexAttribLayout.h"
 
 using namespace glm;
 
@@ -54,51 +53,6 @@ template<> int initVertexAttribute<unsigned char>(const GLBuffer& vbo, unsigned 
 template<> int initVertexAttribute<float>(const GLBuffer& vbo, unsigned int attribDivisor, int attributeIndex);
 
 template<> int initVertexAttribute<glm::mat4>(const GLBuffer& vbo, unsigned int attribDivisor, int attributeIndex);
-
-template<class T1, class T2, class... Ts> 
-void allocateBufferStorage(GLBuffer* vbo, char* streamed, size_t bufferSize, void** pointers) {
-	allocateBufferStorage<T1>(vbo, streamed, bufferSize, pointers);
-	allocateBufferStorage<T2, Ts...>(vbo + 1, streamed+1, bufferSize, pointers+1);
-}
-
-template<class T> 
-void allocateBufferStorage(GLBuffer* vbo, char* streamed, size_t bufferSize, void** pointer) {
-	glBindBuffer(GL_ARRAY_BUFFER, (*vbo));
-	if (*streamed) {
-		GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-		GLbitfield flagsMap = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-		glBufferStorage(GL_ARRAY_BUFFER, bufferSize * sizeof(T), nullptr, flags);
-		(*pointer) = glMapBufferRange(GL_ARRAY_BUFFER, 0, bufferSize * sizeof(T), flagsMap);
-	}
-	else {
-		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
-		(*pointer) = nullptr;
-	}
-	checkGLErrors("<allocateBufferStorage>");
-}
-
-template<class T1, class T2, class... Ts>
-void allocateBufferStorage(GLBuffer* vbo, size_t bufferSize, void** pointers) {
-	allocateBufferStorage<T1>(vbo, bufferSize, pointers);
-	allocateBufferStorage<T2, Ts...>(vbo + 1, bufferSize, pointers + 1);
-}
-
-template<class T>
-void allocateBufferStorage(GLBuffer* vbo, size_t bufferSize, void** pointer) {
-	glBindBuffer(GL_ARRAY_BUFFER, (*vbo));
-	if (attrib::usingPinned<T>()) {
-		GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-		GLbitfield flagsMap = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-		glNamedBufferStorage(*vbo, bufferSize * sizeof(T), nullptr, flags);
-		(*pointer) = glMapNamedBufferRange((*vbo), 0, bufferSize * sizeof(T), flagsMap);
-	}
-	else {
-		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
-		(*pointer) = nullptr;
-	}
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	checkGLErrors("createBufferStorage");
-}
 
 //Need to add divisor to Position attribute
 template<class T>

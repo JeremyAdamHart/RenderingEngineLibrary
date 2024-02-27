@@ -7,7 +7,7 @@ enum {
 	INVERSE_ROTATION_MATRIX
 };
 
-std::vector<pair<GLenum, string>> textShaderNames = {
+std::vector<ShaderData> textShaderNames = {
 	{GL_VERTEX_SHADER, "shaders/basicText.vert"}, {GL_FRAGMENT_SHADER, "shaders/basicText.frag" } };
 
 TextShader::TextShader() :ShaderT<TextureMat, ColorMat>(textShaderNames, {}, { "colorTexture", "textColor", "model_view_projection_matrix", "inverse_rotation_matrix" })

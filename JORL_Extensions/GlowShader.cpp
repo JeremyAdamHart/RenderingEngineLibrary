@@ -2,7 +2,7 @@
 
 namespace renderlib {
 
-std::vector<pair<GLenum, string>> flatShaderNames = {
+std::vector<ShaderData> flatShaderNames = {
 	{GL_VERTEX_SHADER, "shaders/flatColorShader.vert"}, {GL_FRAGMENT_SHADER, "shaders/flatColorShader.frag" } };
 
 FlatColorShader::FlatColorShader() :ShaderT<ColorMat>(flatShaderNames, {}, { "color", "ModelViewProjectionMatrix" }) {
@@ -28,7 +28,7 @@ void FlatColorShader::draw(Camera& cam, Drawable obj) {
 	glUseProgram(0);
 }
 
-std::vector<pair<GLenum, string>> gaussianShaderNames = {
+std::vector<ShaderData> gaussianShaderNames = {
 	{ GL_VERTEX_SHADER, "shaders/gaussian.vert" },{ GL_FRAGMENT_SHADER, "shaders/gaussian.frag" } };
 
 enum {

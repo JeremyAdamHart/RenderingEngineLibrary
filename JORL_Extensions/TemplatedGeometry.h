@@ -133,7 +133,7 @@ public:
 
 	virtual void drawGeometry(GLProgram program) override {
 		
-		vaoMap.requestVAO<Ts...>(program, &vbo);
+		this->vaoMap.requestVAO<Ts...>(program, &this->vbo);
 		
 		if constexpr (!usingInstanced<Ts...>::value)
 			glDrawArrays(mode, 0, bufferSize);
@@ -149,16 +149,16 @@ protected:
 	size_t indexSize;
 public:
 	IndexGeometryT(GLenum mode = GL_TRIANGLES) : GeometryT<Ts...>(mode) {
-		vbo.push_back(createBufferID());
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		this->vbo.push_back(createBufferID());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->vbo.back());
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
 	IndexGeometryT(GLenum mode, const IndexT* indices, size_t indexSize, typename const Ts::Type*... data, size_t dataSize, size_t dataInstances)
 		: GeometryT<Ts...>(mode, data..., dataSize, dataInstances)
 	{
-		vbo.push_back(createBufferID());
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		this->vbo.push_back(createBufferID());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->vbo.back());
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 		loadIndices(indices, indexSize);
@@ -167,8 +167,8 @@ public:
 	IndexGeometryT(GLenum mode, const IndexT* indices, size_t indexSize, typename const Ts::Type*... data, size_t dataSize)
 		: GeometryT<Ts...>(mode, data..., dataSize, 1)
 	{
-		vbo.push_back(createBufferID());
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		this->vbo.push_back(createBufferID());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->vbo.back());
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 		loadIndices(indices, indexSize);
@@ -176,17 +176,17 @@ public:
 
 	void loadIndices(const IndexT* indices, size_t newIndexSize) {
 		indexSize = newIndexSize;
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->vbo.back());
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize*sizeof(IndexT), indices, GL_DYNAMIC_DRAW);
 	}
 
 	virtual void drawGeometry(GLProgram program) override {
-		vaoMap.requestVAO<Ts...>(program, &vbo);	//glBindVertexArray(vao);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo.back());		//Should be built into requestVAO
+		this->vaoMap.requestVAO<Ts...>(program, &this->vbo);	//glBindVertexArray(vao);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->vbo.back());		//Should be built into requestVAO
 		if constexpr (!usingInstanced<Ts...>::value)
-			glDrawElements(mode, indexSize, toGLenum<IndexT>(), 0);
+			glDrawElements(this->mode, indexSize, toGLenum<IndexT>(), 0);
 		else
-			glDrawElementsInstanced(mode, indexSize, toGLenum<IndexT>(), 0, instanceCount);
+			glDrawElementsInstanced(this->mode, indexSize, toGLenum<IndexT>(), 0, this->instanceCount);
 		glBindVertexArray(0);
 	}
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Shader.h>
+#include "glSupport.h"
 
 /***
 * Templated shader class
@@ -14,7 +15,7 @@ class ShaderT : public Shader {
 protected:
 	vector<string> materialNames;
 
-	ShaderT(std::vector<pair<GLenum, string>> shaders,
+	ShaderT(std::vector<ShaderData> shaders,
 		map<GLenum, string> defines = map<GLenum, string>{},
 		vector<string> materialNames = vector<string>{}) : materialNames(materialNames)
 	{

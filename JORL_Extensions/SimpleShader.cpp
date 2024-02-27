@@ -11,7 +11,7 @@ enum {
 	COUNT
 };
 
-vector<pair<GLenum, string>> SimpleShader::defaultShaders(){
+vector<ShaderData> SimpleShader::defaultShaders(){
 	return{ {GL_VERTEX_SHADER, "shaders/simple.vert"},
 	{GL_FRAGMENT_SHADER, "shaders/simple.frag"} };
 }
@@ -22,7 +22,7 @@ SimpleShader::SimpleShader(map<GLenum, string> defines):Shader(ColorMat::id) {
 }
 
 //Alt shader should use the same uniforms
-SimpleShader::SimpleShader(vector<pair<GLenum, string>> alt_shaders, map<GLenum, string> defines) {
+SimpleShader::SimpleShader(vector<ShaderData> alt_shaders, map<GLenum, string> defines) {
 	programID = createGLProgram(alt_shaders, defines);
 	calculateUniformLocations();
 }

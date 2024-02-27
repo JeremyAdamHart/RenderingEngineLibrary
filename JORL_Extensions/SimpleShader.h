@@ -10,12 +10,12 @@ namespace renderlib {
 
 class SimpleShader : public Shader {
 protected:
-	virtual vector<pair<GLenum, string>> defaultShaders();
+	virtual vector<ShaderData> defaultShaders();
 
 	void loadUniforms(const glm::mat4& vp_matrix, const glm::mat4& m_matrix);
 public:
 	SimpleShader(map<GLenum, string> defines = map<GLenum, string>{});
-	SimpleShader(vector<pair<GLenum, string>> alt_shaders, 
+	SimpleShader(vector<ShaderData> alt_shaders, 
 		map<GLenum, string> defines = map<GLenum, string>{});
 	
 	virtual std::vector<std::string> getUniformNames() override;

@@ -18,7 +18,7 @@ enum {
 	COUNT
 };
 
-static vector<pair<GLenum, string>> shaders{
+static vector<ShaderData> shaders{
 	{ GL_VERTEX_SHADER, "shaders/marchingCubeColor.vert" },
 	{ GL_FRAGMENT_SHADER, "shaders/marchingCubeColor.frag" }
 };
@@ -41,7 +41,7 @@ bool VRColorShader::createProgram(map<GLenum, string> defines) {
 	return programID;
 }
 
-bool VRColorShader::createNewProgram(vector<pair<GLenum, string>> shaderNames, map<GLenum, string> defines) {
+bool VRColorShader::createNewProgram(vector<ShaderData> shaderNames, map<GLenum, string> defines) {
 	programID = createGLProgram(shaderNames, defines);
 
 	if (programID)

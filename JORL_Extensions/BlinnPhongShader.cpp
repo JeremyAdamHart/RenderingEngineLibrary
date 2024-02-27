@@ -22,10 +22,11 @@ enum {
 	COUNT
 };
 
-static vector<pair<GLenum, string>> shaders{
-	{ GL_VERTEX_SHADER, "shaders/bpShaded.vert" },
-	{ GL_FRAGMENT_SHADER, "shaders/bpShaded.frag" }
+vector<ShaderData> shaders = {
+		{ GL_VERTEX_SHADER, "shaders/bpShaded.vert" },
+		{ GL_FRAGMENT_SHADER, "shaders/bpShaded.frag" }
 };
+
 
 //TEST SHADER vv
 BlinnPhongShaderT::BlinnPhongShaderT() :

@@ -6,7 +6,7 @@ using namespace glm;
 
 namespace renderlib {
 
-static vector<pair<GLenum, string>> shaders{
+static vector<ShaderData> shaders{
 	{ GL_VERTEX_SHADER, "shaders/blend.vert" },
 	{ GL_FRAGMENT_SHADER, "shaders/blend.frag" }
 };

@@ -44,4 +44,9 @@ void Shader::loadMaterialUniforms(const Drawable &drawable) {
 	}
 }
 
+Shader::operator bool() const
+{
+	return programID;
+}
+
 }

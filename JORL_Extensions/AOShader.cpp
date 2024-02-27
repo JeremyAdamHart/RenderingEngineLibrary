@@ -19,7 +19,7 @@ enum {
 	COUNT
 };
 
-static vector<pair<GLenum, string>> shaders{
+static vector<ShaderData> shaders{
 	{ GL_VERTEX_SHADER, "shaders/ambient.vert" },
 	{ GL_FRAGMENT_SHADER, "shaders/ambient.frag" }
 };

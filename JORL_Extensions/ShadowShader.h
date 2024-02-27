@@ -34,7 +34,7 @@ private:
 		COUNT
 	};
 
-	static std::vector<std::pair<GLenum, std::string>> defaultShaders () {
+	static std::vector<ShaderData> defaultShaders () {
 		return  {{GL_VERTEX_SHADER, "shaders/bpShaded.vert"}, {GL_FRAGMENT_SHADER, "shaders/shadowShader.frag"}};
 	}
 public:
@@ -58,7 +58,7 @@ public:
 	template<>
 	constexpr const char* uniformName<TextureMat>() { return "colorTexture"; }
 
-	ShadowShader(std::vector<std::pair<GLenum, std::string>> shaders=defaultShaders(), 
+	ShadowShader(std::vector<ShaderData> shaders=defaultShaders(), 
 		std::map<GLenum, std::string> defines = {}) 
 		: ShaderT<ShadedMat, ColorSrc>(
 			shaders,

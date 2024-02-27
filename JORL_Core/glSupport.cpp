@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdarg.h>
+#include <algorithm>
 
 //#include <glad/glad.h>
 
@@ -51,6 +52,10 @@ string fileToString(const string &filename)
 		return string();
 	}
 }
+
+ShaderData::ShaderData(GLenum stage, string filepath) :stage(stage), filepath(filepath) {}
+
+ShaderData::ShaderData(GLenum stage, string filepath, string source) : stage(stage), filepath(filepath), source(source) {}
 
 GLuint createShader(const string &source, GLenum shaderType){
 
@@ -166,25 +171,25 @@ GLProgram createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tes
 	checkGLErrors("createProgram");
 }
 
-GLProgram createGLProgram(vector<pair<GLenum, string>> shaders,
-	map<GLenum, string> defines) 
+GLProgram createGLProgram(vector<ShaderData> shaders, map<GLenum, string> defines)
 {
 	GLProgram program = createProgramID();
 
 	vector<GLuint> shaderIDs(shaders.size());
 
 	for (int i = 0; i < shaderIDs.size(); i++) {
-		GLenum shaderType = shaders[i].first;
-		string shaderName = shaders[i].second;
-		cout << "Compiling " << shaderName << endl;
-		try{
-			string define = defines.at(shaders[i].first);
-			shaderIDs[i] = createShader(fileToString(shaderName), 
-				define, shaderType);
+		GLenum shaderType = shaders[i].stage;
+		string shaderName = shaders[i].filepath;
+		string shaderSource = (shaders[i].source.empty()) ? fileToString(shaderName) : shaders[i].source;
+
+		if(!shaderName.empty())
+			cout << "Compiling " << shaderName << endl;
+		try {
+			string define = defines.at(shaderType);
+			shaderIDs[i] = createShader(shaderSource, define, shaderType);
 		}
 		catch (out_of_range) {
-			shaderIDs[i] = createShader(fileToString(shaderName), 
-										shaderType);
+			shaderIDs[i] = createShader(shaderSource, shaderType);
 		}
 
 		if (shaderIDs[i])
@@ -225,7 +230,7 @@ GLProgram createGLProgram(vector<pair<GLenum, string>> shaders,
 	return program;
 }
 
-bool checkGLErrors(string location){
+bool checkGLErrors(string location) {
 #ifdef NDEBUG		//TODO - Switch to Callbacks?
 	bool error = false;
 	for (GLenum flag = glGetError(); flag != GL_NO_ERROR; flag = glGetError())

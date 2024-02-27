@@ -15,6 +15,15 @@ namespace renderlib {
 
 using namespace std;
 
+struct ShaderData {
+	GLenum stage;
+	string filepath;
+	string source;
+
+	ShaderData(GLenum stage, string filepath);
+	ShaderData(GLenum stage, string filepath, string source);
+};
+
 std::string str(const char *fmt, ...);
 
 string fileToString(const string &filename);
@@ -27,7 +36,7 @@ GLProgram createGLProgram(GLuint vertexShader, GLuint fragmentShader, GLuint tes
 
 bool checkGLErrors(string location);
 
-GLProgram createGLProgram(vector<pair<GLenum, string>> shaders,
+GLProgram createGLProgram(vector<ShaderData> shaders,
 	map<GLenum, string> defines = map<GLenum, string>{});
 
 }
