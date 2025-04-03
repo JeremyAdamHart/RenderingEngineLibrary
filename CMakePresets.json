@@ -1,0 +1,39 @@
+{
+    "version": 1,
+    "configurePresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug",
+            "generator": "Ninja",
+            "binaryDir": "build/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_STANDARD": "20"
+            }
+        },
+        {
+            "name": "rel-unix",
+            "displayName": "rel-unix",
+            "generator": "Ninja",
+            "binaryDir": "build/rel-unix",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_STANDARD": "20"
+            }
+        },
+        {
+            "name": "dev-unix",
+            "displayName": "dev-unix",
+            "generator": "Ninja",
+            "binaryDir": "build/dev-unix",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/RelWithDebInfo/generators/conan_toolchain.cmake",
+                "CMAKE_CXX_STANDARD": "20"
+            },
+            "environment": {
+                "GLM_ENABLE_EXPERIMENTAL": "True"
+            }
+        }
+    ]
+}

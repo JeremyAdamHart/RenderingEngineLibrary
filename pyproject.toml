@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "jorl"
+version = "0.1.0"
+description = ""
+authors = ["Jeremy Hart <jeremyadamhart@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.group.dev.dependencies]
+conan = "^2.0.0"
+cmake = "^3.31.6"
+ninja = "^1.11.0.0"
