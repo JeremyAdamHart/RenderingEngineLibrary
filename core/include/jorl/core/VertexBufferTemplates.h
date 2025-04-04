@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <vector>
 #include <glm/glm.hpp>
 #include "glSupport.h"
@@ -80,10 +81,15 @@ template<class T>
 void allocateBufferStorage(GLBuffer* vbo, char* streamed, size_t bufferSize, void** pointer) {
 	glBindBuffer(GL_ARRAY_BUFFER, (*vbo));
 	if (*streamed) {
+		#ifndef USE_GL_4_2
 		GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 		GLbitfield flagsMap = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 		glBufferStorage(GL_ARRAY_BUFFER, bufferSize * sizeof(T), nullptr, flags);
 		(*pointer) = glMapBufferRange(GL_ARRAY_BUFFER, 0, bufferSize * sizeof(T), flagsMap);
+		#else
+		throw std::runtime_error("Can't use streaming when using OpenGL 4.2 or earlier");
+		#endif
+		
 	}
 	else {
 		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
@@ -102,10 +108,14 @@ template<class T>
 void allocateBufferStorage(GLBuffer* vbo, size_t bufferSize, void** pointer) {
 	glBindBuffer(GL_ARRAY_BUFFER, (*vbo));
 	if constexpr (attrib::usingPinned<T>) {
+		#ifndef USE_GL_4_2
 		GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 		GLbitfield flagsMap = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 		glNamedBufferStorage(*vbo, bufferSize * sizeof(T), nullptr, flags);
 		(*pointer) = glMapNamedBufferRange((*vbo), 0, bufferSize * sizeof(T), flagsMap);
+		#else
+		throw std::runtime_error("Can't use streaming when using OpenGL 4.2 or earlier");
+		#endif
 	}
 	else {
 		glBufferData(GL_ARRAY_BUFFER, bufferSize * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
