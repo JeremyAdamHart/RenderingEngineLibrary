@@ -1,5 +1,5 @@
 {
-    "version": 1,
+    "version": 6,
     "configurePresets": [
         {
             "name": "debug",
@@ -29,6 +29,21 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/RelWithDebInfo/generators/conan_toolchain.cmake",
+                "CMAKE_CXX_STANDARD": "20"
+            },
+            "environment": {
+                "GLM_ENABLE_EXPERIMENTAL": "True"
+            }
+        },
+        {
+            "name": "dev-win",
+            "displayName": "dev-win",
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "build/dev-win",
+            "architecture": "x64",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/generators/conan_toolchain.cmake",
                 "CMAKE_CXX_STANDARD": "20"
             },
             "environment": {

@@ -23,7 +23,7 @@ class Recipe(ConanFile):
 
         self.options['glad'].spec = 'gl'
         self.options['glad'].gl_profile = 'core'
-        self.options['glad'].gl_version = '4.2'
+        self.options['glad'].gl_version = '4.6'
 
 
 

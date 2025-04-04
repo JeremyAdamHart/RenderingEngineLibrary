@@ -24,7 +24,6 @@ add_library(jorl::core ALIAS jorl_core)
 target_include_directories(jorl_core PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/jorl/core)
 target_include_directories(jorl_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
-
 # Packages
 find_package(glfw3 REQUIRED)
 find_package(glad REQUIRED)
