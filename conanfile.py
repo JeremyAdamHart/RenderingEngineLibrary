@@ -45,16 +45,17 @@ class Recipe(ConanFile):
         cmake.install()
 
     def requirements(self):
-        self.requires("glfw/3.4")
-        self.requires("freetype/2.13.3")
-        self.requires("glad/0.1.36")
-        self.requires("glm/1.0.1")
-        self.requires("stb/cci.20240531")
-        self.requires("tinyply/2.3.4")
-        self.requires("openvr/1.16.8")
+        self.requires("glfw/3.4", transitive_headers=True, transitive_libs=True)
+        self.requires("freetype/2.13.3", transitive_headers=True, transitive_libs=True)
+        self.requires("glad/0.1.36", transitive_headers=True, transitive_libs=True)
+        self.requires("glm/1.0.1", transitive_headers=True, transitive_libs=True)
+        self.requires("stb/cci.20240531", transitive_headers=True, transitive_libs=True)
+        self.requires("tinyply/2.3.4", transitive_headers=True, transitive_libs=True)
+        self.requires("openvr/1.16.8", transitive_headers=True, transitive_libs=True)
 
     def package_info(self):
         self.cpp_info.components["core"].libs = ["jorl_core"]
+        # self.cpp_info.components["core"].requires = []
         # self.cpp_info.components["core"].set_property("cmake_target_name", "jorl::core")
         self.cpp_info.components["exts"].libs = ["jorl_exts"]
         self.cpp_info.components["exts"].requires = ["core"]
